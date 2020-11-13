@@ -21,6 +21,14 @@ cd contract
 pip3 install -r requirements.txt
 ```
 
+### Running the Tests
+
+The [test suite](tests) contains common tests. To run the entire suite:
+
+```bash
+brownie test
+```
+
 ## License
 
 Copyright (c) 2020, Dispersion.Fi - [All rights reserved](LICENSE).
