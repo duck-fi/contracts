@@ -1,0 +1,14 @@
+# reports:
+#   exclude_paths:
+#     - contracts/*.*
+
+hypothesis:
+  max_examples: 2
+  phases:
+    explicit: true
+    reuse: false
+    generate: true
+    target: false
+    shrink: false
+
+autofetch_sources: true

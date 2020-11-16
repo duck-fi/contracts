@@ -1,28 +1,30 @@
 # @version ^0.2.0
 
 from vyper.interfaces import ERC20
-import interfaces.tokens.mintable as Mintable
-import interfaces.tokens.burnable as Burnable
+import interfaces.tokens.ERC20Mintable as Mintable
+import interfaces.tokens.ERC20Burnable as Burnable
+import interfaces.tokens.ERC20Detailed as Detailed
 
 
 implements: ERC20
 implements: Burnable
 implements: Mintable
+implements: Detailed
 
 
 event Transfer:
-    _from: indexed(address)
-    _to: indexed(address)
-    _value: uint256
+    sender: indexed(address)
+    receiver: indexed(address)
+    value: uint256
 
 event Approval:
-    _owner: indexed(address)
-    _spender: indexed(address)
-    _value: uint256
+    owner: indexed(address)
+    spender: indexed(address)
+    value: uint256
 
 
-name: public(String[32])
-symbol: public(String[4])
+name: public(String[64])
+symbol: public(String[32])
 decimals: public(uint256)
 
 balanceOf: public(HashMap[address, uint256])
@@ -68,6 +70,7 @@ def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
     self.balanceOf[_from] -= _value
     self.balanceOf[_to] += _value
 
+    # TODO maybe remove this checks 
     if msg.sender != self.supply_controller:
         _allowance: uint256 = self.allowances[_from][msg.sender]
         if _allowance != MAX_UINT256:
@@ -78,10 +81,19 @@ def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
 
 
 @external
-def approve(_spender : address, _value : uint256) -> bool:
-    assert _value == 0 or self.allowances[msg.sender][_spender] == 0
-    self.allowances[msg.sender][_spender] = _value
-    log Approval(msg.sender, _spender, _value)
+def approve(_spender : address, amount : uint256) -> bool:
+    # TODO maybe remove this check
+    assert amount == 0 or self.allowances[msg.sender][_spender] == 0
+    self.allowances[msg.sender][_spender] = amount
+    log Approval(msg.sender, _spender, amount)
+    return True
+
+
+@external
+def set_supply_controller(account: address) -> bool:
+    assert msg.sender == self.supply_controller
+    self.supply_controller = account
+    
     return True
 
 
@@ -105,7 +117,7 @@ def burn(amount: uint256) -> bool:
 
     return True
 
-
+# or maybe burn with allowance
 @external
 def burnFrom(account: address, amount: uint256) -> bool:
     assert msg.sender == self.supply_controller
