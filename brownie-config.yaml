@@ -3,12 +3,12 @@
 #     - contracts/*.*
 
 hypothesis:
-  max_examples: 2
+  max_examples: 1
   phases:
     explicit: true
-    reuse: false
+    reuse: true
     generate: true
-    target: false
-    shrink: false
+    target: true
+    shrink: true
 
 autofetch_sources: true

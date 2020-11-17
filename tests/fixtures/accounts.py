@@ -2,6 +2,16 @@ import pytest
 
 
 @pytest.fixture(scope="session")
+def deployer(neo):
+    yield neo
+
+
+@pytest.fixture(scope="module")
+def supply_controller(accounts):
+    yield accounts[-1]
+
+
+@pytest.fixture(scope="session")
 def neo(accounts):
     yield accounts[0]
 
