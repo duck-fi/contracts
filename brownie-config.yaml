@@ -1,6 +1,6 @@
 # reports:
-#   exclude_paths:
-#     - contracts/*.*
+# exclude_paths:
+# - contracts/*.*
 
 hypothesis:
   max_examples: 1
@@ -10,5 +10,10 @@ hypothesis:
     generate: true
     target: true
     shrink: true
+
+networks:
+  development:
+    cmd_settings:
+      accounts: 10
 
 autofetch_sources: true
