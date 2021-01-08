@@ -7,5 +7,5 @@ def mint(account: address, amount: uint256) -> bool:
 
 
 @external    
-def set_supply_controller(account: address) -> bool:
+def setMinter(_minter: address) -> bool:
     pass
