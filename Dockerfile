@@ -7,7 +7,7 @@ ADD interfaces interfaces
 ADD scripts scripts
 ADD brownie-config.yaml brownie-config.yaml
 ADD requirements.txt requirements.txt
-RUN ganache-cli > /dev/null & sleep 5 & brownie run deploy development
+RUN ganache-cli > /dev/null & sleep 5 & brownie run development deploy
 
 EXPOSE 8545
 CMD [ "ganache-cli", "-h", "0.0.0.0" ]
