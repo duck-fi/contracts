@@ -2,10 +2,10 @@
 
 
 @external
-def deposit(amount: uint256, account: address):
+def deposit(amount: uint256, account: address) -> uint256:
     pass
 
 
 @external
-def withdraw(amount: uint256, account: address):
+def withdraw(amount: uint256, account: address) -> uint256:
     pass

@@ -44,19 +44,18 @@ def __init__(_base_token: address, _controller: address, _strategy: address, _vo
 def deposit(amount: uint256, account: address = msg.sender):
     assert amount > 0, "amount <= 0"
     ERC20(self.base_token).transferFrom(msg.sender, self, amount)
-    self.balances[account] += amount
-    ReaperStrategy(self.strategy).deposit(amount, account)
+    deltaBalance: uint256 = ReaperStrategy(self.strategy).deposit(amount, account)
+    self.balances[account] += deltaBalance
+    self.total_balance += deltaBalance
     # ToDo ADD FRACTION LOGIC
 
 
 @external
 def withdraw(amount: uint256):
     assert amount > 0, "amount <= 0"
-    ReaperStrategy(self.strategy).withdraw(amount, msg.sender)
-    old_balance: uint256 = self.balances[msg.sender]
-    assert old_balance >= amount, "amount <= balance"
-    ERC20(self.base_token).transfer(msg.sender, amount)
+    ERC20(self.base_token).transfer(msg.sender, ReaperStrategy(self.strategy).withdraw(amount, msg.sender))
     self.balances[msg.sender] -= amount
+    self.total_balance -= amount
     # ToDo ADD FRACTION LOGIC
 
 
@@ -74,14 +73,8 @@ def kill():
 @external
 def setStrategy(_strategy: address):
     assert msg.sender == self.owner, "owner only"
+    ERC20(self.base_token).approve(_strategy, MAX_UINT256)
     self.strategy = _strategy
-
-
-@external
-def updateBalance(account: address, amount: uint256):
-    assert msg.sender == self.strategy, "strategy only"
-    self.total_balance -= amount - self.balances[account]
-    self.balances[account] = amount
 
 
 @external
