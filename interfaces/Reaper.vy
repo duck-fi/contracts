@@ -7,5 +7,10 @@ def farmIntegral(account: address) -> uint256:
 
 
 @external
-def checkpoint(account: address) -> bool:
+def checkpoint(account: address):
+    pass
+
+
+@external
+def deposit(amount: uint256, account: address):
     pass
