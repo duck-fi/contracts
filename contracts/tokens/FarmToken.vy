@@ -1,6 +1,7 @@
 # @version ^0.2.0
 
 from vyper.interfaces import ERC20
+import interfaces.Ownable as Ownable
 import interfaces.tokens.ERC20Mintable as Mintable
 import interfaces.tokens.ERC20Burnable as Burnable
 import interfaces.tokens.ERC20Detailed as Detailed
@@ -10,6 +11,7 @@ implements: ERC20
 implements: Burnable
 implements: Mintable
 implements: Detailed
+implements: Ownable
 
 
 event Transfer:
@@ -22,6 +24,13 @@ event Approval:
     spender: indexed(address)
     value: uint256
 
+event CommitOwnership:
+    admin: address
+
+event ApplyOwnership:
+    admin: address
+
+
 
 name: public(String[64])
 symbol: public(String[32])
@@ -29,7 +38,10 @@ decimals: public(uint256)
 balanceOf: public(HashMap[address, uint256])
 totalSupply: public(uint256)
 allowance: public(HashMap[address, HashMap[address, uint256]])
+
 minter: public(address)
+owner: public(address)
+future_owner: public(address)
 
 
 @external
@@ -42,6 +54,7 @@ def __init__(_name: String[32], _symbol: String[4], _decimals: uint256, _supply:
     self.balanceOf[msg.sender] = init_supply
     self.totalSupply = init_supply
     self.minter = msg.sender
+    self.owner = msg.sender
 
     log Transfer(ZERO_ADDRESS, msg.sender, init_supply)
 
@@ -103,3 +116,20 @@ def burn(amount: uint256) -> bool:
     log Transfer(msg.sender, ZERO_ADDRESS, amount)
 
     return True
+
+
+@external
+def transferOwnership(_future_owner: address):
+    assert msg.sender == self.owner, "owner only"
+
+    self.future_owner = _future_owner
+    log CommitOwnership(_future_owner)
+
+
+@external
+def applyOwnership():
+    assert msg.sender == self.owner, "owner only"
+    _owner: address = self.future_owner
+    assert _owner != ZERO_ADDRESS, "owner not set"
+    self.owner = _owner
+    log ApplyOwnership(_owner)

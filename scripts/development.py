@@ -1,12 +1,24 @@
 from brownie import (
     accounts,
-    FarmToken
+    FarmToken,
+    Minter,
+    Reaper,
+    ReaperController
 )
 
 
-DEPLOYER = accounts[0]
+DEPLOYER = accounts[2]
 
 
 def deploy():
-    FarmToken.deploy("Dispersion Farming Token",
-                     "DFT", 18, 0, {'from': DEPLOYER})
+    farm_token = FarmToken.deploy("Dispersion Farming Token",
+                                  "DFT", 18, 0, {'from': DEPLOYER})
+
+    minter = Minter.deploy(farm_token, {'from': DEPLOYER})
+    farm_token.setMinter(minter, {'from': DEPLOYER})
+
+    reaperController = ReaperController.deploy(minter, {'from': DEPLOYER})
+    minter.setReaperController(reaperController, {'from': DEPLOYER})
+
+    # curveReaper = Reaper.deploy(minter, {'from': DEPLOYER})
+    # minter.setReaperController(reaperController, {'from': DEPLOYER})
