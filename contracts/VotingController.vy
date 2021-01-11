@@ -110,9 +110,8 @@ def toggleApprove(_reaper: address, _owner_account: address, _voting_account: ad
 @external
 @nonreentrant('lock')
 def snapshot():
-    # TODO: impl
-    assert self.admin == msg.sender, "unauthorized" # TODO: or wait for some blocks (1 week maybe)
-
+    assert self.admin == msg.sender, "unauthorized"
+    
     last_reaper_index: uint256 = ReaperController(self.reaper_controller).last_reaper_index()
     self.last_snapshot_index += 1
     self.last_snapshot_block = block.number

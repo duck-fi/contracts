@@ -17,8 +17,10 @@ blockPeriod: public(uint256)
 
 
 @external
-def __init__(_coin: address):
+def __init__(_coin: address, _coinVoteRatio: uint256, _blockPeriod: uint256):
     self.coin = _coin
+    self.coinVoteRatio = _coinVoteRatio
+    self.blockPeriod = _blockPeriod
     self.owner = msg.sender
 
 
@@ -32,7 +34,7 @@ def coinToVotes(_amount: uint256) -> uint256:
 @external
 def availableToUnvote(_account: address, _amount: uint256) -> uint256:
     if block.timestamp > self.last_modified_block[_account] + self.blockPeriod:
-        return self.locked_coins[_account]+self.unlocked_coins[_account]
+        return self.locked_coins[_account] + self.unlocked_coins[_account]
 
     return self.unlocked_coins[_account]
 
