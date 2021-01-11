@@ -2,6 +2,11 @@
 
 
 @external
+def reaper() -> address:
+    pass
+
+
+@external
 def deposit(amount: uint256, account: address) -> uint256:
     pass
 

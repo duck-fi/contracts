@@ -23,14 +23,17 @@ event ApplyOwnership:
 # minted: public(HashMap[address, HashMap[address, uint256]])
 # allowance: public(HashMap[address, HashMap[address, bool]])
 
+reaper: public(address)
+
 owner: public(address)
 future_owner: public(address)
 
 
 @external
-def __init__():
+def __init__(_reaper: address):
     # self.minter = _minter
     self.owner = msg.sender
+    self.reaper = _reaper
 
 
 @external
