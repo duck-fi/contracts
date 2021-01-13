@@ -1,7 +1,9 @@
 # @version ^0.2.0
 
 
+from vyper.interfaces import ERC20
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
+import interfaces.Reaper as Reaper
 import interfaces.Ownable as Ownable
 
 
@@ -22,12 +24,14 @@ DEFAULT_BOOST_RATE: constant(uint256) = 10 ** 18
 owner: public(address)
 future_owner: public(address)
 reaper: public(address)
+staker: public(address)
 boost_rate: public(uint256)
 
 
 @external
-def __init__(_reaper: address):
+def __init__(_reaper: address, _staker: address):
     self.reaper = _reaper
+    self.staker = _staker
     self.boost_rate = DEFAULT_BOOST_RATE
     self.owner = msg.sender
 
@@ -44,7 +48,12 @@ def withdraw(amount: uint256, account: address) -> uint256:
 
 @external
 @nonreentrant('lock')
-def invest(): 
+def invest():
+    assert self.reaper == msg.sender, "unauthorized"
+    # assert ERC20(Reaper(self.reaper).lp_token()).balanceOf(self.reaper) > 0, "insufficient funds"
+
+    # try to transfer lp tokens to
+
     pass
 
 

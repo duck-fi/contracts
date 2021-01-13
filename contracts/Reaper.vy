@@ -2,8 +2,9 @@
 
 
 from vyper.interfaces import ERC20
+import interfaces.Reaper as Reaper
 import interfaces.tokens.Farmable as Farmable
-import interfaces.ReaperStrategy as ReaperStrategy
+import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.Reapercontroller as Reapercontroller
 import interfaces.Ownable as Ownable
 import interfaces.VotingController as VotingController
