@@ -52,8 +52,8 @@ def toggleApprove(account: address):
 def _mint_for(reaper: address, account: address):
     assert self.index_by_reaper[reaper] > 0, "reaper is not supported"
 
-    Reaper(reaper).checkpoint(account)
-    total_mint: uint256 = Reaper(reaper).farmIntegral(account)
+    Reaper(reaper).snapshot(account)
+    total_mint: uint256 = Reaper(reaper).farm_integral_for(account)
     to_mint: uint256 = total_mint - self.minted[reaper][account]
 
     if to_mint != 0:

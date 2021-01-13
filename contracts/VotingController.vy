@@ -211,7 +211,7 @@ def accountVotePower(_reaper: address, _coin: address, _account: address) -> uin
     """
     @notice Returns vote power share for account `_account` for reaper `_reaper` multiplied on 1e18
     @param _reaper Reaper to get its vote power for
-    @param _account Coin which has been used to vote
+    @param _coin Coin which has been used to vote
     @param _account Account to get its vote power for
     @return Vote power multiplied on 1e18
     """

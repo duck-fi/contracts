@@ -3,13 +3,12 @@
 
 from vyper.interfaces import ERC20
 import interfaces.Reaper as Reaper
-import interfaces.tokens.Farmable as Farmable
-import interfaces.strategies.ReaperStrategy as ReaperStrategy
-import interfaces.Reapercontroller as Reapercontroller
+import interfaces.ReaperController as ReaperController
 import interfaces.Ownable as Ownable
 import interfaces.VotingController as VotingController
-import interfaces.Reaper as Reaper
 import interfaces.Minter as Minter
+import interfaces.tokens.Farmable as Farmable
+import interfaces.strategies.ReaperStrategy as ReaperStrategy
 
 
 implements: Reaper
@@ -74,7 +73,7 @@ def approve(account: address, can_deposit: bool):
 def _snapshot(account: address):
     assert not self.is_killed, "reaper is dead"
 
-    farm_token: address = Minter(Reapercontroller(self.controller).minter()).token()
+    farm_token: address = Minter(ReaperController(self.controller).minter()).token()
     rate_integral: uint256 = Farmable(farm_token).rateIntegral()
     vote_integral: uint256 = VotingController(self.voting_controller).reaper_integrated_votes(self)
 
