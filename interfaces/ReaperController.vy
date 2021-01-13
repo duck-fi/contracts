@@ -9,3 +9,8 @@ def toggleApprove(account: address):
 @external
 def mint(reaper: address): 
     pass
+
+
+@external
+def minter() -> address: 
+    pass

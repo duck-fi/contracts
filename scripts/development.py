@@ -12,7 +12,7 @@ DEPLOYER = accounts[2]
 
 def deploy():
     farm_token = FarmToken.deploy("Dispersion Farming Token",
-                                  "DFT", 18, 0, {'from': DEPLOYER})
+                                  "DFT", 18, 1000, {'from': DEPLOYER})
 
     minter = Minter.deploy(farm_token, {'from': DEPLOYER})
     farm_token.setMinter(minter, {'from': DEPLOYER})
