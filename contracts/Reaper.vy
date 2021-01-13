@@ -3,13 +3,26 @@
 
 from vyper.interfaces import ERC20
 import interfaces.Reaper as Reaper
+import interfaces.tokens.Farmable as Farmable
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
+import interfaces.Reapercontroller as Reapercontroller
 import interfaces.Ownable as Ownable
+import interfaces.VotingController as VotingController
+import interfaces.Reaper as Reaper
+import interfaces.Minter as Minter
 
 
 implements: Reaper
 implements: Ownable
 
+
+event Deposit:
+    provider: indexed(address)
+    value: uint256
+
+event Withdraw:
+    provider: indexed(address)
+    value: uint256
 
 event CommitOwnership:
     admin: address
@@ -18,13 +31,25 @@ event ApplyOwnership:
     admin: address
 
 
-base_token: public(address)
+MULTIPLIER: constant(uint256) = 10 ** 18
+
+
+lp_token: public(address)
 controller: public(address)
 voting_controller: public(address)
 strategy: public(address)
-balances: public(HashMap[address, uint256])
-total_balance: public(uint256)
-farmIntegral: public(HashMap[address, uint256])
+
+allowance: public(HashMap[address, HashMap[address, bool]])
+balanceOf: public(HashMap[address, uint256])
+totalSupply: public(uint256)
+
+farm_integral_for: public(HashMap[address, uint256])
+farm_total_supply_integral: public(uint256)
+last_snapshot_block: public(uint256)
+unit_cost_integral: public(uint256)
+unit_cost_integral_for: public(HashMap[address, uint256])
+last_rate_integral: public(uint256)
+last_vote_integral: public(uint256)
 
 owner: public(address)
 future_owner: public(address)
@@ -33,35 +58,71 @@ is_killed: bool
 
 
 @external
-def __init__(_base_token: address, _controller: address, _strategy: address, _voting_controller: address):
-    self.base_token = _base_token
+def __init__(_lp_token: address, _controller: address, _strategy: address, _voting_controller: address):
+    self.lp_token = _lp_token
     self.controller = _controller
     self.voting_controller = _voting_controller
     self.strategy = _strategy
 
 
 @external
+def approve(account: address, can_deposit: bool):
+    self.allowance[account][msg.sender] = can_deposit
+
+
+@internal
+def _snapshot(account: address):
+    assert not self.is_killed, "reaper is dead"
+
+    farm_token: address = Minter(Reapercontroller(self.controller).minter()).token()
+    rate_integral: uint256 = Farmable(farm_token).rateIntegral()
+    vote_integral: uint256 = VotingController(self.voting_controller).reaper_integrated_votes(self)
+
+    new_unit_cost_integral: uint256 = self.unit_cost_integral + (rate_integral - self.last_rate_integral) * (vote_integral - self.last_vote_integral) / self.totalSupply
+    self.last_rate_integral = rate_integral
+    self.last_vote_integral = vote_integral
+
+    self.farm_integral_for[account] += self.balanceOf[account] * (new_unit_cost_integral - self.unit_cost_integral_for[account]) / MULTIPLIER
+    self.farm_total_supply_integral +=  new_unit_cost_integral * self.totalSupply
+    self.unit_cost_integral_for[account] = new_unit_cost_integral
+    self.unit_cost_integral = new_unit_cost_integral
+
+
+@external
 def deposit(amount: uint256, account: address = msg.sender):
-    assert amount > 0, "amount <= 0"
-    ERC20(self.base_token).transferFrom(msg.sender, self, amount)
-    deltaBalance: uint256 = ReaperStrategy(self.strategy).deposit(amount, account)
-    self.balances[account] += deltaBalance
-    self.total_balance += deltaBalance
-    # ToDo ADD FRACTION LOGIC
+    if account != msg.sender:
+        assert self.allowance[msg.sender][account], "Not approved"
+
+    self._snapshot(account)
+
+    if amount != 0:
+        ERC20(self.lp_token).transferFrom(msg.sender, self, amount)
+        deltaBalance: uint256 = amount
+
+        if self.strategy != ZERO_ADDRESS:
+            deltaBalance = ReaperStrategy(self.strategy).deposit(amount, account)
+        
+        self.balanceOf[account] += deltaBalance
+        self.totalSupply += deltaBalance
+        
+        log Deposit(account, deltaBalance)
 
 
 @external
 def withdraw(amount: uint256):
-    assert amount > 0, "amount <= 0"
-    ERC20(self.base_token).transfer(msg.sender, ReaperStrategy(self.strategy).withdraw(amount, msg.sender))
-    self.balances[msg.sender] -= amount
-    self.total_balance -= amount
-    # ToDo ADD FRACTION LOGIC
+    self._snapshot(msg.sender)
+
+    withdraw_amount: uint256 = ReaperStrategy(self.strategy).withdraw(amount, msg.sender)
+    ERC20(self.lp_token).transfer(msg.sender, withdraw_amount)
+    
+    self.balanceOf[msg.sender] -= amount
+    self.totalSupply -= amount
+    log Withdraw(msg.sender, amount)
 
 
 @external
-def checkpoint(account: address):
-    pass
+def snapshot(account: address):
+    self._snapshot(account)
 
 
 @external
@@ -73,7 +134,7 @@ def kill():
 @external
 def setStrategy(_strategy: address):
     assert msg.sender == self.owner, "owner only"
-    ERC20(self.base_token).approve(_strategy, MAX_UINT256)
+    ERC20(self.lp_token).approve(_strategy, MAX_UINT256)
     self.strategy = _strategy
 
 

@@ -2,12 +2,7 @@
 
 
 @external
-def farmIntegral(account: address) -> uint256:
-    pass
-
-
-@external
-def checkpoint(account: address):
+def snapshot(account: address):
     pass
 
 
