@@ -3,7 +3,7 @@
 
 from vyper.interfaces import ERC20
 import interfaces.Reaper as Reaper
-import interfaces.ReaperStrategy as ReaperStrategy
+import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.Ownable as Ownable
 
 
