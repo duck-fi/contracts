@@ -5,6 +5,7 @@ import interfaces.Ownable as Ownable
 import interfaces.tokens.ERC20Mintable as Mintable
 import interfaces.tokens.ERC20Burnable as Burnable
 import interfaces.tokens.ERC20Detailed as Detailed
+import interfaces.tokens.Farmable as Farmable
 
 
 implements: ERC20
@@ -12,6 +13,7 @@ implements: Burnable
 implements: Mintable
 implements: Detailed
 implements: Ownable
+implements: Farmable
 
 
 event Transfer:
@@ -31,6 +33,11 @@ event ApplyOwnership:
     admin: address
 
 
+YEAR: constant(uint256) = 86_400 * 365
+INITIAL_RATE: constant(uint256) = 274_815_283 * 10 ** 18 / YEAR
+RATE_REDUCTION_TIME: constant(uint256) = YEAR
+INFLATION_DELAY: constant(uint256) = 86_400 * 7
+
 
 name: public(String[64])
 symbol: public(String[32])
@@ -38,6 +45,10 @@ decimals: public(uint256)
 balanceOf: public(HashMap[address, uint256])
 totalSupply: public(uint256)
 allowance: public(HashMap[address, HashMap[address, uint256]])
+
+inflation_rate_by_block: public(uint256)
+inflation_rate_integral: public(uint256)
+last_rate_timestamp: public(uint256)
 
 minter: public(address)
 owner: public(address)
@@ -57,6 +68,39 @@ def __init__(_name: String[32], _symbol: String[4], _decimals: uint256, _supply:
     self.owner = msg.sender
 
     log Transfer(ZERO_ADDRESS, msg.sender, init_supply)
+
+
+@external
+def startInflation():
+    assert msg.sender == self.owner
+    if self.last_rate_timestamp == 0:
+        self.inflation_rate_by_block = INITIAL_RATE
+        self.last_rate_timestamp = block.timestamp
+
+
+@internal
+def _update_rate() -> uint256:
+    future_rate_timestamp: uint256 = self.last_rate_timestamp + RATE_REDUCTION_TIME
+    last_rate_by_block: uint256 = self.inflation_rate_by_block
+
+    if future_rate_timestamp > block.timestamp:
+        self.inflation_rate_integral += RATE_REDUCTION_TIME * last_rate_by_block
+        self.last_rate_timestamp = future_rate_timestamp
+        last_rate_by_block = last_rate_by_block * 3 / 4
+        self.inflation_rate_by_block = last_rate_by_block
+
+    return last_rate_by_block
+
+
+@external
+def rate() -> uint256:
+    return self._update_rate()
+
+
+@external
+def rateIntegral() -> uint256:
+    current_rate: uint256 = self._update_rate()
+    return self.inflation_rate_integral + current_rate * (block.timestamp - self.last_rate_timestamp) 
 
 
 @external

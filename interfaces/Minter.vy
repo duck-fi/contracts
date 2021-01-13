@@ -4,3 +4,8 @@
 @external
 def mint(account: address, amount: uint256): 
     pass
+
+
+@external
+def token() -> address: 
+    pass
