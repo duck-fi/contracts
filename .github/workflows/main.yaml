@@ -1,0 +1,10 @@
+on: [push, pull_request]
+
+name: main workflow
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
