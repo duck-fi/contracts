@@ -18,5 +18,5 @@ jobs:
           push: false
           cache-from: type=local,src=/tmp/.docker-cache
           cache-to: type=local,dest=/tmp/.docker-cache
-          tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/node:$([ "$GITHUB_REF" = refs/heads/master ] && echo "latest" || echo "$GITHUB_REF")
+          # tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/node:$([ "$GITHUB_REF" = refs/heads/master ] && echo "latest" || echo "$GITHUB_REF")
       - run: echo ${{ steps.docker_build.outputs.digest }}
