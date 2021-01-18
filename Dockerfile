@@ -7,7 +7,7 @@ ADD interfaces interfaces
 ADD scripts scripts
 ADD brownie-config.yaml brownie-config.yaml
 ADD requirements.txt requirements.txt
-RUN ganache-cli > node-logs.txt & sleep 5 & brownie run development deploy > deploy-logs.txt
+RUN ganache-cli --db /var/lib/dispersion/db > node-logs.txt & sleep 5 & brownie run development deploy > deploy-logs.txt
 
 EXPOSE 8545
-CMD [ "ganache-cli", "-h", "0.0.0.0" ]
+CMD [ "ganache-cli", "-h", "0.0.0.0", "--db", "/var/lib/dispersion/db" ]
