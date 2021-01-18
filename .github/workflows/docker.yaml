@@ -1,6 +1,6 @@
-on: [push, pull_request]
+on: [push]
 
-name: main workflow
+name: build docker image
 
 jobs:
   build:
@@ -17,11 +17,12 @@ jobs:
           registry: ${{ secrets.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_ACCESS_TOKEN }}
+      - run: echo "IMAGE_TAG=$(echo "$GITHUB_REF" | sed 's/refs\/heads\///g' | sed 's/\//-/g')" >> $GITHUB_ENV
       - uses: docker/build-push-action@v2
         id: docker_build
         with:
-          push: false
+          push: true
           cache-from: type=local,src=/tmp/.docker-cache
           cache-to: type=local,dest=/tmp/.docker-cache
-          tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/node
+          tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/contracts:${{env.IMAGE_TAG}}
       - run: echo ${{ steps.docker_build.outputs.digest }}
