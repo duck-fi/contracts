@@ -1,8 +1,10 @@
 import pytest
+import brownie
 
 pytest_plugins = [
     "fixtures.accounts",
     "fixtures.tokens",
+    "fixtures.contracts",
 ]
 
 
@@ -12,5 +14,5 @@ def ZERO_ADDRESS():
 
 
 @pytest.fixture(autouse=True)
-def isolation_setup(fn_isolation):
+def isolation_setup(module_isolation):
     pass

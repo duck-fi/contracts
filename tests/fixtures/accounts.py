@@ -6,8 +6,8 @@ def deployer(neo):
     yield neo
 
 
-@pytest.fixture(scope="module")
-def supply_controller(accounts):
+@pytest.fixture(scope="session")
+def minter(accounts):
     yield accounts[-1]
 
 
