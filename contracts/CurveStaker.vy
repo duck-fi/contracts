@@ -2,7 +2,7 @@
 
 
 from vyper.interfaces import ERC20
-import interfaces.StakeInterface as StakeInterface
+import interfaces.StakerInterface as StakerInterface
 
 
 interface Minter:
@@ -19,7 +19,7 @@ interface LiquidityGauge:
     def crv_token() -> address: view
 
 
-implements: StakeInterface
+implements: StakerInterface
 
 
 owner: public(address)
