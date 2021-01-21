@@ -45,7 +45,7 @@ jobs:
         id: docker_build
         with:
           push: true
-          context: ./integration/blockscout
+          file: ./integration/blockscout/Dockerfile
           cache-from: type=local,src=/tmp/.docker-blockscout-postgres-cache
           cache-to: type=local,dest=/tmp/.docker-blockscout-postgres-cache
           tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/blockscout-postgres-contracts:${{env.IMAGE_TAG}}
