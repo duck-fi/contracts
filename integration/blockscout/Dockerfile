@@ -13,4 +13,4 @@ RUN ganache-cli --db /var/lib/dispersion/db -m "abstract render give egg now oxy
 RUN python3 integration/blockscout/blockscout.py
 
 FROM forestfriends/blockscout:postgres
-COPY --from=builder contracts.sql /docker-entrypoint-initdb.d/1-contracts.sql
+COPY --from=builder /var/lib/dispersion/contracts.sql /docker-entrypoint-initdb.d/1-contracts.sql
