@@ -47,6 +47,6 @@ jobs:
           push: true
           file: ./integration/blockscout/Dockerfile
           cache-from: type=local,src=/tmp/.docker-blockscout-postgres-cache
-          cache-to: type=local,dest=/tmp/.docker-blockscout-postgres-cache
+          cache-to: type=inline,dest=/tmp/.docker-blockscout-postgres-cache
           tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/blockscout-postgres:${{env.IMAGE_TAG}}
       - run: echo ${{ steps.docker_build.outputs.digest }}
