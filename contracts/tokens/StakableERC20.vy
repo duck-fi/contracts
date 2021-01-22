@@ -1,9 +1,11 @@
 # @version ^0.2.0
 
 from vyper.interfaces import ERC20
+import interfaces.tokens.ERC20Stakable as Stakable
 
 
 implements: ERC20
+implements: Stakable
 
 
 event Transfer:

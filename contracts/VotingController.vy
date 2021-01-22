@@ -2,13 +2,8 @@
 
 from vyper.interfaces import ERC20
 import interfaces.Ownable as Ownable
+import interfaces.ReaperController as ReaperController
 import interfaces.strategies.VotingStrategy as VotingStrategy
-
-
-interface ReaperController:
-    def reaper_by_index(reaper: address) -> uint256: view
-    def last_reaper_index() -> uint256: view
-    def reapers(index: uint256) -> address: view
 
 
 implements: Ownable
@@ -32,6 +27,13 @@ event Unvote:
     account: address
     amount: uint256
 
+event VoteApproval:
+    reaper: address
+    coin: address
+    owner_account: address
+    voter_account: address
+    can_vote: bool
+
 event CommitOwnership:
     admin: address
 
@@ -49,6 +51,7 @@ admin: public(address)
 reaper_controller: public(address)
 coins: public(HashMap[address, bool])
 coinsArray: public(address[MULTIPLIER])
+last_coins_index: public(uint256)
 strategies: public(HashMap[address, address]) # coin -> voting strategy
 balances: public(HashMap[address, HashMap[address, HashMap[address, uint256]]]) # reaper -> coin -> account -> amount
 reaper_balances: public(HashMap[address, HashMap[address, uint256]]) # reaper -> coin -> balance
@@ -58,7 +61,7 @@ reaper_integrated_votes: public(HashMap[address, uint256]) # reaper -> integrate
 last_snapshot_timestamp: public(uint256)
 last_snapshot_index: public(uint256)
 snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER]) # [snapshot index, record index]
-vote_allowances: public(HashMap[address, HashMap[address, HashMap[address, bool]]]) # reaper -> owner_account -> voting_account -> can_vote
+vote_allowances: public(HashMap[address, HashMap[address, HashMap[address, HashMap[address, bool]]]]) # reaper -> coin -> owner_account -> voting_account -> can_vote
 
 
 @external
@@ -82,12 +85,12 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
     @param _amount Amount which is used to vote
     @param _account Account who is voting
     """
-    assert ReaperController(self.reaper_controller).reaper_by_index(_reaper) > 0, "invalid reaper"
+    assert ReaperController(self.reaper_controller).index_by_reaper(_reaper) > 0, "invalid reaper"
     assert self.coins[_coin] and _amount > 0 and self.strategies[_coin] != ZERO_ADDRESS, "invalid params"
     if _account != msg.sender:
-        assert self.vote_allowances[_reaper][_account][msg.sender], "voting approve required"
-    assert ERC20(_account).balanceOf(_coin) >= _amount, "insufficient funds"
-    assert ERC20(_account).transferFrom(_account, self, _amount), "approve required"
+        assert self.vote_allowances[_reaper][_coin][_account][msg.sender], "voting approve required"
+    assert ERC20(_coin).balanceOf(_account) >= _amount, "insufficient funds"
+    assert ERC20(_coin).transferFrom(_account, self, _amount)
 
     new_amount: uint256 = VotingStrategy(self.strategies[_coin]).vote(_account, _amount)
 
@@ -111,7 +114,7 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     assert _amount > 0 and self.strategies[_coin] != ZERO_ADDRESS, "invalid params"
     
     if _account != msg.sender:
-        assert self.vote_allowances[_reaper][_account][msg.sender], "voting approve required"
+        assert self.vote_allowances[_reaper][_coin][_account][msg.sender], "voting approve required"
 
     available_amount: uint256 = VotingStrategy(self.strategies[_coin]).availableToUnvote(_account, self.balances[_reaper][_coin][_account])
     assert available_amount >=  _amount, "token balance is locked" # TODO: maybe another message
@@ -120,12 +123,17 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     self.balances[_reaper][_coin][_account] -= new_amount
     self.reaper_balances[_reaper][_coin] -= new_amount
 
+    assert ERC20(_coin).balanceOf(self) >= _amount, "insufficient funds"
+    ERC20(_coin).transfer(_account, _amount)
+
     log Unvote(_reaper, _coin, _account, new_amount)
 
 
 @external
-def toggleApprove(_reaper: address, _owner_account: address, _voting_account: address):
-    self.vote_allowances[_reaper][_owner_account][_voting_account] = not self.vote_allowances[_reaper][_owner_account][_voting_account]
+def approve(_reaper: address, _coin: address, _voter_account: address, _can_vote: bool):
+    self.vote_allowances[_reaper][_coin][msg.sender][_voter_account] = _can_vote
+
+    log VoteApproval(_reaper, _coin, msg.sender, _voter_account, _can_vote)
 
 
 @external
@@ -166,6 +174,7 @@ def snapshot():
         reaperVoteBalance: uint256 = 0
 
         for _coin in self.coinsArray:
+            # TODO: make index range(0, index)
             reaperVoteBalance += VotingStrategy(self.strategies[_coin]).coinToVotes(self.reaper_balances[current_reaper][_coin])
 
         self.snapshots[self.last_snapshot_index][i] = VoteReaperSnapshot({reaper: current_reaper, votes: reaperVoteBalance, share: 0})
@@ -228,6 +237,9 @@ def setStrategy(_coin: address, _strategy: address = ZERO_ADDRESS):
     assert self.owner == msg.sender, "unauthorized"
     assert not self.coins[_coin] and _strategy != ZERO_ADDRESS, "coin is not initialized"
     
+    self.coinsArray[self.last_coins_index] = _coin
+    self.last_coins_index += 1
+    self.coins[_coin] = True
     self.strategies[_coin] = _strategy
 
 

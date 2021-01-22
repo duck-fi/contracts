@@ -7,8 +7,6 @@ reports/
 build/
 .venv/
 venv/
-.env/
-env/
 
 .idea/
 .vscode/

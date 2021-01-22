@@ -22,7 +22,7 @@ hypothesis:
 networks:
   development:
     cmd_settings:
-      accounts: 10
+      accounts: 20
 
 autofetch_sources: true
 
