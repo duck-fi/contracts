@@ -9,6 +9,7 @@ project_structure:
 reports:
   exclude_paths: 
     - interfaces/*.*
+    - contracts/testing/*.*
 
 hypothesis:
   max_examples: 1
@@ -27,5 +28,5 @@ networks:
 autofetch_sources: true
 
 dependencies:
-  - curvefi/curve-dao-contracts@1.0.0
+  - curvefi/curve-dao-contracts@1.1.0
   - Uniswap/uniswap-v2-core@1.0.1

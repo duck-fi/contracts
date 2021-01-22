@@ -21,7 +21,7 @@ def deploy():
     usdn_token = StakableERC20.deploy("Neutrino USD", "USDN", 18, {'from': DEPLOYER})
     farm_token = FarmToken.deploy("Dispersion Farming Token", "DFT", 18, 1000, {'from': DEPLOYER})
 
-    deployCurveContracts()
+#     deployCurveContracts()
     deployUniswapContracts()
 
     minter = Minter.deploy(farm_token, {'from': DEPLOYER})
@@ -45,7 +45,7 @@ def deploy():
 
 def deployCurveContracts():
     package = 'curvefi/curve-dao-contracts@1.0.0'
-    aaa = project.load(Path.home().joinpath(".brownie").joinpath(f"packages/curvefi/curve-dao-contracts@1.0.0"), 'curvefi/curve-dao-contracts@1.0.0').ERC20CRV
+    aaa = project.load(Path.home().joinpath(".brownie").joinpath(f"packages/curvefi/curve-dao-contracts@1.1.0"), 'curvefi/curve-dao-contracts@1.1.0').ERC20CRV
     crvToken = pm('curvefi/curve-dao-contracts@1.0.0').deploy({'from': DEPLOYER})
     assert crvToken.total_supply() == 0
 
@@ -54,6 +54,5 @@ def deployUniswapContracts():
     package = 'Uniswap/uniswap-v2-core@1.0.1'
     uniswapProject = project.load(Path.home().joinpath(".brownie").joinpath(f"packages/Uniswap/uniswap-v2-core@1.0.1"), 'Uniswap/uniswap-v2-core@1.0.1')
     uniswapV2ERC20Token = uniswapProject.UniswapV2ERC20.deploy({'from': DEPLOYER})
-    uniswapV2Factory = uniswapProject.UniswapV2Factory.deploy(DEPLOYER, {'from': DEPLOYER})
-    pairToken = uniswapV2Factory.createPair(tokenA, tokenB)
-    print(uniswapV2ERC20Token)
+#     uniswapV2Factory = uniswapProject.UniswapV2Factory.deploy(DEPLOYER, {'from': DEPLOYER})
+#     pairToken = uniswapV2Factory.createPair(tokenA, tokenB)
