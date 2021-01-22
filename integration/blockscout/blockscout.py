@@ -23,11 +23,12 @@ if __name__ == "__main__":
                 contract_name = abi['contractName']
                 compiler_version = abi['compiler']['version']
                 source = abi['source'].replace('\n', '\\n')
+                abi_str = json.dumps(abi['abi'], separators=(',', ':'))
 
                 sql += '''
                 insert into public.smart_contracts
                 (name,compiler_version,optimization,contract_source_code,abi,address_hash,inserted_at,updated_at,constructor_arguments,optimization_runs,evm_version,external_libraries) values
-                ('{}','{}',true,'{}','''.format(contract_name, compiler_version, source)
+                ('{}','{}',true,'{}', '{}', '''.format(contract_name, compiler_version, source, abi_str)
                 sql += "E'\\\\x{}',now(),now(),null,null,null,".format(address)
                 sql += "'{}');\n"
 
