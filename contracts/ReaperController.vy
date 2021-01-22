@@ -82,7 +82,7 @@ def addReaper(reaper: address):
     assert msg.sender == self.owner, "owner only"
 
     reaper_index: uint256 = self.index_by_reaper[reaper]
-    assert reaper_index == 0, "reaper is exist"
+    assert reaper_index == 0, "reaper exists"
 
     new_reaper_index: uint256 = self.last_reaper_index + 1
     self.reapers[new_reaper_index] = reaper
