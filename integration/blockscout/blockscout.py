@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
                 contract_name = abi['contractName']
                 compiler_version = abi['compiler']['version']
-                source = abi['source'].replace('\n', '\\n').replace("'", "\\'")
+                source = abi['source'].replace('\n', '\\n').replace("'", "''")
                 byte_code = abi['bytecode']
                 abi_str = json.dumps(abi['abi'], separators=(',', ':'))
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
                 (0,{},'''.format(block)
                 sql += "E'\\\\x{}',".format(address)
                 sql += "E'\\\\x{}',".format(byte_code[2:])
-                sql += "now(), now(), null, false, false);"
+                sql += "now(), now(), null, false, false);\n"
 
                 sql += '''
                 insert into public.smart_contracts
