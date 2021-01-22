@@ -13,5 +13,4 @@ RUN cat -v deploy-logs.txt | sed 's/\^M//g' > deploy-logs.txt
 RUN python3 integration/blockscout/blockscout.py
 
 FROM forestfriends/blockscout:postgres
-COPY --from=builder /var/lib/dispersion/contracts.sql contracts.sql
-RUN cat contracts.sql >> /docker-entrypoint-initdb.d/0-init.sql
+COPY --from=builder /var/lib/dispersion/contracts.sql /docker-entrypoint-initdb.d/1-contracts.sql
