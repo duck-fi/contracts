@@ -9,6 +9,7 @@ COPY interfaces interfaces
 COPY contracts contracts
 RUN brownie compile
 COPY scripts scripts
+ADD brownie-config.yaml brownie-config.yaml
 RUN ganache-cli --db /var/lib/dispersion/db -m "abstract render give egg now oxygen wisdom extend strategy link risk insane" > node-logs.txt & sleep 5 & brownie run development deploy > deploy-logs.txt
 # INTEGRATION
 RUN cp /root/.brownie/packages/Uniswap/uniswap-v2-core@1.0.1/build/contracts/* build/contracts
