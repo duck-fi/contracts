@@ -23,7 +23,7 @@ jobs:
         with:
           push: true
           cache-from: type=local,src=/tmp/.docker-contracts-cache
-          cache-to: type=local,dest=/tmp/.docker-contracts-cache
+          cache-to: type=inline
           tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/contracts:${{env.IMAGE_TAG}}
       - run: echo ${{ steps.contracts_docker_build.outputs.digest }}
       - uses: docker/build-push-action@v2
