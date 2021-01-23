@@ -12,7 +12,7 @@ if __name__ == "__main__":
     with open(args.file, 'r') as content_file:
         content = content_file.read()
 
-        deployed_contracts = re.findall( r'Nonce: ([0-9]*)\n(.*)Block: ([0-9]*)(.*)\n(.*) deployed at: (.*)0x([0-9,x,a-z,A-Z]*)', content)
+        deployed_contracts = re.findall( r'Nonce: ([0-9]*)[\n]*(.*)Block: ([0-9]*)(.*)[\n]*(.*) deployed at: (.*)0x([0-9,x,a-z,A-Z]*)', content)
         for contract in deployed_contracts:
             nonce = contract[0]
             block = contract[2]
