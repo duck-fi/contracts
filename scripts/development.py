@@ -62,8 +62,8 @@ def deploy_tether():
 def deploy_usdn():
     usdn_token = StakableERC20.deploy(
         "Neutrino USD", "USDN", 18, {'from': DEPLOYER})
-    for account in accounts:
-        usdn_token.deposit(account, 1_000_000 * 10 ** 18, {'from': DEPLOYER})
+    # for account in accounts:
+        # usdn_token.deposit(account, 1_000_000 * 10 ** 18, {'from': DEPLOYER})
     return usdn_token
 
 
