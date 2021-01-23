@@ -23,13 +23,14 @@ jobs:
         with:
           push: true
           cache-from: type=local,src=/tmp/.docker-contracts-cache
-          cache-to: type=inline
+          cache-to: type=inline,dest=/tmp/.docker-contracts-cache
           tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/contracts:${{env.IMAGE_TAG}}
       - run: echo ${{ steps.contracts_docker_build.outputs.digest }}
       - uses: docker/build-push-action@v2
         id: blockscout_postgres_docker_build
         with:
           push: true
+          pull: true
           build-args: |
             image=${{ secrets.DOCKER_REGISTRY }}/dispersion/contracts:${{env.IMAGE_TAG}}
           file: ./integration/blockscout/Dockerfile
