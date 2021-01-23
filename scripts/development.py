@@ -31,8 +31,8 @@ def deploy():
     # Curve
 
     # Uniswap
-    uniswap_factory = deployUniswapFactory()
-    uniswap_factory.createPair(usdn, usdt) # USDN/USDT
+#     uniswap_factory = deployUniswapFactory()
+#     uniswap_factory.createPair(usdn, usdt) # USDN/USDT
 
 #     deployCurveContracts()
     # deployUniswapContracts()

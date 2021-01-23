@@ -7,9 +7,9 @@ RUN apk add --no-cache musl-dev linux-headers python3-dev gcc py-pip nodejs npm 
 # COMPILE
 COPY interfaces interfaces
 COPY contracts contracts
+ADD brownie-config.yaml brownie-config.yaml
 RUN brownie compile
 COPY scripts scripts
-ADD brownie-config.yaml brownie-config.yaml
 RUN ganache-cli --db /var/lib/dispersion/db -m "abstract render give egg now oxygen wisdom extend strategy link risk insane" > node-logs.txt & sleep 5 & brownie run development deploy > deploy-logs.txt
 # INTEGRATION
 RUN cp /root/.brownie/packages/Uniswap/uniswap-v2-core@1.0.1/build/contracts/* build/contracts
