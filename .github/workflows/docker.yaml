@@ -30,6 +30,8 @@ jobs:
         id: blockscout_postgres_docker_build
         with:
           push: true
+          build-args: |
+            image=${{ secrets.DOCKER_REGISTRY }}/dispersion/contracts:${{env.IMAGE_TAG}}
           file: ./integration/blockscout/Dockerfile
           tags: ${{ secrets.DOCKER_REGISTRY }}/dispersion/blockscout-postgres:${{env.IMAGE_TAG}}
       - run: echo ${{ steps.contracts_docker_build.outputs.digest }}
