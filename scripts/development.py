@@ -19,6 +19,7 @@ DAY = 86400
 WEEK = DAY * 7
 
 USDN_DECIMALS = 18
+CURVE_DECIMALS = 18
 USDT_DECIMALS = 6
 
 
@@ -29,10 +30,12 @@ def deploy():
                            "DFT", 18, 20_000, {'from': DEPLOYER})
 
     # Curve
+    crv = deploy_crv()
 
     # Uniswap
-    uniswap_factory = deployUniswapFactory()
-    uniswap_factory.createPair(usdn, usdt) # USDN/USDT
+    uniswap_factory = deploy_uniswap_factory()
+    uniswap_factory.createPair(usdn, usdt)  # USDN/USDT
+    uniswap_factory.createPair(usdn, crv)   # USDN/CRV
 
 #     deployCurveContracts()
     # deployUniswapContracts()
@@ -65,16 +68,27 @@ def deploy_usdt():
 
 
 def deploy_usdn():
-    usdn_token = StakableERC20.deploy(
+    usdn = StakableERC20.deploy(
         "Neutrino USD", "USDN", USDN_DECIMALS, {'from': DEPLOYER})
     for account in accounts:
-        usdn_token.deposit(account, 1_000_000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
-    return usdn_token
+        usdn.deposit(account, 1_000_000 * 10 **
+                     USDN_DECIMALS, {'from': DEPLOYER})
+    return usdn
 
 
-def deployUniswapFactory():
+def deploy_uniswap_factory():
     uniswap = utils.load_package('Uniswap/uniswap-v2-core@1.0.1')
     return uniswap.UniswapV2Factory.deploy(DEPLOYER, {'from': DEPLOYER})
+
+
+def deploy_crv():
+    curve = utils.load_package('curvefi/curve-dao-contracts@1.1.0')
+    crv = curve.ERC20CRV.deploy(
+        "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
+    for account in accounts:
+        crv.mint(account, 1_000_000 * 10 **
+                 CURVE_DECIMALS, {'from': DEPLOYER})
+    return crv
 
 
 # def deployCurveContracts():
