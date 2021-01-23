@@ -1,7 +1,7 @@
 from brownie import (
     project,
     accounts,
-    ERC20,
+    ERC20Basic,
     FarmToken,
     StakableERC20,
     Minter,
@@ -17,6 +17,9 @@ from . import utils
 DEPLOYER = accounts[2]
 DAY = 86400
 WEEK = DAY * 7
+
+USDN_DECIMALS = 18
+USDT_DECIMALS = 6
 
 
 def deploy():
@@ -52,18 +55,18 @@ def deploy():
 
 
 def deploy_usdt():
-    tether_token = ERC20.deploy(
-        "Tether USD", "USDT", 6, 0, {'from': DEPLOYER})
+    usdt = ERC20Basic.deploy(
+        "Tether USD", "USDT", USDT_DECIMALS, 0, {'from': DEPLOYER})
     for account in accounts:
-        tether_token.mint(account, 1_000_000 * 10 ** 6, {'from': DEPLOYER})
-    return tether_token
+        usdt.mint(account, 1_000_000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
+    return usdt
 
 
 def deploy_usdn():
     usdn_token = StakableERC20.deploy(
-        "Neutrino USD", "USDN", 18, {'from': DEPLOYER})
+        "Neutrino USD", "USDN", USDN_DECIMALS, {'from': DEPLOYER})
     for account in accounts:
-        usdn_token.deposit(account, 1_000_000 * 10 ** 18, {'from': DEPLOYER})
+        usdn_token.deposit(account, 1_000_000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
     return usdn_token
 
 
