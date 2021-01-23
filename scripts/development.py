@@ -85,15 +85,4 @@ def deploy_crv():
     curve = utils.load_package('curvefi/curve-dao-contracts@1.1.0')
     crv = curve.ERC20CRV.deploy(
         "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
-    crv.set_minter(DEPLOYER, {'from': DEPLOYER})
-    for account in accounts:
-        crv.mint(account, 1_000_000 * 10 **
-                 CURVE_DECIMALS, {'from': DEPLOYER})
     return crv
-
-
-# def deployCurveContracts():
-#     package = 'curvefi/curve-dao-contracts@1.0.0'
-#     aaa = project.load(Path.home().joinpath(".brownie").joinpath(f"packages/curvefi/curve-dao-contracts@1.1.0"), 'curvefi/curve-dao-contracts@1.1.0').ERC20CRV
-#     crvToken = pm('curvefi/curve-dao-contracts@1.0.0').deploy({'from': DEPLOYER})
-#     assert crvToken.total_supply() == 0
