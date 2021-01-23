@@ -20,8 +20,8 @@ WEEK = DAY * 7
 
 
 def deploy():
-    usdt = deploy_tether()
-    # usdn = deploy_usdn()
+    usdn = deploy_usdn()
+    # usdt = deploy_tether()
     # dft = FarmToken.deploy(
     #     "Dispersion Farming Token", "DFT", 18, 20_000, {'from': DEPLOYER})
 
@@ -62,8 +62,8 @@ def deploy_tether():
 def deploy_usdn():
     usdn_token = StakableERC20.deploy(
         "Neutrino USD", "USDN", 18, {'from': DEPLOYER})
-    # for account in accounts:
-        # usdn_token.deposit(account, 1_000_000 * 10 ** 18, {'from': DEPLOYER})
+    for account in accounts:
+        usdn_token.deposit(account, 1_000_000 * 10 ** 18, {'from': DEPLOYER})
     return usdn_token
 
 
