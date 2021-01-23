@@ -1,5 +1,12 @@
 # @version ^0.2.0
 
+
+from vyper.interfaces import ERC20
+
+
+implements: ERC20
+
+
 event Transfer:
     _from: indexed(address)
     _to: indexed(address)
@@ -21,8 +28,8 @@ name: public(String[64])
 symbol: public(String[32])
 decimals: public(uint256)
 balanceOf: public(HashMap[address, uint256])
-allowance: HashMap[address, HashMap[address, uint256]]
-totalSupply: uint256
+allowances: HashMap[address, HashMap[address, uint256]]
+total_supply: uint256
 
 minter: public(address)
 owner: public(address)
@@ -37,11 +44,23 @@ def __init__(_name: String[64], _symbol: String[32], _decimals: uint256, _supply
 
     init_supply: uint256 = _supply * 10 ** _decimals
     self.balanceOf[msg.sender] = init_supply
-    self.totalSupply = init_supply
+    self.total_supply = init_supply
     self.minter = msg.sender
     self.owner = msg.sender
 
     log Transfer(ZERO_ADDRESS, msg.sender, init_supply)
+
+
+@external
+@view
+def totalSupply() -> uint256:
+    return self.total_supply
+
+
+@external
+@view
+def allowance(_owner : address, _spender : address) -> uint256:
+    return self.allowances[_owner][_spender]
 
 
 @external
@@ -56,14 +75,14 @@ def transfer(_to : address, _value : uint256) -> bool:
 def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
     self.balanceOf[_from] -= _value
     self.balanceOf[_to] += _value
-    self.allowance[_from][msg.sender] -= _value
+    self.allowances[_from][msg.sender] -= _value
     log Transfer(_from, _to, _value)
     return True
 
 
 @external
 def approve(_spender : address, _value : uint256) -> bool:
-    self.allowance[msg.sender][_spender] = _value
+    self.allowances[msg.sender][_spender] = _value
     log Approval(msg.sender, _spender, _value)
     return True
 
@@ -81,7 +100,7 @@ def mint(account: address, amount: uint256) -> bool:
     assert msg.sender == self.minter
     assert account != ZERO_ADDRESS
 
-    self.totalSupply += amount
+    self.total_supply += amount
     self.balanceOf[account] += amount
     log Transfer(ZERO_ADDRESS, account, amount)
     
@@ -90,7 +109,7 @@ def mint(account: address, amount: uint256) -> bool:
 
 @external
 def burn(amount: uint256) -> bool:
-    self.totalSupply -= amount
+    self.total_supply -= amount
     self.balanceOf[msg.sender] -= amount
     log Transfer(msg.sender, ZERO_ADDRESS, amount)
 
