@@ -24,12 +24,12 @@ USDT_DECIMALS = 6
 
 def deploy():
     usdn = deploy_usdn()
-    usdt = deploy_usdt()
+#     usdt = deploy_usdt()
     dft = FarmToken.deploy("Dispersion Farming Token",
                            "DFT", 18, 20_000, {'from': DEPLOYER})
 
     # Uniswap
-    # uniswap_factory = deployUniswapFactory()
+    uniswap_factory = deployUniswapFactory()
     # uniswap_factory.createPair(usdn, usdt) # USDN/USDT
 
 #     deployCurveContracts()
