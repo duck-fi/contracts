@@ -6,7 +6,7 @@ def three_reapers_stub(accounts):
     contracts = [
         accounts[10],
         accounts[11],
-        accounts[12],
+        accounts[12], 
     ]
 
     yield contracts

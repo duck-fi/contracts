@@ -111,22 +111,27 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     @param _amount Amount which is used to unvote
     @param _account Account who is unvoting
     """
-    assert _amount > 0 and self.strategies[_coin] != ZERO_ADDRESS, "invalid params"
+    assert _amount > 0, "amount should be > 0"
     
-    if _account != msg.sender:
+    if _account != msg.sender: 
         assert self.vote_allowances[_reaper][_coin][_account][msg.sender], "voting approve required"
 
-    available_amount: uint256 = VotingStrategy(self.strategies[_coin]).availableToUnvote(_account, self.balances[_reaper][_coin][_account])
-    assert available_amount >=  _amount, "token balance is locked" # TODO: maybe another message
+    unvote_amount: uint256 = 0
+    if not self.coins[_coin]:
+        assert self.balances[_reaper][_coin][_account] >=  _amount, "token balance is locked"
+        unvote_amount = _amount
+    else:
+        available_amount: uint256 = VotingStrategy(self.strategies[_coin]).availableToUnvote(_account, self.balances[_reaper][_coin][_account])
+        assert available_amount >=  _amount, "token balance is locked" # TODO: here can be insufficiend funds also
+        unvote_amount = VotingStrategy(self.strategies[_coin]).unvote(_account, _amount)
+
+    self.balances[_reaper][_coin][_account] -= unvote_amount
+    self.reaper_balances[_reaper][_coin] -= unvote_amount
     
-    new_amount: uint256 = VotingStrategy(self.strategies[_coin]).unvote(_account, _amount)
-    self.balances[_reaper][_coin][_account] -= new_amount
-    self.reaper_balances[_reaper][_coin] -= new_amount
+    assert ERC20(_coin).balanceOf(self) >= unvote_amount, "insufficient funds"
+    ERC20(_coin).transfer(_account, unvote_amount)
 
-    assert ERC20(_coin).balanceOf(self) >= _amount, "insufficient funds"
-    ERC20(_coin).transfer(_account, _amount)
-
-    log Unvote(_reaper, _coin, _account, new_amount)
+    log Unvote(_reaper, _coin, _account, unvote_amount)
 
 
 @external
@@ -146,7 +151,7 @@ def snapshot():
     
     if self.last_snapshot_timestamp == 0:
         # initial voting round: we share equally for all reapers
-        totalVoteBalance: uint256 = last_reaper_index + 1
+        totalVoteBalance: uint256 = last_reaper_index
         self.last_snapshot_timestamp = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / self.voting_period * self.voting_period
         for i in range(1, MULTIPLIER):
             if i > last_reaper_index:
@@ -173,8 +178,14 @@ def snapshot():
         current_reaper: address = ReaperController(self.reaper_controller).reapers(i)
         reaperVoteBalance: uint256 = 0
 
-        for _coin in self.coinsArray:
-            # TODO: make index range(0, index)
+        for j in range(0, MULTIPLIER):
+            if j >= self.last_coins_index:
+                break
+
+            _coin: address = self.coinsArray[j]
+            if not self.coins[_coin]:
+                continue
+
             reaperVoteBalance += VotingStrategy(self.strategies[_coin]).coinToVotes(self.reaper_balances[current_reaper][_coin])
 
         self.snapshots[self.last_snapshot_index][i] = VoteReaperSnapshot({reaper: current_reaper, votes: reaperVoteBalance, share: 0})
@@ -224,6 +235,7 @@ def accountVotePower(_reaper: address, _coin: address, _account: address) -> uin
     @param _account Account to get its vote power for
     @return Vote power multiplied on 1e18
     """
+    # TODO: check for token enabling
     return VotingStrategy(self.strategies[_coin]).coinToVotes(self.balances[_reaper][_coin][_account])
 
 
@@ -235,11 +247,15 @@ def setStrategy(_coin: address, _strategy: address = ZERO_ADDRESS):
     @param _strategy Strategy contract address (ZERO_ADDRESS to remove)
     """
     assert self.owner == msg.sender, "unauthorized"
-    assert not self.coins[_coin] and _strategy != ZERO_ADDRESS, "coin is not initialized"
+
+    if _strategy == ZERO_ADDRESS:
+        assert self.coins[_coin], "coin can't be removed"
+        self.coins[_coin] = False
+    else:
+        self.coinsArray[self.last_coins_index] = _coin
+        self.last_coins_index += 1
+        self.coins[_coin] = True
     
-    self.coinsArray[self.last_coins_index] = _coin
-    self.last_coins_index += 1
-    self.coins[_coin] = True
     self.strategies[_coin] = _strategy
 
 

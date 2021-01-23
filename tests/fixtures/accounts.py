@@ -27,5 +27,10 @@ def trinity(accounts):
 
 
 @pytest.fixture(scope="session")
-def oracle(accounts):
+def thomas(accounts):
     yield accounts[3]
+
+
+@pytest.fixture(scope="session")
+def oracle(accounts):
+    yield accounts[4]
