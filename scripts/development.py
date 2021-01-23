@@ -28,9 +28,11 @@ def deploy():
     dft = FarmToken.deploy("Dispersion Farming Token",
                            "DFT", 18, 20_000, {'from': DEPLOYER})
 
+    # Curve
+
     # Uniswap
     uniswap_factory = deployUniswapFactory()
-    # uniswap_factory.createPair(usdn, usdt) # USDN/USDT
+    uniswap_factory.createPair(usdn, usdt) # USDN/USDT
 
 #     deployCurveContracts()
     # deployUniswapContracts()
