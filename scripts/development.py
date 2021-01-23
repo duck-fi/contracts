@@ -21,7 +21,7 @@ WEEK = DAY * 7
 
 def deploy():
     usdn = deploy_usdn()
-    # usdt = deploy_tether()
+    usdt = deploy_usdt()
     dft = FarmToken.deploy("Dispersion Farming Token",
                            "DFT", 18, 20_000, {'from': DEPLOYER})
 
@@ -51,11 +51,11 @@ def deploy():
     # minter.setReaperController(reaperController, {'from': DEPLOYER})
 
 
-def deploy_tether():
+def deploy_usdt():
     tether_token = ERC20.deploy(
         "Tether USD", "USDT", 6, 0, {'from': DEPLOYER})
-    for i in range(10):
-        tether_token.mint(accounts[i], 1_000_000 * 10 ** 6, {'from': DEPLOYER})
+    for account in accounts:
+        tether_token.mint(account, 1_000_000 * 10 ** 6, {'from': DEPLOYER})
     return tether_token
 
 
