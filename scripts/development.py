@@ -54,8 +54,8 @@ def deploy():
 def deploy_tether():
     tether_token = ERC20.deploy(
         "Tether USD", "USDT", 6, 0, {'from': DEPLOYER})
-    for account in accounts:
-        tether_token.mint(account, 1_000_000 * 10 ** 6, {'from': DEPLOYER})
+    for i in range(10):
+        tether_token.mint(accounts[i], 1_000_000 * 10 ** 6, {'from': DEPLOYER})
     return tether_token
 
 
