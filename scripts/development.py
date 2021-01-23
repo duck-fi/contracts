@@ -22,8 +22,8 @@ WEEK = DAY * 7
 def deploy():
     usdn = deploy_usdn()
     # usdt = deploy_tether()
-    # dft = FarmToken.deploy(
-    #     "Dispersion Farming Token", "DFT", 18, 20_000, {'from': DEPLOYER})
+    dft = FarmToken.deploy("Dispersion Farming Token",
+                           "DFT", 18, 20_000, {'from': DEPLOYER})
 
     # Uniswap
     # uniswap_factory = deployUniswapFactory()
