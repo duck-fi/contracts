@@ -218,11 +218,42 @@ def availableToUnvote(_reaper: address, _coin: address, _account: address) -> ui
 @external
 def reaperVotePower(_reaper: address) -> uint256:
     """
-    @notice Returns vote power share for reaper `_reaper` multiplied on 1e18
+    @notice Returns current vote power share for reaper `_reaper` multiplied on 1e18
     @param _reaper Reaper to get its vote power for
     @return Vote power multiplied on 1e18
     """
-    return self.current_votes[_reaper]
+    assert ReaperController(self.reaper_controller).index_by_reaper(_reaper) > 0, "invalid reaper"
+
+    last_reaper_index: uint256 = ReaperController(self.reaper_controller).last_reaper_index()
+    totalVoteBalance: uint256 = 0
+    targetVoteBalance: uint256 = 0
+
+    for i in range(1, MULTIPLIER):
+        if i > last_reaper_index:
+            break
+
+        current_reaper: address = ReaperController(self.reaper_controller).reapers(i)
+        reaperVoteBalance: uint256 = 0
+
+        for j in range(0, MULTIPLIER):
+            if j >= self.last_coins_index:
+                break
+
+            _coin: address = self.coinsArray[j]
+            if not self.coins[_coin]:
+                continue
+
+            reaperVoteBalance += VotingStrategy(self.strategies[_coin]).coinToVotes(self.reaper_balances[current_reaper][_coin])
+
+        if _reaper == current_reaper:
+            targetVoteBalance = reaperVoteBalance
+
+        totalVoteBalance += reaperVoteBalance
+
+    if totalVoteBalance > 0:
+        return targetVoteBalance * MULTIPLIER / totalVoteBalance
+
+    return 0
 
 
 @view
@@ -235,7 +266,9 @@ def accountVotePower(_reaper: address, _coin: address, _account: address) -> uin
     @param _account Account to get its vote power for
     @return Vote power multiplied on 1e18
     """
-    # TODO: check for token enabling
+    if not self.coins[_coin]:
+        return 0
+    
     return VotingStrategy(self.strategies[_coin]).coinToVotes(self.balances[_reaper][_coin][_account])
 
 

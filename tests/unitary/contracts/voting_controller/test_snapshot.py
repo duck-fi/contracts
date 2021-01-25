@@ -449,7 +449,6 @@ def test_snapshot_1(voting_controller, farm_token, voting_strategy_stub, three_r
     with brownie.reverts("Division by zero"): # total vote balance == 0, unreal in production usage
         voting_controller.snapshot()
 
-
     assert voting_controller.reaper_balances(three_reapers_stub[0], farm_token) == 0
     assert voting_controller.reaper_balances(three_reapers_stub[1], farm_token) == 0
     assert voting_controller.reaper_balances(three_reapers_stub[2], farm_token) == 0
