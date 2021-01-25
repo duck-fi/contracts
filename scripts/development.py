@@ -21,11 +21,17 @@ WEEK = DAY * 7
 USDN_DECIMALS = 18
 CURVE_DECIMALS = 18
 USDT_DECIMALS = 6
+USDC_DECIMALS = 6
+DAI_DECIMALS = 18
 
 
 def deploy():
     usdn = deploy_usdn()
-    usdt = deploy_usdt()
+
+    usdt = deploy_erc20("Tether USD", "USDT", USDT_DECIMALS, 1_000_000)
+    usdc = deploy_erc20("USD Coin", "USDC", USDC_DECIMALS, 1_000_000)
+    dai = deploy_erc20("Dai Stablecoin", "DAI", DAI_DECIMALS, 1_000_000)
+
     dft = FarmToken.deploy("Dispersion Farming Token",
                            "DFT", 18, 20_000, {'from': DEPLOYER})
 
@@ -37,7 +43,7 @@ def deploy():
     uniswap_factory.createPair(usdn, usdt)  # USDN/USDT
     uniswap_factory.createPair(usdn, crv)   # USDN/CRV
 
-#     deployCurveContracts()
+    # deployCurveContracts()
     # deployUniswapContracts()
 
     # minter = Minter.deploy(farm_token, {'from': DEPLOYER})
@@ -59,12 +65,11 @@ def deploy():
     # minter.setReaperController(reaperController, {'from': DEPLOYER})
 
 
-def deploy_usdt():
-    usdt = ERC20Basic.deploy(
-        "Tether USD", "USDT", USDT_DECIMALS, 0, {'from': DEPLOYER})
+def deploy_erc20(name, symbol, decimals, mint):
+    token = ERC20Basic.deploy(name, symbol, decimals, 0, {'from': DEPLOYER})
     for account in accounts:
-        usdt.mint(account, 1_000_000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
-    return usdt
+        token.mint(account, mint * 10 ** decimals, {'from': DEPLOYER})
+    return token
 
 
 def deploy_usdn():
