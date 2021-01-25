@@ -15,13 +15,26 @@ locked_coins: public(HashMap[address, uint256])
 last_modified_block: public(HashMap[address, uint256])
 blockPeriod: public(uint256)
 
-
 @external
 def __init__(_coin: address, _coinVoteRatio: uint256, _blockPeriod: uint256):
     self.coin = _coin
     self.coinVoteRatio = _coinVoteRatio
     self.blockPeriod = _blockPeriod
     self.owner = msg.sender
+
+
+@view
+@internal
+def _isCoinsReadyToUnlock(_account: address) -> bool:
+    # it is better to check locked_coins first because if it FASLE the we are spending less gas
+    return self.locked_coins[_account] > 0 and block.timestamp > self.last_modified_block[_account] + self.blockPeriod
+
+
+@internal
+def _unlockCoinsIfReady(_account: address):
+    if self._isCoinsReadyToUnlock(_account):
+        self.unlocked_coins[_account] += self.locked_coins[_account]
+        self.locked_coins[_account] = 0
 
 
 @view
@@ -33,18 +46,17 @@ def coinToVotes(_amount: uint256) -> uint256:
 @view
 @external
 def availableToUnvote(_account: address, _amount: uint256) -> uint256:
-    if block.timestamp > self.last_modified_block[_account] + self.blockPeriod:
-        return self.locked_coins[_account] + self.unlocked_coins[_account]
+    additionalToUnlock: uint256 = 0
+    if self._isCoinsReadyToUnlock(_account):
+        additionalToUnlock = self.locked_coins[_account]
 
-    return self.unlocked_coins[_account]
+    return self.unlocked_coins[_account] + additionalToUnlock
 
 
 @external
 @nonreentrant('lock')
 def vote(_account: address, _amount: uint256) -> uint256: 
-    if block.timestamp > self.last_modified_block[_account] + self.blockPeriod and self.locked_coins[_account] > 0:
-        self.unlocked_coins[_account] += self.locked_coins[_account]
-        self.locked_coins[_account] = 0
+    self._unlockCoinsIfReady(_account)
 
     self.locked_coins[_account] += _amount
     self.last_modified_block[_account] = block.timestamp
@@ -55,11 +67,7 @@ def vote(_account: address, _amount: uint256) -> uint256:
 @external
 @nonreentrant('lock')
 def unvote(_account: address, _amount: uint256) -> uint256: 
-    assert self.unlocked_coins[_account] + self.locked_coins[_account] >= _amount, "insufficient funds"
-    
-    if block.timestamp > self.last_modified_block[_account] + self.blockPeriod and self.locked_coins[_account] > 0:
-        self.unlocked_coins[_account] += self.locked_coins[_account]
-        self.locked_coins[_account] = 0
+    self._unlockCoinsIfReady(_account)
 
     assert self.unlocked_coins[_account] >= _amount, "funds are locked"
     self.unlocked_coins[_account] -= _amount
