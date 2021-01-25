@@ -1,11 +1,15 @@
 FROM forestfriends/ganache-brownie as builder
 WORKDIR /var/lib/dispersion
 
+# PRE-INSTALL COMPILERS (FOR CACHE)
+RUN mkdir -p /root/.vvm && cd /root/.vvm && wget https://github.com/vyperlang/vyper/releases/download/v0.2.4/vyper.0.2.4+commit.7949850.linux -O vyper-0.2.4 && chmod +x vyper-0.2.4
+RUN mkdir -p /root/.vvm && cd /root/.vvm && wget https://github.com/vyperlang/vyper/releases/download/v0.2.7/vyper.0.2.7+commit.0b3f3b3.linux -O vyper-0.2.7 && chmod +x vyper-0.2.7
+RUN mkdir -p /root/.solcx && cd /root/.solcx && wget https://solc-bin.ethereum.org/linux-amd64/solc-linux-amd64-v0.5.17+commit.d19bba13 -O solc-v0.5.17 && chmod +x solc-v0.5.17
+RUN mkdir -p /root/.solcx && cd /root/.solcx && wget https://solc-bin.ethereum.org/linux-amd64/solc-linux-amd64-v0.5.16+commit.9c3226ce -O solc-v0.5.16 && chmod +x solc-v0.5.16
 # COMPILE
 COPY interfaces interfaces
 COPY contracts contracts
 ADD brownie-config.yaml brownie-config.yaml
-RUN brownie compile
 COPY scripts scripts
 RUN ganache-cli --db /var/lib/dispersion/db -m "abstract render give egg now oxygen wisdom extend strategy link risk insane" > node-logs.txt & sleep 5 & brownie run development deploy | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | sed 's/\^M//g' > deploy-logs.txt && cat deploy-logs.txt
 # INTEGRATION
