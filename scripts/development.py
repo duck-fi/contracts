@@ -23,33 +23,38 @@ CURVE_DECIMALS = 18
 USDT_DECIMALS = 6
 USDC_DECIMALS = 6
 DAI_DECIMALS = 18
+DFT_DECIMALS = 18
 
 
 def deploy():
-    usdn = deploy_usdn()
+    curve = utils.load_package('curvefi/curve-dao-contracts@1.1.0')
+    uniswap = utils.load_package('Uniswap/uniswap-v2-core@1.0.1')
 
+    usdn = deploy_usdn()
     usdt = deploy_erc20("Tether USD", "USDT", USDT_DECIMALS, 1_000_000)
     usdc = deploy_erc20("USD Coin", "USDC", USDC_DECIMALS, 1_000_000)
     dai = deploy_erc20("Dai Stablecoin", "DAI", DAI_DECIMALS, 1_000_000)
-    crv = deploy_crv()
+    crv = curve.ERC20CRV.deploy(
+                  "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
     dft = FarmToken.deploy("Dispersion Farming Token",
-                           "DFT", 18, 20_000, {'from': DEPLOYER})
+                           "DFT", DFT_DECIMALS, 20_000, {'from': DEPLOYER})
 
     # Uniswap
-    uniswap_factory = deploy_uniswap_factory()
+    uniswap_factory = uniswap.UniswapV2Factory.deploy(DEPLOYER, {'from': DEPLOYER})
     uniswap_factory.createPair(usdn, usdt)  # USDN/USDT
     uniswap_factory.createPair(usdn, crv)   # USDN/CRV
 
-    # deployCurveContracts()
-    # deployUniswapContracts()
+    # Curve
+#     usdn_3pool_lp = CurvePool.deploy([usdn, 3pool], lp, 100, 4 *
+#                                                 10 ** 6, {'from': deployer})
 
-    # minter = Minter.deploy(farm_token, {'from': DEPLOYER})
-    # farm_token.setMinter(minter, {'from': DEPLOYER})
+    minter = Minter.deploy(dft, {'from': DEPLOYER})
+    dft.setMinter(minter, {'from': DEPLOYER})
 
-    # reaper_controller = ReaperController.deploy(minter, {'from': DEPLOYER})
-    # minter.setReaperController(reaper_controller, {'from': DEPLOYER})
+    reaper_controller = ReaperController.deploy(minter, {'from': DEPLOYER})
+    minter.setReaperController(reaper_controller, {'from': DEPLOYER})
 
-    # # Voting
+    # Voting
     # voting_controller = VotingController.deploy(
     #     reaper_controller, {'from': DEPLOYER})
     # simple_voting_strategy = SimpleVotingStrategy.deploy(
@@ -76,15 +81,3 @@ def deploy_usdn():
         usdn.deposit(account, 1_000_000 * 10 **
                      USDN_DECIMALS, {'from': DEPLOYER})
     return usdn
-
-
-def deploy_uniswap_factory():
-    uniswap = utils.load_package('Uniswap/uniswap-v2-core@1.0.1')
-    return uniswap.UniswapV2Factory.deploy(DEPLOYER, {'from': DEPLOYER})
-
-
-def deploy_crv():
-    curve = utils.load_package('curvefi/curve-dao-contracts@1.1.0')
-    crv = curve.ERC20CRV.deploy(
-        "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
-    return crv
