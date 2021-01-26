@@ -2,7 +2,9 @@ FROM forestfriends/ganache-brownie as builder
 WORKDIR /var/lib/dispersion
 
 # PRE-INSTALL COMPILERS (FOR CACHE)
+RUN mkdir -p /root/.vvm && cd /root/.vvm && wget https://github.com/vyperlang/vyper/releases/download/v0.1.0-beta.16/vyper.0.1.0-beta.16+commit.5e4a94a.linux -O vyper-0.1.0 && chmod +x vyper-0.1.0
 RUN mkdir -p /root/.vvm && cd /root/.vvm && wget https://github.com/vyperlang/vyper/releases/download/v0.2.4/vyper.0.2.4+commit.7949850.linux -O vyper-0.2.4 && chmod +x vyper-0.2.4
+RUN mkdir -p /root/.vvm && cd /root/.vvm && wget https://github.com/vyperlang/vyper/releases/download/v0.2.5/vyper.0.2.5+commit.a0c561c.linux -O vyper-0.2.5 && chmod +x vyper-0.2.5
 RUN mkdir -p /root/.vvm && cd /root/.vvm && wget https://github.com/vyperlang/vyper/releases/download/v0.2.7/vyper.0.2.7+commit.0b3f3b3.linux -O vyper-0.2.7 && chmod +x vyper-0.2.7
 RUN mkdir -p /root/.solcx && cd /root/.solcx && wget https://solc-bin.ethereum.org/linux-amd64/solc-linux-amd64-v0.5.17+commit.d19bba13 -O solc-v0.5.17 && chmod +x solc-v0.5.17
 RUN mkdir -p /root/.solcx && cd /root/.solcx && wget https://solc-bin.ethereum.org/linux-amd64/solc-linux-amd64-v0.5.16+commit.9c3226ce -O solc-v0.5.16 && chmod +x solc-v0.5.16
