@@ -31,12 +31,9 @@ def deploy():
     usdt = deploy_erc20("Tether USD", "USDT", USDT_DECIMALS, 1_000_000)
     usdc = deploy_erc20("USD Coin", "USDC", USDC_DECIMALS, 1_000_000)
     dai = deploy_erc20("Dai Stablecoin", "DAI", DAI_DECIMALS, 1_000_000)
-
+    crv = deploy_crv()
     dft = FarmToken.deploy("Dispersion Farming Token",
                            "DFT", 18, 20_000, {'from': DEPLOYER})
-
-    # Curve
-    crv = deploy_crv()
 
     # Uniswap
     uniswap_factory = deploy_uniswap_factory()
