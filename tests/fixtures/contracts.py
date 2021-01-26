@@ -28,5 +28,10 @@ def voting_strategy_stub(VotingStrategyStub, neo):
 
 
 @pytest.fixture(scope="module")
+def voting_strategy_stub_v2(VotingStrategyStubV2, neo):
+    yield VotingStrategyStubV2.deploy({'from': neo})
+
+
+@pytest.fixture(scope="module")
 def voting_controller(VotingController, reaper_controller_stub, neo, accounts):
     yield VotingController.deploy(reaper_controller_stub, {'from': neo})

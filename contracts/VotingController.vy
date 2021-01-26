@@ -297,9 +297,18 @@ def setStrategy(_coin: address, _strategy: address = ZERO_ADDRESS):
         self.last_coin_index = new_coin_index
     elif _strategy == ZERO_ADDRESS:
         # removing coin and strategy
-        removing_coin_index: uint256 = self.index_by_coin[_coin] # TODO: make tests for strategy deletion
+        removing_coin_index: uint256 = self.index_by_coin[_coin]
+        last_coin_index: uint256 = self.last_coin_index
+        if removing_coin_index < last_coin_index:
+            self.index_by_coin[_coin] = 0
+            last_coin: address = self.coins[last_coin_index]
+            self.coins[last_coin_index] = ZERO_ADDRESS
+            self.index_by_coin[last_coin] = removing_coin_index
+            self.coins[removing_coin_index] = last_coin
+        else:
+            self.coins[last_coin_index] = ZERO_ADDRESS
+        
         self.index_by_coin[_coin] = 0
-        self.coins[removing_coin_index] = self.coins[self.last_coin_index]
         self.last_coin_index -= 1
     
     # updating strategy
