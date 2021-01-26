@@ -3,14 +3,14 @@
 
 @external    
 def name() -> String[64]:
-    pass
+    return ""
 
 
 @external    
 def symbol() -> String[32]:
-    pass
+    return ""
 
 
 @external    
 def decimals() -> uint256:
-    pass
+    return 0

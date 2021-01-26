@@ -14,14 +14,14 @@ def reap():
 @view
 @external
 def boost_rate() -> uint256:
-    pass
+    return 0
 
 
 @external
 def deposit(amount: uint256, account: address) -> uint256: 
-    pass
+    return 0
 
 
 @external
 def withdraw(amount: uint256, account: address) -> uint256: 
-    pass
+    return 0
