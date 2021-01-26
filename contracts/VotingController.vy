@@ -47,7 +47,6 @@ INIT_VOTING_TIME: constant(uint256) = 1609372800 # Thursday, 31 December 2020, 0
 
 owner: public(address)
 future_owner: public(address)
-admin: public(address)
 reaper_controller: public(address)
 coins: public(address[MULTIPLIER])
 index_by_coin: public(HashMap[address, uint256])
@@ -71,7 +70,6 @@ def __init__(_reaper_controller: address):
     """
     self.reaper_controller = _reaper_controller
     self.voting_period = WEEK
-    self.admin = msg.sender
     self.owner = msg.sender
 
 
@@ -90,7 +88,7 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
     if _account != msg.sender:
         assert self.vote_allowances[_reaper][_coin][_account][msg.sender], "voting approve required"
     assert ERC20(_coin).balanceOf(_account) >= _amount, "insufficient funds"
-    assert ERC20(_coin).transferFrom(_account, self, _amount)
+    assert ERC20(_coin).transferFrom(_account, self, _amount) # TODO: refactor !! first, calc, then transfer
 
     new_amount: uint256 = VotingStrategy(self.strategies[_coin]).vote(_account, _amount)
 
@@ -153,9 +151,8 @@ def approve(_reaper: address, _coin: address, _voter_account: address, _can_vote
 def snapshot():
     """
     @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
-    @dev Only possible to call it once per voting period, callable only for admin # TODO: maybe for everyone?
+    @dev Only possible to call it once per voting period
     """
-    assert self.admin == msg.sender, "unauthorized"
     assert self.last_snapshot_timestamp + self.voting_period < block.timestamp, "already snapshotted"
     
     last_reaper_index: uint256 = ReaperController(self.reaper_controller).last_reaper_index()
@@ -326,19 +323,6 @@ def setVotingPeriod(_period: uint256):
     assert _period > 0, "invalid params"
 
     self.voting_period = _period
-
-
-@external
-def setAdmin(_admin: address):
-    """
-    @notice Sets admin address
-    @dev Callable by owner only
-    @param _admin New admin address
-    """
-    assert self.owner == msg.sender, "unauthorized"
-    assert _admin != ZERO_ADDRESS, "invalid params"
-
-    self.admin = _admin
 
 
 @external
