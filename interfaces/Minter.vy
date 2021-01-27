@@ -8,4 +8,4 @@ def mint(account: address, amount: uint256):
 
 @external
 def token() -> address: 
-    pass
+    return ZERO_ADDRESS

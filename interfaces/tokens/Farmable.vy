@@ -3,9 +3,9 @@
 
 @external
 def rate() -> uint256: 
-    pass
+    return 0
 
 
 @external
 def rateIntegral() -> uint256: 
-    pass
+    return 0

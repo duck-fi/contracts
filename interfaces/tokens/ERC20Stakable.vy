@@ -3,14 +3,14 @@
 
 @external
 def deposit(account: address, amount: uint256) -> bool:
-    pass
+    return False
 
 
 @external
 def stake(reward: uint256) -> bool:
-    pass
+    return False
 
 
 @external
 def withdraw(account: address) -> bool:
-    pass
+    return False

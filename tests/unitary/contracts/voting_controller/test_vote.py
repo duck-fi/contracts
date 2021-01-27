@@ -171,5 +171,3 @@ def test_vote_delegated(voting_controller, farm_token, three_reapers_stub, neo, 
     assert len(tx2.events) == 1
     assert tx2.events["VoteApproval"].values(
     ) == [three_reapers_stub[0], farm_token, neo, morpheus, False]
-
-    pass

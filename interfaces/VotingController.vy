@@ -3,4 +3,4 @@
 
 @external
 def reaper_integrated_votes(reaper: address) -> uint256:
-    pass
+    return 0

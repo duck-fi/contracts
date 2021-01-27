@@ -3,7 +3,7 @@
 
 @external
 def owner() -> address:
-    pass
+    return ZERO_ADDRESS
 
 
 @external

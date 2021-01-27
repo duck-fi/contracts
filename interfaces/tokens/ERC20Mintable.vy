@@ -3,9 +3,9 @@
 
 @external    
 def mint(account: address, amount: uint256) -> bool:
-    pass
+    return False
 
 
 @external    
 def setMinter(_minter: address) -> bool:
-    pass
+    return False

@@ -4,19 +4,19 @@
 @view
 @external
 def index_by_reaper(reaper: address) -> uint256:
-    pass
+    return 0
 
 
 @view
 @external
 def last_reaper_index() -> uint256:
-    pass
+    return 0
 
 
 @view
 @external
 def reapers(index: uint256) -> address:
-    pass
+    return ZERO_ADDRESS
 
 
 @external
@@ -31,4 +31,4 @@ def mint(reaper: address):
 
 @external
 def minter() -> address: 
-    pass
+    return ZERO_ADDRESS

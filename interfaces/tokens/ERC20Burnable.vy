@@ -3,4 +3,4 @@
 
 @external
 def burn(amount: uint256) -> bool: 
-    pass
+    return False

@@ -6,7 +6,7 @@ def three_reapers_stub(accounts):
     contracts = [
         accounts[10],
         accounts[11],
-        accounts[12],
+        accounts[12], 
     ]
 
     yield contracts
@@ -25,6 +25,11 @@ def reaper_controller_stub(VotingController, ReaperControllerStub, neo, three_re
 @pytest.fixture(scope="module")
 def voting_strategy_stub(VotingStrategyStub, neo):
     yield VotingStrategyStub.deploy({'from': neo})
+
+
+@pytest.fixture(scope="module")
+def voting_strategy_stub_v2(VotingStrategyStubV2, neo):
+    yield VotingStrategyStubV2.deploy({'from': neo})
 
 
 @pytest.fixture(scope="module")

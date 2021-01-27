@@ -13,4 +13,4 @@ def deposit(amount: uint256, account: address):
 
 @external
 def farm_integral_for(account: address) -> uint256:
-    pass
+    return 0
