@@ -2,5 +2,5 @@
 
 
 @external
-def burn(amount: uint256) -> bool: 
-    return False
+def burn(_amount: uint256): 
+    pass

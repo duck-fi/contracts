@@ -1,19 +1,19 @@
 # @version ^0.2.0
 
 from vyper.interfaces import ERC20
+import interfaces.tokens.ERC20Detailed as ERC20Detailed
+import interfaces.tokens.ERC20Burnable as ERC20Burnable
+import interfaces.tokens.ERC20Mintable as ERC20Mintable
 import interfaces.Ownable as Ownable
-import interfaces.tokens.ERC20Mintable as Mintable
-import interfaces.tokens.ERC20Burnable as Burnable
-import interfaces.tokens.ERC20Detailed as Detailed
 import interfaces.tokens.Farmable as Farmable
 
 
-implements: ERC20
-implements: Burnable
-implements: Mintable
-implements: Detailed
-implements: Ownable
-implements: Farmable
+# implements: ERC20
+# implements: ERC20Detailed
+# implements: ERC20Burnable
+# implements: ERC20Mintable
+# implements: Farmable
+# implements: Ownable
 
 
 event Transfer:
@@ -134,32 +134,26 @@ def approve(_spender : address, amount : uint256) -> bool:
 
 
 @external
-def setMinter(_minter: address) -> bool:
+def setMinter(_minter: address):
     assert msg.sender == self.minter
     self.minter = _minter
-    
-    return True
 
 
 @external
-def mint(account: address, amount: uint256) -> bool:
+def mint(account: address, amount: uint256):
     assert msg.sender == self.minter
     assert account != ZERO_ADDRESS
 
     self.totalSupply += amount
     self.balanceOf[account] += amount
     log Transfer(ZERO_ADDRESS, account, amount)
-    
-    return True
 
 
 @external
-def burn(amount: uint256) -> bool:
+def burn(amount: uint256):
     self.totalSupply -= amount
     self.balanceOf[msg.sender] -= amount
     log Transfer(msg.sender, ZERO_ADDRESS, amount)
-
-    return True
 
 
 @external
