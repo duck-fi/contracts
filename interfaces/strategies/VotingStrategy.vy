@@ -3,18 +3,24 @@
 
 @view
 @external
-def coinToVotes(amount: uint256) -> uint256: 
+def votingController() -> address: 
+    return ZERO_ADDRESS
+
+
+@view
+@external
+def coinToVotes(_amount: uint256) -> uint256: 
     return 0
 
 
 @view
 @external
-def availableToUnvote(account: address, amount: uint256) -> uint256: 
+def availableToUnvote(_account: address, _amount: uint256) -> uint256: 
     return 0
 
 
 @external
-def vote(account: address, amount: uint256) -> uint256: 
+def vote(_account: address, _amount: uint256) -> uint256: 
     return 0
 
 

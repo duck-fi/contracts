@@ -2,10 +2,5 @@
 
 
 @external
-def mint(account: address, amount: uint256): 
+def mintFor(_reaper: address, _account: address): 
     pass
-
-
-@external
-def token() -> address: 
-    return ZERO_ADDRESS

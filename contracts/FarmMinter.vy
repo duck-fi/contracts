@@ -17,12 +17,12 @@ event ApplyOwnership:
     admin: address
 
 
-reaper_controller: public(address)
 token: public(address)
+reaperController: public(address)
 minted: public(HashMap[address, uint256])
 
 owner: public(address)
-future_owner: public(address)
+futureOwner: public(address)
 
 
 @external
@@ -34,37 +34,34 @@ def __init__(_token: address):
 @external
 @nonreentrant('lock')
 def mint(account: address, amount: uint256):
-    assert msg.sender == self.reaper_controller, "reaper controller only"
+    assert msg.sender == self.reaperController, "reaper controller only"
     ERC20Mintable(self.token).mint(account, amount)
     self.minted[account] += amount
 
 
 @external
-@nonreentrant('lock')
 def setReaperController(controller: address):
     assert msg.sender == self.owner, "owner only"
-    self.reaper_controller = controller
+    self.reaperController = controller
 
 
 @external
-@nonreentrant('lock')
 def setToken(_token: address):
     assert msg.sender == self.owner, "owner only"
     self.token = _token
 
 
 @external
-def transferOwnership(_future_owner: address):
+def transferOwnership(_futureOwner: address):
     assert msg.sender == self.owner, "owner only"
-
-    self.future_owner = _future_owner
-    log CommitOwnership(_future_owner)
+    self.futureOwner = _futureOwner
+    log CommitOwnership(_futureOwner)
 
 
 @external
 def applyOwnership():
     assert msg.sender == self.owner, "owner only"
-    _owner: address = self.future_owner
+    _owner: address = self.futureOwner
     assert _owner != ZERO_ADDRESS, "owner not set"
     self.owner = _owner
     log ApplyOwnership(_owner)
