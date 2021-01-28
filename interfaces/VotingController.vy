@@ -120,3 +120,8 @@ def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: boo
 @external
 def setVoteStrategy(_coin: address, _voteStrategy: address):
     pass
+
+
+@external
+def setVotingPeriod(_votingPeriod: uint256):
+    pass
