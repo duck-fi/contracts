@@ -46,7 +46,6 @@ owner: public(address)
 futureOwner: public(address)
 
 
-
 @external
 def __init__(_lpToken: address, _controller: address, _votingController: address):
     self.lpToken = _lpToken
@@ -168,6 +167,7 @@ def snapshot(_account: address = msg.sender):
 def setReaperStrategy(_reaperStrategy: address):
     assert msg.sender == self.owner, "owner only"
     ERC20(self.lpToken).approve(_reaperStrategy, MAX_UINT256)
+    self.depositAllowance[self][_reaperStrategy] = MAX_UINT256
     self.reaperStrategy = _reaperStrategy
 
 
