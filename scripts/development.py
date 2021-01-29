@@ -95,8 +95,10 @@ def deploy():
         crv, curve_controller, {'from': DEPLOYER})
     usdn_mpool_gauge = curve_dao.LiquidityGauge.deploy(
         usdn_mpool_lp, curve_minter, DEPLOYER, {'from': DEPLOYER})
-    curve_controller.add_type("simple", 1000000000000000000, {'from': DEPLOYER})
-    curve_controller.add_gauge(usdn_mpool_gauge, 0, 1000000000000000000, {'from': DEPLOYER})
+    curve_controller.add_type(
+        "simple", 1000000000000000000, {'from': DEPLOYER})
+    curve_controller.add_gauge(
+        usdn_mpool_gauge, 0, 1000000000000000000, {'from': DEPLOYER})
 
     # minter = Minter.deploy(dft, {'from': DEPLOYER})
     # dft.setMinter(minter, {'from': DEPLOYER})

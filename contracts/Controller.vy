@@ -1,21 +1,17 @@
 # @version ^0.2.0
 
 
-# import interfaces.ReaperController as ReaperController
-import interfaces.Ownable as Ownable
+import interfaces.Controller as Controller
 import interfaces.Minter as Minter
-# import interfaces.Reaper as Reaper
+import interfaces.Ownable as Ownable
+import interfaces.tokens.ERC20Mintable as ERC20Mintable
+import interfaces.Reaper as Reaper
 
 
-implements: Ownable
 implements: Minter
-# implements: ReaperController
+implements: Ownable
+implements: Controller
 
-
-event Minted:
-    recipient: indexed(address)
-    reaper: address
-    minted: uint256
 
 event CommitOwnership:
     admin: address
@@ -27,89 +23,70 @@ event ApplyOwnership:
 MAX_REAPERS_COUNT: constant(uint256) = 10 ** 6
 
 
-token: public(address)
+farmToken: public(address)
 reapers: public(address[MAX_REAPERS_COUNT])
-index_by_reaper: public(HashMap[address, uint256])
-last_reaper_index: public(uint256)
+lastReaperIndex: public(uint256)
+indexByReaper: public(HashMap[address, uint256])
 minted: public(HashMap[address, HashMap[address, uint256]])
-allowance: public(HashMap[address, HashMap[address, bool]])
+mintAllowance: public(HashMap[address, HashMap[address, HashMap[address, bool]]])
 
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_token: address):
-    self.token = _token
+def __init__(_farmToken: address):
+    self.farmToken = _farmToken
     self.owner = msg.sender
-
-
-# @external
-# def toggleApprove(account: address):
-#     self.allowance[account][msg.sender] = not self.allowance[account][msg.sender]
 
 
 @external
 @nonreentrant('lock')
-def mintFor(reaper: address, account: address = msg.sender):
-    pass
-    # assert self.index_by_reaper[reaper] > 0, "reaper is not supported"
+def mintFor(_reaper: address, _account: address = msg.sender):
+    assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
 
-    # Reaper(reaper).snapshot(account)
-    # total_mint: uint256 = Reaper(reaper).farm_integral_for(account)
-    # to_mint: uint256 = total_mint - self.minted[reaper][account]
+    if _account != msg.sender:
+        assert self.mintAllowance[_reaper][_account][msg.sender], "mint is not allowed"
 
-    # if to_mint != 0:
-    #     Minter(self.minter).mint(account, to_mint)
-    #     self.minted[reaper][account] = total_mint
+    Reaper(_reaper).snapshot(_account)
+    totalMinted: uint256 = Reaper(_reaper).reapIntegralFor(_account)
+    toMint: uint256 = totalMinted - self.minted[_reaper][_account]
 
-    #     log Minted(account, reaper, total_mint)
-
-
-# @external
-# @nonreentrant('lock')
-# def mintFor(reaper: address, account: address):
-#     if self.allowance[msg.sender][account]:
-#         self._mint_for(reaper, account)
+    if toMint != 0:
+        ERC20Mintable(self.farmToken).mint(_account, toMint)
+        self.minted[_reaper][_account] = totalMinted
 
 
-# @external
-# @nonreentrant('lock')
-# def addReaper(reaper: address):
-#     assert msg.sender == self.owner, "owner only"
-
-#     reaper_index: uint256 = self.index_by_reaper[reaper]
-#     assert reaper_index == 0, "reaper exists"
-
-#     new_reaper_index: uint256 = self.last_reaper_index + 1
-#     self.reapers[new_reaper_index] = reaper
-#     self.index_by_reaper[reaper] = new_reaper_index
-#     self.last_reaper_index = new_reaper_index
+@external
+def mintApprove(_reaper: address, _minter: address, _canMint: bool):
+    self.mintAllowance[_reaper][msg.sender][_minter] = _canMint
 
 
-# @external
-# @nonreentrant('lock')
-# def removeReaper(reaper: address):
-#     assert msg.sender == self.owner, "owner only"
+@external
+def addReaper(_reaper: address):
+    assert msg.sender == self.owner, "owner only"
+    reaperIndex: uint256 = self.indexByReaper[_reaper]
+    assert reaperIndex == 0, "reaper is exist"
 
-#     reaper_index: uint256 = self.index_by_reaper[reaper]
-#     assert reaper_index > 0, "reaper has not exist"
-
-#     last_reaper_idx: uint256 = self.last_reaper_index
-#     last_reaper: address = self.reapers[last_reaper_idx]
-
-#     self.reapers[reaper_index] = last_reaper
-#     self.index_by_reaper[last_reaper] = reaper_index
-#     self.index_by_reaper[reaper] = 0
-#     self.reapers[last_reaper_idx] = ZERO_ADDRESS
-#     self.last_reaper_index = last_reaper_idx - 1
+    reaperIndex = self.lastReaperIndex + 1
+    self.reapers[reaperIndex] = _reaper
+    self.indexByReaper[_reaper] = reaperIndex
+    self.lastReaperIndex = reaperIndex
 
 
-# @external
-# @nonreentrant('lock')
-# def setMinter(_minter: address):
-#     assert msg.sender == self.owner, "owner only"
-#     self.minter = _minter
+@external
+def removeReaper(_reaper: address):
+    assert msg.sender == self.owner, "owner only"
+    reaperIndex: uint256 = self.indexByReaper[_reaper]
+    assert reaperIndex > 0, "reaper is not exist"
+
+    recentReaperIndex: uint256 = self.lastReaperIndex
+    lastReaper: address = self.reapers[recentReaperIndex]
+
+    self.reapers[reaperIndex] = lastReaper
+    self.indexByReaper[lastReaper] = reaperIndex
+    self.indexByReaper[_reaper] = 0
+    self.lastReaperIndex = recentReaperIndex - 1
 
 
 @external
