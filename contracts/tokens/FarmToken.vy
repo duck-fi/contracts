@@ -139,10 +139,10 @@ def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
 
 
 @external
-def approve(_spender : address, amount : uint256) -> bool:
-    assert amount == 0 or self.allowance[msg.sender][_spender] == 0, "already approved"
-    self.allowance[msg.sender][_spender] = amount
-    log Approval(msg.sender, _spender, amount)
+def approve(_spender : address, _amount : uint256) -> bool:
+    assert _amount == 0 or self.allowance[msg.sender][_spender] == 0, "already approved"
+    self.allowance[msg.sender][_spender] = _amount
+    log Approval(msg.sender, _spender, _amount)
     return True
 
 
@@ -154,23 +154,23 @@ def setMinter(_minter: address):
 
 
 @external
-def mint(account: address, amount: uint256):
+def mint(account: address, _amount: uint256):
     assert msg.sender == self.minter
     assert account != ZERO_ADDRESS
 
     _totalSupply: uint256 = self.totalSupply
-    self.totalSupply = _totalSupply + amount
-    self.balanceOf[account] += amount
-    assert self._currentEmissionIntegral() / (block.timestamp - self.startEmissionTimestamp) >= _totalSupply + amount, "exceeds allowable mint amount"
+    self.totalSupply = _totalSupply + _amount
+    self.balanceOf[account] += _amount
+    assert self._currentEmissionIntegral() / (block.timestamp - self.startEmissionTimestamp) >= _totalSupply + _amount, "exceeds allowable mint amount"
 
-    log Transfer(ZERO_ADDRESS, account, amount)
+    log Transfer(ZERO_ADDRESS, account, _amount)
 
 
 @external
-def burn(amount: uint256):
-    self.totalSupply -= amount
-    self.balanceOf[msg.sender] -= amount
-    log Transfer(msg.sender, ZERO_ADDRESS, amount)
+def burn(_amount: uint256):
+    self.totalSupply -= _amount
+    self.balanceOf[msg.sender] -= _amount
+    log Transfer(msg.sender, ZERO_ADDRESS, _amount)
 
 
 @external

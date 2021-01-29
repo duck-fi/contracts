@@ -47,18 +47,28 @@ def reap() -> uint256:
 
 
 @external
-def deposit(_amount: uint256, _account: address) -> uint256:
+def deposit(_amount: uint256):
     assert msg.sender == self.reaper, "reaper only"
     _staker: address = self.staker
     ERC20(Staker(_staker).stakeToken()).transferFrom(self.reaper, _staker, _amount)
     Staker(_staker).stake(_amount)
-    return _amount
 
 
 @external
-def withdraw(_amount: uint256, _account: address) -> uint256:
+def withdraw(_amount: uint256, _account: address):
     assert msg.sender == self.reaper, "reaper only"
     Staker(self.staker).unstake(_amount, _account)
+
+
+@view
+@external
+def availableToDeposit(_amount: uint256, _account: address) -> uint256:
+    return _amount
+
+
+@view
+@external
+def availableToWithdraw(_amount: uint256, _account: address) -> uint256:
     return _amount
 
 

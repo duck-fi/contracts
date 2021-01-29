@@ -95,7 +95,7 @@ def depositApprove(_spender: address, _amount:uint256):
 
 
 @external
-def deposit(_amount: uint256, _account: address):
+def deposit(_amount: uint256, _account: address, _feeOptimization: bool):
     pass
 
 
