@@ -65,6 +65,7 @@ def mintApprove(_reaper: address, _minter: address, _canMint: bool):
 @external
 def addReaper(_reaper: address):
     assert msg.sender == self.owner, "owner only"
+    assert _reaper != ZERO_ADDRESS
     reaperIndex: uint256 = self.indexByReaper[_reaper]
     assert reaperIndex == 0, "reaper is exist"
 

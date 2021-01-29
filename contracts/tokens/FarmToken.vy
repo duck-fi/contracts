@@ -149,6 +149,7 @@ def approve(_spender : address, amount : uint256) -> bool:
 @external
 def setMinter(_minter: address):
     assert msg.sender == self.owner, "owner only"
+    assert _minter != ZERO_ADDRESS
     self.minter = _minter
 
 
