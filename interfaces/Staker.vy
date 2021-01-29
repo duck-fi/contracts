@@ -41,5 +41,5 @@ def unstake(_amount: uint256, _recipient: address):
 
 
 @external
-def claim(_recipient: address): 
-    pass
+def claim(_recipient: address) -> uint256: 
+    return 0

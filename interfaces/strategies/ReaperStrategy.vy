@@ -14,13 +14,13 @@ def staker() -> address:
 
 
 @external
-def invest():
+def invest(_amount: uint256):
     pass
 
 
 @external
-def reap():
-    pass
+def reap() -> uint256:
+    return 0
 
 
 @external

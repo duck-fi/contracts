@@ -14,10 +14,10 @@ implements: Controller
 
 
 event CommitOwnership:
-    admin: address
+    owner: address
 
 event ApplyOwnership:
-    admin: address
+    owner: address
 
 
 MAX_REAPERS_COUNT: constant(uint256) = 10 ** 6

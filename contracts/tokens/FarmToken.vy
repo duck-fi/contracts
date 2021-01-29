@@ -27,10 +27,10 @@ event Approval:
     value: uint256
 
 event CommitOwnership:
-    admin: address
+    owner: address
 
 event ApplyOwnership:
-    admin: address
+    owner: address
 
 
 YEAR: constant(uint256) = 86_400 * 365

@@ -22,10 +22,10 @@ implements: Ownable
 
 
 event CommitOwnership:
-    admin: address
+    owner: address
 
 event ApplyOwnership:
-    admin: address
+    owner: address
 
 
 reaperStrategy: public(address)
@@ -57,30 +57,30 @@ def setReaperStrategy(_reaperStrategy: address):
 
 @external
 def stake(_amount: uint256):
-    _reaperStrategy: address = self.reaperStrategy
-    assert msg.sender == _reaperStrategy or msg.sender == self.owner , "owner or reaperStrategy only"
-    ERC20(self.stakeToken).transferFrom(_reaperStrategy, self, _amount)
+    assert msg.sender == self.reaperStrategy , "reaperStrategy only"
     LiquidityGauge(self.stakeContract).deposit(_amount)
 
 
 @external
-def unstake(_amount: uint256, _recipient: address):
+def unstake(_amount: uint256, _recipient: address = msg.sender):
     _reaperStrategy: address = self.reaperStrategy
-    assert msg.sender == _reaperStrategy or msg.sender == self.owner , "owner or reaperStrategy only"
+    assert msg.sender == _reaperStrategy, "reaperStrategy only"
     LiquidityGauge(self.stakeContract).withdraw(_amount)
-    ERC20(self.stakeToken).transfer(_reaperStrategy, _amount)
+    ERC20(self.stakeToken).transfer(_recipient, _amount)
 
 
 @external
-def claim(_recipient: address): 
+def claim(_recipient: address = msg.sender) -> uint256: 
     _reaperStrategy: address = self.reaperStrategy
     _stakeContract: address = self.stakeContract
-    assert msg.sender == _reaperStrategy or msg.sender == self.owner , "owner or reaperStrategy only"
+    assert msg.sender == _reaperStrategy, "reaperStrategy only"
     
     claimableTokens: uint256 = LiquidityGauge(_stakeContract).claimable_tokens(self)
     if claimableTokens > 0:
         Minter(LiquidityGauge(_stakeContract).minter()).mint(_stakeContract)
-        ERC20(self.rewardToken).transfer(_reaperStrategy, claimableTokens)
+        ERC20(self.rewardToken).transfer(_recipient, claimableTokens)
+
+    return claimableTokens
 
 
 @external
