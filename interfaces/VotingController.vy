@@ -102,6 +102,12 @@ def availableToUnvote(_reaper: address, _coin: address, _account: address) -> ui
 
 @view
 @external
+def voteIntegral(_reaper: address) -> uint256:
+    return 0
+
+
+@view
+@external
 def reaperVotePower(_reaper: address) -> uint256:
     return 0
 
@@ -118,7 +124,7 @@ def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: boo
 
 
 @external
-def setVoteStrategy(_coin: address, _voteStrategy: address):
+def setVotingStrategy(_coin: address, _votingStrategy: address):
     pass
 
 

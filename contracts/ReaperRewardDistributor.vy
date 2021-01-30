@@ -32,7 +32,7 @@ futureOwner: public(address)
 
 @external
 def __init__(_reaper: address):
-    assert _reaper != ZERO_ADDRESS, "_reaper is not set"
+    assert _reaper != ZERO_ADDRESS, "reaper is not set"
     self.reaper = _reaper
     self.owner = msg.sender
 
