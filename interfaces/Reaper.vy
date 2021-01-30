@@ -114,13 +114,14 @@ def withdraw(_amount: uint256):
     pass
 
 
+@view
 @external
-def claim(_account: address):
-    pass
+def extraClaimableTokens(_account: address) -> uint256:
+    return 0
 
 
 @external
-def claimableTokens(_account: address):
+def extraClaim(_account: address):
     pass
 
 

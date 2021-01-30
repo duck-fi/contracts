@@ -5,10 +5,10 @@ from vyper.interfaces import ERC20
 import interfaces.Ownable as Ownable
 import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
+import interfaces.tokens.Farmable as Farmable
+import interfaces.VotingController as VotingController
 # import interfaces.ReaperController as ReaperController
-# import interfaces.VotingController as VotingController
 # import interfaces.Minter as Minter
-# import interfaces.tokens.Farmable as Farmable
 
 
 implements: Ownable
@@ -22,10 +22,11 @@ event ApplyOwnership:
     owner: address
 
 
-# MULTIPLIER: constant(uint256) = 10 ** 18
+MULTIPLIER: constant(uint256) = 10 ** 18
 
 
 lpToken: public(address)
+farmToken: public(address)
 controller: public(address)
 reaperStrategy: public(address)
 votingController: public(address)
@@ -35,9 +36,10 @@ totalBalances: public(uint256)
 isKilled: public(bool)
 reapIntegral: public(uint256)
 reapIntegralFor: public(HashMap[address, uint256])
+unitCostIntegral: public(uint256)
 emissionIntegral: public(uint256)
 voteIntegral: public(uint256)
-lastSnapshotTimestamp: public(uint256)
+lastUnitCostIntegralFor: public(HashMap[address, uint256])
 lastReapTimestampFor: public(HashMap[address, uint256])
 rewardIntegral: public(uint256)
 rewardIntegralFor: public(HashMap[address, uint256])
@@ -47,10 +49,13 @@ futureOwner: public(address)
 
 
 @external
-def __init__(_lpToken: address, _controller: address, _votingController: address):
+def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address):
     self.lpToken = _lpToken
     self.controller = _controller
     self.votingController = _votingController
+    self.farmToken = _farmToken
+
+    ERC20(_farmToken).approve(_controller, MAX_UINT256)
 
 
 @external
@@ -61,21 +66,20 @@ def depositApprove(_spender: address, _amount:uint256):
 
 @internal
 def _snapshot(_account: address):
-    pass
-    #     assert not self.is_killed, "reaper is dead"
+    if self.isKilled == False:
+        _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
+        _voteIntegral: uint256 = VotingController(self.votingController).reaperIntegratedVotes(self)
 
-#     farm_token: address = Minter(ReaperController(self.controller).minter()).token()
-#     rate_integral: uint256 = Farmable(farm_token).rateIntegral()
-#     vote_integral: uint256 = VotingController(self.voting_controller).reaper_integrated_votes(self)
+        _reapIntegralDiff: uint256 = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral)
+        _unitCostIntegralDiff: uint256 = _reapIntegralDiff / self.totalBalances
+        self.reapIntegral += _reapIntegralDiff
+        self.unitCostIntegral += _unitCostIntegralDiff
+        self.emissionIntegral = _emissionIntegral
+        self.voteIntegral = _voteIntegral
 
-#     new_unit_cost_integral: uint256 = self.unit_cost_integral + (rate_integral - self.last_rate_integral) * (vote_integral - self.last_vote_integral) / self.totalSupply
-#     self.last_rate_integral = rate_integral
-#     self.last_vote_integral = vote_integral
-
-#     self.farm_integral_for[account] += self.balanceOf[account] * (new_unit_cost_integral - self.unit_cost_integral_for[account]) / MULTIPLIER
-#     self.farm_total_supply_integral +=  new_unit_cost_integral * self.totalSupply
-#     self.unit_cost_integral_for[account] = new_unit_cost_integral
-#     self.unit_cost_integral = new_unit_cost_integral
+        self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / MULTIPLIER / (block.timestamp - self.lastReapTimestampFor(_account))
+        self.lastReapTimestampFor[_account] = block.timestamp
+        self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
 
 
 @external
@@ -115,7 +119,7 @@ def invest():
 
 @external
 def reap():
-    pass
+    self.rewardIntegral += ReaperStrategy(self.reaperStrategy).reap()
 
 
 @external
@@ -149,13 +153,13 @@ def withdraw(_amount: uint256):
 
 
 @external
-def claim(_account: address):
+def extraClaim(_account: address):
     pass
 
 
 @external
-def claimableTokens(_account: address):
-    pass
+def extraClaimableTokens(_account: address) -> uint256:
+    return 0
 
 
 @external

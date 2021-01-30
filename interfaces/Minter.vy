@@ -21,3 +21,9 @@ def mintAllowance(_reaper: address, _owner: address, _minter: address) -> bool:
 @external
 def mintApprove(_reaper: address, _minter: address, _canMint: bool):
     pass
+
+
+@view
+@external
+def mintableTokens(_reaper: address, _account: address) -> uint256:
+    return 0
