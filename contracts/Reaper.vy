@@ -66,20 +66,24 @@ def depositApprove(_spender: address, _amount:uint256):
 
 @internal
 def _snapshot(_account: address):
-    if self.isKilled == False:
-        _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
-        _voteIntegral: uint256 = VotingController(self.votingController).reaperIntegratedVotes(self)
+    _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
+    _voteIntegral: uint256 = VotingController(self.votingController).reaperIntegratedVotes(self)
 
-        _reapIntegralDiff: uint256 = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral)
-        _unitCostIntegralDiff: uint256 = _reapIntegralDiff / self.totalBalances
-        self.reapIntegral += _reapIntegralDiff
-        self.unitCostIntegral += _unitCostIntegralDiff
+
+    _reapIntegralDiff: uint256 = 0
+    _unitCostIntegralDiff: uint256 = 0
+    _unitCostIntegral: uint256 = self.unitCostIntegral
+    if self.isKilled == False:
+        _reapIntegralDiff = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral)
+        _unitCostIntegral += _reapIntegralDiff / self.totalBalances
         self.emissionIntegral = _emissionIntegral
         self.voteIntegral = _voteIntegral
+        self.reapIntegral += _reapIntegralDiff
+        self.unitCostIntegral = _unitCostIntegral
 
-        self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / MULTIPLIER / (block.timestamp - self.lastReapTimestampFor(_account))
-        self.lastReapTimestampFor[_account] = block.timestamp
-        self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
+    self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / MULTIPLIER / (block.timestamp - self.lastReapTimestampFor(_account))
+    self.lastReapTimestampFor[_account] = block.timestamp
+    self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
 
 
 @external
