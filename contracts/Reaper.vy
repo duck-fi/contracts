@@ -46,10 +46,15 @@ futureOwner: public(address)
 
 @external
 def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address):
+    assert _lpToken != ZERO_ADDRESS, "_lpToken is not set"
+    assert _controller != ZERO_ADDRESS, "_controller is not set"
+    assert _votingController != ZERO_ADDRESS, "_votingController is not set"
+    assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
     self.lpToken = _lpToken
     self.controller = _controller
     self.votingController = _votingController
     self.farmToken = _farmToken
+    self.owner = msg.sender
 
     ERC20(_farmToken).approve(_controller, MAX_UINT256)
 

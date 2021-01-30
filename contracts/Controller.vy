@@ -36,6 +36,7 @@ futureOwner: public(address)
 
 @external
 def __init__(_farmToken: address):
+    assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
     self.farmToken = _farmToken
     self.owner = msg.sender
 

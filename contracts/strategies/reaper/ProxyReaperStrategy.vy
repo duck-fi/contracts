@@ -28,9 +28,9 @@ futureOwner: public(address)
 
 @external
 def __init__(_reaper: address, _staker: address, _rewardContract: address):
-    assert _reaper != ZERO_ADDRESS, "_reaper not set"
-    assert _staker != ZERO_ADDRESS, "_staker not set"
-    assert _rewardContract != ZERO_ADDRESS, "_rewardContract not set"
+    assert _reaper != ZERO_ADDRESS, "_reaper is not set"
+    assert _staker != ZERO_ADDRESS, "_staker is not set"
+    assert _rewardContract != ZERO_ADDRESS, "_rewardContract is not set"
     self.reaper = _reaper
     self.staker = _staker
     self.rewardContract = _rewardContract
