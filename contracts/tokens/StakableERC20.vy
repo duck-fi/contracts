@@ -21,6 +21,10 @@ event Approval:
 event Deprecate:
     account: indexed(address)
 
+event Reward:
+    id: uint256
+    amount: uint256
+
 
 PERCENT_FACTOR: constant(uint256) = 10 ** 12
 MULTIPLIER: constant(uint256) = 10 ** 18

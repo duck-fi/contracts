@@ -1,11 +1,6 @@
 # @version ^0.2.0
 
 
-event Reward:
-    id: uint256
-    amount: uint256
-
-
 @external
 def deposit(_account: address, _amount: uint256) -> bool:
     return False
