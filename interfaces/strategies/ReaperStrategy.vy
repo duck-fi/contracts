@@ -13,6 +13,12 @@ def staker() -> address:
     return ZERO_ADDRESS
 
 
+@view
+@external
+def rewardContract() -> address:
+    return ZERO_ADDRESS
+
+
 @external
 def invest(_amount: uint256):
     pass

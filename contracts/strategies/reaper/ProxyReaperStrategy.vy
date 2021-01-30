@@ -20,15 +20,20 @@ event ApplyOwnership:
 
 reaper: public(address)
 staker: public(address)
+rewardContract: public(address)
 
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_reaper: address, _staker: address):
+def __init__(_reaper: address, _staker: address, _rewardContract: address):
+    assert _reaper != ZERO_ADDRESS, "_reaper not set"
+    assert _staker != ZERO_ADDRESS, "_staker not set"
+    assert _rewardContract != ZERO_ADDRESS, "_rewardContract not set"
     self.reaper = _reaper
     self.staker = _staker
+    self.rewardContract = _rewardContract
     self.owner = msg.sender
 
 
@@ -43,7 +48,7 @@ def invest(_amount: uint256):
 @external
 def reap() -> uint256:
     assert msg.sender == self.reaper, "reaper only"
-    return Staker(self.staker).claim(self.reaper)
+    return Staker(self.staker).claim(self.rewardContract)
 
 
 @external
