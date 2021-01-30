@@ -7,12 +7,10 @@ import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.tokens.Farmable as Farmable
 import interfaces.VotingController as VotingController
-# import interfaces.ReaperController as ReaperController
-# import interfaces.Minter as Minter
 
 
-implements: Ownable
 implements: Reaper
+implements: Ownable
 
 
 event CommitOwnership:
@@ -22,7 +20,7 @@ event ApplyOwnership:
     owner: address
 
 
-MULTIPLIER: constant(uint256) = 10 ** 18
+VOTE_DIVIDER: constant(uint256) = 10 ** 18
 
 
 lpToken: public(address)
@@ -37,12 +35,10 @@ isKilled: public(bool)
 reapIntegral: public(uint256)
 reapIntegralFor: public(HashMap[address, uint256])
 unitCostIntegral: public(uint256)
+lastReapTimestampFor: public(HashMap[address, uint256])
+lastUnitCostIntegralFor: public(HashMap[address, uint256])
 emissionIntegral: public(uint256)
 voteIntegral: public(uint256)
-lastUnitCostIntegralFor: public(HashMap[address, uint256])
-lastReapTimestampFor: public(HashMap[address, uint256])
-rewardIntegral: public(uint256)
-rewardIntegralFor: public(HashMap[address, uint256])
 
 owner: public(address)
 futureOwner: public(address)
@@ -81,7 +77,7 @@ def _snapshot(_account: address):
         self.reapIntegral += _reapIntegralDiff
         self.unitCostIntegral = _unitCostIntegral
 
-    self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / MULTIPLIER / (block.timestamp - self.lastReapTimestampFor(_account))
+    self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / (block.timestamp - self.lastReapTimestampFor[_account])
     self.lastReapTimestampFor[_account] = block.timestamp
     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
 
@@ -123,7 +119,7 @@ def invest():
 
 @external
 def reap():
-    self.rewardIntegral += ReaperStrategy(self.reaperStrategy).reap()
+    ReaperStrategy(self.reaperStrategy).reap()
 
 
 @external
@@ -154,16 +150,6 @@ def withdraw(_amount: uint256):
     
     self.balances[msg.sender] -= _availableAmount
     self.totalBalances -= _availableAmount
-
-
-@external
-def extraClaim(_account: address):
-    pass
-
-
-@external
-def extraClaimableTokens(_account: address) -> uint256:
-    return 0
 
 
 @external

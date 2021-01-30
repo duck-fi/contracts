@@ -56,14 +56,12 @@ def mintFor(_reaper: address, _account: address = msg.sender):
         ERC20Mintable(self.farmToken).mint(_account, toMint)
         self.minted[_reaper][_account] = totalMinted
 
-    Reaper(_reaper).extraClaim(_account)
-
 
 @external
 def mintableTokens(_reaper: address, _account: address) -> uint256:
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
     Reaper(_reaper).snapshot(_account)
-    return Reaper(_reaper).reapIntegralFor(_account) - self.minted[_reaper][_account] + Reaper(_reaper).extraClaimableTokens(_account)
+    return Reaper(_reaper).reapIntegralFor(_account) - self.minted[_reaper][_account]
 
 
 @external

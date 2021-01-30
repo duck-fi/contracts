@@ -9,6 +9,12 @@ def lpToken() -> address:
 
 @view
 @external
+def farmToken() -> address:
+    return ZERO_ADDRESS
+
+
+@view
+@external
 def controller() -> address:
     return ZERO_ADDRESS
 
@@ -49,43 +55,39 @@ def isKilled() -> bool:
     return False
 
 
+@view
 @external
 def reapIntegral() -> uint256:
     return 0
 
 
+@view
+@external
+def unitCostIntegral() -> uint256:
+    return 0
+
+
+@view
 @external
 def emissionIntegral() -> uint256:
     return 0
 
 
+@view
 @external
 def voteIntegral() -> uint256:
     return 0
 
 
-@external
-def lastSnapshotTimestamp() -> uint256:
-    return 0
-
-
+@view
 @external
 def reapIntegralFor(_account: address) -> uint256:
     return 0
 
 
+@view
 @external
-def lastReapTimestampFor(_account: address) -> uint256:
-    return 0
-
-
-@external
-def rewardIntegral() -> uint256:
-    return 0
-
-
-@external
-def rewardIntegralFor(_account: address) -> uint256:
+def lastUnitCostIntegralFor(_account: address) -> uint256:
     return 0
 
 
@@ -111,17 +113,6 @@ def reap():
 
 @external
 def withdraw(_amount: uint256):
-    pass
-
-
-@view
-@external
-def extraClaimableTokens(_account: address) -> uint256:
-    return 0
-
-
-@external
-def extraClaim(_account: address):
     pass
 
 
