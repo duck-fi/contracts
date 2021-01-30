@@ -344,16 +344,16 @@ def setVotingStrategy(_coin: address, _votingStrategy: address = ZERO_ADDRESS):
     elif _votingStrategy == ZERO_ADDRESS:
         # removing coin and strategy
         _removingCoinIndex: uint256 = self.indexByCoin[_coin]
-        lastCoinIndex: uint256 = self.lastCoinIndex
+        _lastCoinIndex: uint256 = self.lastCoinIndex
         
-        if _removingCoinIndex < lastCoinIndex:
+        if _removingCoinIndex < _lastCoinIndex:
             self.indexByCoin[_coin] = 0
-            last_coin: address = self.coins[lastCoinIndex]
-            self.coins[lastCoinIndex] = ZERO_ADDRESS
+            last_coin: address = self.coins[_lastCoinIndex]
+            self.coins[_lastCoinIndex] = ZERO_ADDRESS
             self.indexByCoin[last_coin] = _removingCoinIndex
             self.coins[_removingCoinIndex] = last_coin
         else:
-            self.coins[lastCoinIndex] = ZERO_ADDRESS
+            self.coins[_lastCoinIndex] = ZERO_ADDRESS
         
         self.indexByCoin[_coin] = 0
         self.lastCoinIndex -= 1
