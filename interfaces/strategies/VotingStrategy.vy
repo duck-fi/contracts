@@ -15,6 +15,12 @@ def coinToVotes(_amount: uint256) -> uint256:
 
 @view
 @external
+def availableToVote(_account: address, _amount: uint256) -> uint256: 
+    return 0
+
+
+@view
+@external
 def availableToUnvote(_account: address, _amount: uint256) -> uint256: 
     return 0
 
