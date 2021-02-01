@@ -37,3 +37,8 @@ def addReaper(_reaper: address):
 @external
 def removeReaper(_reaper: address):
     pass
+
+
+@external
+def claimAdminFee(_reaper: address):
+    pass

@@ -4,11 +4,8 @@ from brownie import (
     ERC20Basic,
     FarmToken,
     StakableERC20,
-    Minter,
-    Reaper,
-    ReaperController,
+    Controller,
     VotingController,
-    SimpleVotingStrategy,
 )
 from pathlib import Path
 from . import utils
@@ -99,6 +96,12 @@ def deploy():
         "simple", 1000000000000000000, {'from': DEPLOYER})
     curve_controller.add_gauge(
         usdn_mpool_gauge, 0, 1000000000000000000, {'from': DEPLOYER})
+
+    # Dispersion
+    controller = Controller.deploy(dft, {'from': DEPLOYER})
+    dft.setMinter(controller, {'from': DEPLOYER})
+
+    voting_controller = VotingController.deploy(controller, {'from': DEPLOYER})
 
     # minter = Minter.deploy(dft, {'from': DEPLOYER})
     # dft.setMinter(minter, {'from': DEPLOYER})
