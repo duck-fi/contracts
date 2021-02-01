@@ -42,11 +42,8 @@ def claimApprove(_coin: address, _claimer: address, _canClaim: bool):
     self.claimAllowance[_coin][msg.sender][_claimer] = _canClaim
 
 
-@external
-def claim(_coin: address, _account: address):
-    if _account != msg.sender:
-        assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
-
+@internal
+def _claim(_coin: address, _account: address, _recipient: address):
     _balance: uint256 = ERC20(_coin).balanceOf(self)
     _lastBalance: uint256 = self.lastBalance[_coin]
     _rewardIntegral: uint256 = self.rewardIntegral[_coin]
@@ -59,11 +56,18 @@ def claim(_coin: address, _account: address):
     Reaper(_reaper).snapshot(_account)
     _reapIntegralFor: uint256 = Reaper(_reaper).reapIntegralFor(_account)
     _reapIntegral: uint256 = Reaper(_reaper).reapIntegral()
-    ERC20(_coin).transfer(_account, _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / (_reapIntegral - self.totalReapIntegralFor[_coin][_account]))
+    ERC20(_coin).transfer(_recipient, _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / (_reapIntegral - self.totalReapIntegralFor[_coin][_account]))
 
     self.reapIntegralFor[_coin][_account] = _reapIntegralFor
     self.totalReapIntegralFor[_coin][_account] = _reapIntegral
     self.rewardIntegralFor[_coin][_account] = _rewardIntegral
+
+
+@external
+def claim(_coin: address, _account: address):
+    if _account != msg.sender:
+        assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
+    self._claim(_coin, _account, _account)
 
 
 @external
@@ -86,6 +90,12 @@ def claimableTokens(_coin: address, _account: address) -> uint256:
 def emergencyWithdraw(_coin: address):
     assert msg.sender == self.owner, "owner only"
     assert ERC20(_coin).transfer(self.owner, ERC20(_coin).balanceOf(self))
+
+
+@external
+def claimAdminFee(_coin: address):
+    assert msg.sender == self.owner, "owner only"
+    self._claim(_coin, self.reaper, msg.sender)
 
 
 @external

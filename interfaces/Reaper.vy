@@ -3,6 +3,12 @@
 
 @view
 @external
+def adminFee() -> uint256:
+    return 0
+
+
+@view
+@external
 def lpToken() -> address:
     return ZERO_ADDRESS
 
@@ -128,4 +134,9 @@ def setReaperStrategy(_reaperStrategy: address):
 
 @external
 def kill():
+    pass
+
+
+@external
+def setAdminFee(_percent: uint256):
     pass

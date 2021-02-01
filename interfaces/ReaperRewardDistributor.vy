@@ -62,3 +62,8 @@ def claimableTokens(_coin: address, _account: address) -> uint256:
 @external
 def emergencyWithdraw(_coin: address):
     pass
+
+
+@external
+def claimAdminFee(_coin: address):
+    pass

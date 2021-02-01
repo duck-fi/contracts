@@ -21,6 +21,7 @@ event ApplyOwnership:
 
 
 VOTE_DIVIDER: constant(uint256) = 10 ** 18
+ADMIN_FEE_MULTIPLYER: constant(uint256) = 10 ** 3
 
 
 lpToken: public(address)
@@ -39,21 +40,24 @@ lastReapTimestampFor: public(HashMap[address, uint256])
 lastUnitCostIntegralFor: public(HashMap[address, uint256])
 emissionIntegral: public(uint256)
 voteIntegral: public(uint256)
+adminFee: public(uint256)
 
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address):
+def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address, _adminFee: uint256):
     assert _lpToken != ZERO_ADDRESS, "_lpToken is not set"
     assert _controller != ZERO_ADDRESS, "_controller is not set"
     assert _votingController != ZERO_ADDRESS, "_votingController is not set"
     assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
+    assert _adminFee <= ADMIN_FEE_MULTIPLYER, "_adminFee > 100%"
     self.lpToken = _lpToken
     self.controller = _controller
     self.votingController = _votingController
     self.farmToken = _farmToken
+    self.adminFee = _adminFee
     self.owner = msg.sender
 
     ERC20(_farmToken).approve(_controller, MAX_UINT256)
@@ -81,6 +85,15 @@ def _snapshot(_account: address):
         self.voteIntegral = _voteIntegral
         self.reapIntegral += _reapIntegralDiff
         self.unitCostIntegral = _unitCostIntegral
+
+    _emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / (block.timestamp - self.lastReapTimestampFor[_account])
+    _adminFee: uint256 = self.adminFee
+
+    if _adminFee != 0:
+        self.reapIntegralFor[_account] += _emission * (ADMIN_FEE_MULTIPLYER - _adminFee) / ADMIN_FEE_MULTIPLYER
+        self.reapIntegralFor[self] += _emission * _adminFee / ADMIN_FEE_MULTIPLYER
+    else:
+        self.reapIntegralFor[_account] += _emission
 
     self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / (block.timestamp - self.lastReapTimestampFor[_account])
     self.lastReapTimestampFor[_account] = block.timestamp
@@ -174,6 +187,13 @@ def setReaperStrategy(_reaperStrategy: address):
 def kill():
     assert msg.sender == self.owner, "owner only"
     self.isKilled = True
+
+
+@external
+def setAdminFee(_percent: uint256):
+    assert msg.sender == self.owner, "owner only"
+    assert _percent <= ADMIN_FEE_MULTIPLYER, "_adminFee > 100%"
+    self.adminFee = _percent
 
 
 @external

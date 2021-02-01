@@ -99,6 +99,21 @@ def removeReaper(_reaper: address):
 
 
 @external
+def claimAdminFee(_reaper: address):
+    assert msg.sender == self.owner, "owner only"
+    assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
+
+    Reaper(_reaper).snapshot(_reaper)
+    totalMinted: uint256 = Reaper(_reaper).reapIntegralFor(_reaper)
+    toMint: uint256 = totalMinted - self.minted[_reaper][_reaper]
+
+    if toMint != 0:
+        ERC20Mintable(self.farmToken).mint(msg.sender, toMint)
+        self.minted[_reaper][_reaper] = totalMinted
+
+
+
+@external
 def transferOwnership(_futureOwner: address):
     assert msg.sender == self.owner, "owner only"
     self.futureOwner = _futureOwner
