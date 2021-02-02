@@ -102,16 +102,6 @@ def deploy():
     dft.setMinter(controller, {'from': DEPLOYER})
 
     voting_controller = VotingController.deploy(controller, {'from': DEPLOYER})
-
-    # minter = Minter.deploy(dft, {'from': DEPLOYER})
-    # dft.setMinter(minter, {'from': DEPLOYER})
-
-    # reaper_controller = ReaperController.deploy(minter, {'from': DEPLOYER})
-    # minter.setReaperController(reaper_controller, {'from': DEPLOYER})
-
-    # Voting
-    # voting_controller = VotingController.deploy(
-    #     reaper_controller, {'from': DEPLOYER})
     # simple_voting_strategy = SimpleVotingStrategy.deploy(
     #     farm_token, 1, DAY, {'from': DEPLOYER})
     # voting_controller.setStrategy(
