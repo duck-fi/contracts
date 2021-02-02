@@ -4,11 +4,8 @@ from brownie import (
     ERC20Basic,
     FarmToken,
     StakableERC20,
-    Minter,
-    Reaper,
-    ReaperController,
+    Controller,
     VotingController,
-    SimpleVotingStrategy,
 )
 from pathlib import Path
 from . import utils
@@ -95,18 +92,16 @@ def deploy():
         crv, curve_controller, {'from': DEPLOYER})
     usdn_mpool_gauge = curve_dao.LiquidityGauge.deploy(
         usdn_mpool_lp, curve_minter, DEPLOYER, {'from': DEPLOYER})
-    curve_controller.add_type("simple", 1000000000000000000, {'from': DEPLOYER})
-    curve_controller.add_gauge(usdn_mpool_gauge, 0, 1000000000000000000, {'from': DEPLOYER})
+    curve_controller.add_type(
+        "simple", 1000000000000000000, {'from': DEPLOYER})
+    curve_controller.add_gauge(
+        usdn_mpool_gauge, 0, 1000000000000000000, {'from': DEPLOYER})
 
-    # minter = Minter.deploy(dft, {'from': DEPLOYER})
-    # dft.setMinter(minter, {'from': DEPLOYER})
+    # Dispersion
+    controller = Controller.deploy(dft, {'from': DEPLOYER})
+    dft.setMinter(controller, {'from': DEPLOYER})
 
-    # reaper_controller = ReaperController.deploy(minter, {'from': DEPLOYER})
-    # minter.setReaperController(reaper_controller, {'from': DEPLOYER})
-
-    # Voting
-    # voting_controller = VotingController.deploy(
-    #     reaper_controller, {'from': DEPLOYER})
+    voting_controller = VotingController.deploy(controller, {'from': DEPLOYER})
     # simple_voting_strategy = SimpleVotingStrategy.deploy(
     #     farm_token, 1, DAY, {'from': DEPLOYER})
     # voting_controller.setStrategy(

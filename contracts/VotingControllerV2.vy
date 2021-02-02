@@ -8,13 +8,7 @@ import interfaces.strategies.VotingStrategy as VotingStrategy
 
 
 implements: Ownable
-implements: VotingController
-
-
-struct VoteReaperSnapshot:
-    reaper: address
-    votes: uint256
-    share: uint256
+# implements: VotingController TODO
 
 
 event Vote:
@@ -57,12 +51,14 @@ indexByCoin: public(HashMap[address, uint256]) # coin -> index
 strategyByCoin: public(HashMap[address, address]) # coin -> voting strategy
 balances: public(HashMap[address, HashMap[address, HashMap[address, uint256]]]) # reaper -> coin -> account -> amount
 reaperBalances: public(HashMap[address, HashMap[address, uint256]]) # reaper -> coin -> balance
-lastVotes: public(HashMap[address, uint256])  # reaper -> lastVotes
-votingPeriod: public(uint256)
+totalBalances: public(HashMap[address, uint256]) # coin -> balance
+reaperVotes: public(HashMap[address, uint256]) # reaper -> reaper votes
+totalVotes: public(uint256)
+totalIntegratedVotes: public(uint256)
 reaperIntegratedVotes: public(HashMap[address, uint256]) # reaper -> integrated votes
-lastSnapshotTimestamp: public(uint256)
-lastSnapshotIndex: public(uint256)
-snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER]) # [snapshot index, record index]
+lastReaperIntegratedTimestamp:  public(HashMap[address, uint256]) # reaper -> integrated votes timestamp
+lastTotalIntegratedTimestamp: public(uint256)
+
 voteAllowance: public(HashMap[address, HashMap[address, HashMap[address, HashMap[address, bool]]]]) # reaper -> coin -> owner -> voter -> canVote
 
 
@@ -72,68 +68,87 @@ def __init__(_controller: address):
     @notice Contract constructor
     """
     self.controller = _controller
-    self.votingPeriod = WEEK
     self.owner = msg.sender
 
 
-@external
-@nonreentrant('lock')
-def snapshot():
-    """
-    @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
-    @dev Only possible to call it once per voting period
-    """
-    assert self.lastSnapshotTimestamp + self.votingPeriod < block.timestamp, "already snapshotted"
+# @external
+# @nonreentrant('lock')
+# def snapshot():
+#     """
+#     @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
+#     @dev Only possible to call it once per voting period
+#     """
+#     assert self.lastSnapshotTimestamp + self.votingPeriod < block.timestamp, "already snapshotted"
     
-    _lastReaperIndex: uint256 = Controller(self.controller).lastReaperIndex()
+#     _lastReaperIndex: uint256 = Controller(self.controller).lastReaperIndex()
     
-    if self.lastSnapshotTimestamp == 0:
-        # initial voting round: we share equally for all reapers
-        _totalVoteBalance: uint256 = _lastReaperIndex
-        self.lastSnapshotTimestamp = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / self.votingPeriod * self.votingPeriod
-        for i in range(1, MULTIPLIER):
-            if i > _lastReaperIndex:
-                break
+#     if self.lastSnapshotTimestamp == 0:
+#         # initial voting round: we share equally for all reapers
+#         _totalVoteBalance: uint256 = _lastReaperIndex
+#         self.lastSnapshotTimestamp = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / self.votingPeriod * self.votingPeriod
+#         for i in range(1, MULTIPLIER):
+#             if i > _lastReaperIndex:
+#                 break
 
-            _currentReaper: address = Controller(self.controller).reapers(i)
-            _reaperShare: uint256 = 1 * MULTIPLIER / _totalVoteBalance
+#             _currentReaper: address = Controller(self.controller).reapers(i)
+#             _reaperShare: uint256 = 1 * MULTIPLIER / _totalVoteBalance
 
-            self.snapshots[self.lastSnapshotIndex][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: 1, share: _reaperShare})
-            self.lastVotes[_currentReaper] = _reaperShare
+#             self.snapshots[self.lastSnapshotIndex][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: 1, share: _reaperShare})
+#             self.lastVotes[_currentReaper] = _reaperShare
 
-        return
+#         return
 
-    _currentSnapshotTimestamp: uint256 = block.timestamp / self.votingPeriod * self.votingPeriod
-    _dt: uint256 = _currentSnapshotTimestamp - self.lastSnapshotTimestamp
-    self.lastSnapshotTimestamp = _currentSnapshotTimestamp
-    self.lastSnapshotIndex += 1
+#     _currentSnapshotTimestamp: uint256 = block.timestamp / self.votingPeriod * self.votingPeriod
+#     _dt: uint256 = _currentSnapshotTimestamp - self.lastSnapshotTimestamp
+#     self.lastSnapshotTimestamp = _currentSnapshotTimestamp
+#     self.lastSnapshotIndex += 1
+#     _totalVoteBalance: uint256 = 0
+
+#     for i in range(1, MULTIPLIER):
+#         if i > _lastReaperIndex:
+#             break
+
+#         _currentReaper: address = Controller(self.controller).reapers(i)
+#         _reaperVoteBalance: uint256 = 0
+
+#         for j in range(1, MULTIPLIER):
+#             if j > self.lastCoinIndex:
+#                 break
+
+#             _coin: address = self.coins[j]
+#             _reaperVoteBalance += VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.reaperBalances[_currentReaper][_coin])
+
+#         self.snapshots[self.lastSnapshotIndex][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: _reaperVoteBalance, share: 0})
+#         _totalVoteBalance += _reaperVoteBalance
+
+#     for i in range(1, MULTIPLIER):
+#         if i > _lastReaperIndex:
+#             break
+
+#         _reaperShare: uint256 = self.snapshots[self.lastSnapshotIndex][i].votes * MULTIPLIER / _totalVoteBalance
+#         self.snapshots[self.lastSnapshotIndex][i].share = _reaperShare
+#         self.reaperIntegratedVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] += self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] * _dt
+#         self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] = _reaperShare
+@internal
+def _updateReaperIntegral(_reaper: address):
+    _reaperVoteBalance: uint256 = 0
     _totalVoteBalance: uint256 = 0
 
-    for i in range(1, MULTIPLIER):
-        if i > _lastReaperIndex:
+    for j in range(1, MULTIPLIER):
+        if j > self.lastCoinIndex:
             break
 
-        _currentReaper: address = Controller(self.controller).reapers(i)
-        _reaperVoteBalance: uint256 = 0
+        _coin: address = self.coins[j]
+        _reaperVoteBalance += VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.reaperBalances[_reaper][_coin])
+        _totalVoteBalance += VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.totalBalances[_coin])
 
-        for j in range(1, MULTIPLIER):
-            if j > self.lastCoinIndex:
-                break
+    self.reaperIntegratedVotes[_reaper] = self.reaperIntegratedVotes[_reaper] + self.reaperVotes[_reaper] * (block.timestamp - self.lastReaperIntegratedTimestamp[_reaper])
+    self.totalIntegratedVotes = self.totalIntegratedVotes + self.totalVotes * (block.timestamp - self.lastTotalIntegratedTimestamp)
 
-            _coin: address = self.coins[j]
-            _reaperVoteBalance += VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.reaperBalances[_currentReaper][_coin])
-
-        self.snapshots[self.lastSnapshotIndex][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: _reaperVoteBalance, share: 0})
-        _totalVoteBalance += _reaperVoteBalance
-
-    for i in range(1, MULTIPLIER):
-        if i > _lastReaperIndex:
-            break
-
-        _reaperShare: uint256 = self.snapshots[self.lastSnapshotIndex][i].votes * MULTIPLIER / _totalVoteBalance
-        self.snapshots[self.lastSnapshotIndex][i].share = _reaperShare
-        self.reaperIntegratedVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] += self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] * _dt
-        self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] = _reaperShare
+    self.reaperVotes[_reaper] = _reaperVoteBalance
+    self.totalVotes = _totalVoteBalance
+    self.lastReaperIntegratedTimestamp[_reaper] = block.timestamp
+    self.lastTotalIntegratedTimestamp = block.timestamp
 
 
 @external
@@ -156,13 +171,16 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
     ERC20(_coin).transferFrom(_account, self, _amount)
 
     _availableAmount: uint256 = VotingStrategy(self.strategyByCoin[_coin]).availableToVote(_account, _amount)
+    VotingStrategy(self.strategyByCoin[_coin]).vote(_account, _amount)
+    
     self.balances[_reaper][_coin][_account] += _availableAmount
     self.reaperBalances[_reaper][_coin] += _availableAmount
+    self.totalBalances[_coin] += _availableAmount
 
     if _amount - _availableAmount > 0:
         self.balances[_reaper][_coin][self] += _amount - _availableAmount
 
-    VotingStrategy(self.strategyByCoin[_coin]).vote(_account, _amount)
+    self._updateReaperIntegral(_reaper)
 
     log Vote(_reaper, _coin, _account, _availableAmount)
 
@@ -195,8 +213,11 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
 
     self.balances[_reaper][_coin][_account] -= _unvoteAmount
     self.reaperBalances[_reaper][_coin] -= _unvoteAmount
+    self.totalBalances[_coin] -= _unvoteAmount
     
     ERC20(_coin).transfer(_account, _unvoteAmount)
+
+    self._updateReaperIntegral(_reaper)
 
     log Unvote(_reaper, _coin, _account, _unvoteAmount)
 
@@ -226,7 +247,11 @@ def voteIntegral(_reaper: address) -> uint256:
     @return Vote integral multiplied on 1e18
     """
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
-    return self.reaperIntegratedVotes[_reaper] + self.lastVotes[_reaper] * (block.timestamp - self.lastSnapshotTimestamp)
+
+    reaperIntegral: uint256 = self.reaperIntegratedVotes[_reaper] + self.reaperVotes[_reaper] * (block.timestamp - self.lastReaperIntegratedTimestamp[_reaper])
+    totalIntegral: uint256 = self.totalIntegratedVotes + self.totalVotes * (block.timestamp - self.lastTotalIntegratedTimestamp)
+
+    return reaperIntegral * MULTIPLIER / totalIntegral
 
 
 @view
@@ -319,16 +344,16 @@ def setVotingStrategy(_coin: address, _votingStrategy: address = ZERO_ADDRESS):
     elif _votingStrategy == ZERO_ADDRESS:
         # removing coin and strategy
         _removingCoinIndex: uint256 = self.indexByCoin[_coin]
-        lastCoinIndex: uint256 = self.lastCoinIndex
+        _lastCoinIndex: uint256 = self.lastCoinIndex
         
-        if _removingCoinIndex < lastCoinIndex:
+        if _removingCoinIndex < _lastCoinIndex:
             self.indexByCoin[_coin] = 0
-            last_coin: address = self.coins[lastCoinIndex]
-            self.coins[lastCoinIndex] = ZERO_ADDRESS
+            last_coin: address = self.coins[_lastCoinIndex]
+            self.coins[_lastCoinIndex] = ZERO_ADDRESS
             self.indexByCoin[last_coin] = _removingCoinIndex
             self.coins[_removingCoinIndex] = last_coin
         else:
-            self.coins[lastCoinIndex] = ZERO_ADDRESS
+            self.coins[_lastCoinIndex] = ZERO_ADDRESS
         
         self.indexByCoin[_coin] = 0
         self.lastCoinIndex -= 1
@@ -337,17 +362,17 @@ def setVotingStrategy(_coin: address, _votingStrategy: address = ZERO_ADDRESS):
     self.strategyByCoin[_coin] = _votingStrategy
 
 
-@external
-def setVotingPeriod(_votingPeriod: uint256):
-    """
-    @notice Sets voting period `_votingPeriod` in unixtime
-    @dev Callable by owner only
-    @param _votingPeriod Voting period in unixtime
-    """
-    assert self.owner == msg.sender, "owner only"
-    assert _votingPeriod > 0, "invalid params"
+# @external
+# def setVotingPeriod(_votingPeriod: uint256):
+#     """
+#     @notice Sets voting period `_votingPeriod` in unixtime
+#     @dev Callable by owner only
+#     @param _votingPeriod Voting period in unixtime
+#     """
+#     assert self.owner == msg.sender, "owner only"
+#     assert _votingPeriod > 0, "invalid params"
 
-    self.votingPeriod = _votingPeriod
+#     self.votingPeriod = _votingPeriod
 
 
 @external

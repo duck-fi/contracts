@@ -1,13 +1,20 @@
 # @version ^0.2.0
 
 
+@view
 @external
 def owner() -> address:
     return ZERO_ADDRESS
 
 
+@view
 @external
-def transferOwnership(future_owner: address):
+def futureOwner() -> address:
+    return ZERO_ADDRESS
+
+
+@external
+def transferOwnership(_futureOwner: address):
     pass
 
 

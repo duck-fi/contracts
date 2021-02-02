@@ -1,16 +1,24 @@
 # @version ^0.2.0
 
 
-@external    
+@view
+@external
 def name() -> String[64]:
     return ""
 
 
-@external    
+@view
+@external
 def symbol() -> String[32]:
     return ""
 
 
-@external    
+@view
+@external
 def decimals() -> uint256:
     return 0
+
+
+@external
+def setName(_name: String[64], _symbol: String[32]):
+    pass

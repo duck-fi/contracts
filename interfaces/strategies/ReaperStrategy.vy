@@ -1,27 +1,51 @@
 # @version ^0.2.0
 
 
+@view
 @external
-def invest(): 
-    pass
-
-
-@external
-def reap(): 
-    pass
+def reaper() -> address: 
+    return ZERO_ADDRESS
 
 
 @view
 @external
-def boost_rate() -> uint256:
+def staker() -> address:
+    return ZERO_ADDRESS
+
+
+@view
+@external
+def rewardContract() -> address:
+    return ZERO_ADDRESS
+
+
+@external
+def invest(_amount: uint256):
+    pass
+
+
+@external
+def reap() -> uint256:
+    return 0
+
+
+@view
+@external
+def availableToDeposit(_amount: uint256, _account: address) -> uint256:
+    return 0
+
+
+@view
+@external
+def availableToWithdraw(_amount: uint256, _account: address) -> uint256:
     return 0
 
 
 @external
-def deposit(amount: uint256, account: address) -> uint256: 
-    return 0
+def deposit(_amount: uint256):
+    pass
 
 
 @external
-def withdraw(amount: uint256, account: address) -> uint256: 
-    return 0
+def withdraw(_amount: uint256, _account: address):
+    pass

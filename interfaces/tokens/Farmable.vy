@@ -1,11 +1,13 @@
 # @version ^0.2.0
 
 
+@view
 @external
-def rate() -> uint256: 
+def yearEmission() -> uint256: 
     return 0
 
 
+@view
 @external
-def rateIntegral() -> uint256: 
+def emissionIntegral() -> uint256: 
     return 0

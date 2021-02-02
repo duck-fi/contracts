@@ -1,19 +1,19 @@
 # @version ^0.2.0
 
 from vyper.interfaces import ERC20
+import interfaces.tokens.ERC20Detailed as ERC20Detailed
+import interfaces.tokens.ERC20Burnable as ERC20Burnable
+import interfaces.tokens.ERC20Mintable as ERC20Mintable
 import interfaces.Ownable as Ownable
-import interfaces.tokens.ERC20Mintable as Mintable
-import interfaces.tokens.ERC20Burnable as Burnable
-import interfaces.tokens.ERC20Detailed as Detailed
 import interfaces.tokens.Farmable as Farmable
 
 
 implements: ERC20
-implements: Burnable
-implements: Mintable
-implements: Detailed
-implements: Ownable
+implements: ERC20Detailed
+implements: ERC20Burnable
+implements: ERC20Mintable
 implements: Farmable
+implements: Ownable
 
 
 event Transfer:
@@ -27,16 +27,16 @@ event Approval:
     value: uint256
 
 event CommitOwnership:
-    admin: address
+    owner: address
 
 event ApplyOwnership:
-    admin: address
+    owner: address
 
 
 YEAR: constant(uint256) = 86_400 * 365
-INITIAL_RATE: constant(uint256) = 274_815_283 * 10 ** 18 / YEAR
-RATE_REDUCTION_TIME: constant(uint256) = YEAR
-INFLATION_DELAY: constant(uint256) = 86_400 * 7
+INITIAL_EMISSION: constant(uint256) = 1_000_000
+EMISSION_REDUCTION_TIME: constant(uint256) = YEAR
+EMISSION_REDUCTION_DELIMITER: constant(uint256) = 2
 
 
 name: public(String[64])
@@ -46,17 +46,18 @@ balanceOf: public(HashMap[address, uint256])
 totalSupply: public(uint256)
 allowance: public(HashMap[address, HashMap[address, uint256]])
 
-inflation_rate_by_block: public(uint256)
-inflation_rate_integral: public(uint256)
-last_rate_timestamp: public(uint256)
+_yearEmission: uint256
+_emissionIntegral: uint256
+startEmissionTimestamp: public(uint256)
+lastEmissionUpdateTimestamp: public(uint256)
 
 minter: public(address)
 owner: public(address)
-future_owner: public(address)
+futureOwner: public(address)
 
 
 @external
-def __init__(_name: String[32], _symbol: String[4], _decimals: uint256, _supply: uint256):
+def __init__(_name: String[64], _symbol: String[32], _decimals: uint256, _supply: uint256):
     self.name = _name
     self.symbol = _symbol
     self.decimals = _decimals
@@ -71,36 +72,48 @@ def __init__(_name: String[32], _symbol: String[4], _decimals: uint256, _supply:
 
 
 @external
-def startInflation():
-    assert msg.sender == self.owner
-    if self.last_rate_timestamp == 0:
-        self.inflation_rate_by_block = INITIAL_RATE
-        self.last_rate_timestamp = block.timestamp
+def setName(_name: String[64], _symbol: String[32]):
+    assert msg.sender == self.owner, "owner only"
+    self.name = _name
+    self.symbol = _symbol
+
+
+@external
+def startEmission():
+    assert msg.sender == self.owner, "owner only"
+    assert self.lastEmissionUpdateTimestamp == 0, "emission already started"
+    self._yearEmission = INITIAL_EMISSION
+    self.lastEmissionUpdateTimestamp = block.timestamp
+    self.startEmissionTimestamp = block.timestamp
 
 
 @internal
-def _update_rate() -> uint256:
-    future_rate_timestamp: uint256 = self.last_rate_timestamp + RATE_REDUCTION_TIME
-    last_rate_by_block: uint256 = self.inflation_rate_by_block
+def _updateYearEmission() -> uint256:
+    futureEmissionUpdateTimestamp: uint256 = self.lastEmissionUpdateTimestamp + EMISSION_REDUCTION_TIME
+    lastYearEmission: uint256 = self._yearEmission
 
-    if future_rate_timestamp > block.timestamp:
-        self.inflation_rate_integral += RATE_REDUCTION_TIME * last_rate_by_block
-        self.last_rate_timestamp = future_rate_timestamp
-        last_rate_by_block = last_rate_by_block * 3 / 4
-        self.inflation_rate_by_block = last_rate_by_block
+    if block.timestamp > futureEmissionUpdateTimestamp:
+        self._emissionIntegral += EMISSION_REDUCTION_TIME * lastYearEmission
+        self.lastEmissionUpdateTimestamp = futureEmissionUpdateTimestamp
+        lastYearEmission /= EMISSION_REDUCTION_DELIMITER
+        self._yearEmission = lastYearEmission
 
-    return last_rate_by_block
-
-
-@external
-def rate() -> uint256:
-    return self._update_rate()
+    return lastYearEmission
 
 
 @external
-def rateIntegral() -> uint256:
-    current_rate: uint256 = self._update_rate()
-    return self.inflation_rate_integral + current_rate * (block.timestamp - self.last_rate_timestamp) 
+def yearEmission() -> uint256:
+    return self._updateYearEmission()
+
+
+@internal
+def _currentEmissionIntegral() -> uint256:
+    return self._emissionIntegral + self._updateYearEmission() * (block.timestamp - self.lastEmissionUpdateTimestamp) / YEAR
+
+
+@external
+def emissionIntegral() -> uint256:
+    return self._currentEmissionIntegral()
 
 
 @external
@@ -126,54 +139,51 @@ def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
 
 
 @external
-def approve(_spender : address, amount : uint256) -> bool:
-    assert amount == 0 or self.allowance[msg.sender][_spender] == 0
-    self.allowance[msg.sender][_spender] = amount
-    log Approval(msg.sender, _spender, amount)
+def approve(_spender : address, _amount : uint256) -> bool:
+    assert _amount == 0 or self.allowance[msg.sender][_spender] == 0, "already approved"
+    self.allowance[msg.sender][_spender] = _amount
+    log Approval(msg.sender, _spender, _amount)
     return True
 
 
 @external
-def setMinter(_minter: address) -> bool:
-    assert msg.sender == self.minter
+def setMinter(_minter: address):
+    assert msg.sender == self.owner, "owner only"
+    assert _minter != ZERO_ADDRESS
     self.minter = _minter
-    
-    return True
 
 
 @external
-def mint(account: address, amount: uint256) -> bool:
+def mint(account: address, _amount: uint256):
     assert msg.sender == self.minter
     assert account != ZERO_ADDRESS
 
-    self.totalSupply += amount
-    self.balanceOf[account] += amount
-    log Transfer(ZERO_ADDRESS, account, amount)
-    
-    return True
+    _totalSupply: uint256 = self.totalSupply
+    self.totalSupply = _totalSupply + _amount
+    self.balanceOf[account] += _amount
+    assert self._currentEmissionIntegral() / (block.timestamp - self.startEmissionTimestamp) >= _totalSupply + _amount, "exceeds allowable mint amount"
+
+    log Transfer(ZERO_ADDRESS, account, _amount)
 
 
 @external
-def burn(amount: uint256) -> bool:
-    self.totalSupply -= amount
-    self.balanceOf[msg.sender] -= amount
-    log Transfer(msg.sender, ZERO_ADDRESS, amount)
-
-    return True
+def burn(_amount: uint256):
+    self.totalSupply -= _amount
+    self.balanceOf[msg.sender] -= _amount
+    log Transfer(msg.sender, ZERO_ADDRESS, _amount)
 
 
 @external
-def transferOwnership(_future_owner: address):
+def transferOwnership(_futureOwner: address):
     assert msg.sender == self.owner, "owner only"
-
-    self.future_owner = _future_owner
-    log CommitOwnership(_future_owner)
+    self.futureOwner = _futureOwner
+    log CommitOwnership(_futureOwner)
 
 
 @external
 def applyOwnership():
     assert msg.sender == self.owner, "owner only"
-    _owner: address = self.future_owner
+    _owner: address = self.futureOwner
     assert _owner != ZERO_ADDRESS, "owner not set"
     self.owner = _owner
     log ApplyOwnership(_owner)

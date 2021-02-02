@@ -1,7 +1,7 @@
 # @version ^0.2.0
 
 from vyper.interfaces import ERC20
-import interfaces.tokens.ERC20Stakable as Stakable
+import interfaces.tokens.Stakable as Stakable
 
 
 implements: ERC20
@@ -18,12 +18,12 @@ event Approval:
     spender: indexed(address)
     value: uint256
 
-event Reward:
-    id: uint256 
-    amount: uint256
-
 event Deprecate:
     account: indexed(address)
+
+event Reward:
+    id: uint256
+    amount: uint256
 
 
 PERCENT_FACTOR: constant(uint256) = 10 ** 12

@@ -2,165 +2,211 @@
 
 
 from vyper.interfaces import ERC20
-import interfaces.Reaper as Reaper
-import interfaces.ReaperController as ReaperController
 import interfaces.Ownable as Ownable
-import interfaces.VotingController as VotingController
-import interfaces.Minter as Minter
-import interfaces.tokens.Farmable as Farmable
+import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
+import interfaces.tokens.Farmable as Farmable
+import interfaces.VotingController as VotingController
 
 
 implements: Reaper
 implements: Ownable
 
 
-event Deposit:
-    provider: indexed(address)
-    value: uint256
-
-event Withdraw:
-    provider: indexed(address)
-    value: uint256
-
 event CommitOwnership:
-    admin: address
+    owner: address
 
 event ApplyOwnership:
-    admin: address
+    owner: address
 
 
-MULTIPLIER: constant(uint256) = 10 ** 18
+VOTE_DIVIDER: constant(uint256) = 10 ** 18
+ADMIN_FEE_MULTIPLYER: constant(uint256) = 10 ** 3
 
 
-lp_token: public(address)
+lpToken: public(address)
+farmToken: public(address)
 controller: public(address)
-voting_controller: public(address)
-strategy: public(address)
-
-allowance: public(HashMap[address, HashMap[address, bool]])
-balanceOf: public(HashMap[address, uint256])
-totalSupply: public(uint256)
-
-farm_integral_for: public(HashMap[address, uint256])
-farm_total_supply_integral: public(uint256)
-last_snapshot_block: public(uint256)
-unit_cost_integral: public(uint256)
-unit_cost_integral_for: public(HashMap[address, uint256])
-last_rate_integral: public(uint256)
-last_vote_integral: public(uint256)
+reaperStrategy: public(address)
+votingController: public(address)
+balances: public(HashMap[address, uint256])
+depositAllowance: public(HashMap[address, HashMap[address, uint256]])
+totalBalances: public(uint256)
+isKilled: public(bool)
+reapIntegral: public(uint256)
+reapIntegralFor: public(HashMap[address, uint256])
+unitCostIntegral: public(uint256)
+lastReapTimestampFor: public(HashMap[address, uint256])
+lastUnitCostIntegralFor: public(HashMap[address, uint256])
+emissionIntegral: public(uint256)
+voteIntegral: public(uint256)
+adminFee: public(uint256)
 
 owner: public(address)
-future_owner: public(address)
-
-is_killed: bool
+futureOwner: public(address)
 
 
 @external
-def __init__(_lp_token: address, _controller: address, _strategy: address, _voting_controller: address):
-    self.lp_token = _lp_token
+def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address, _adminFee: uint256):
+    assert _lpToken != ZERO_ADDRESS, "_lpToken is not set"
+    assert _controller != ZERO_ADDRESS, "_controller is not set"
+    assert _votingController != ZERO_ADDRESS, "_votingController is not set"
+    assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
+    assert _adminFee <= ADMIN_FEE_MULTIPLYER, "_adminFee > 100%"
+    self.lpToken = _lpToken
     self.controller = _controller
-    self.voting_controller = _voting_controller
-    self.strategy = _strategy
+    self.votingController = _votingController
+    self.farmToken = _farmToken
+    self.adminFee = _adminFee
+    self.owner = msg.sender
+
+    ERC20(_farmToken).approve(_controller, MAX_UINT256)
 
 
 @external
-def approve(account: address, can_deposit: bool):
-    self.allowance[account][msg.sender] = can_deposit
+def depositApprove(_spender: address, _amount:uint256):
+    assert _amount == 0 or self.depositAllowance[msg.sender][_spender] == 0, "already approved"
+    self.depositAllowance[msg.sender][_spender] = _amount
 
 
 @internal
-def _snapshot(account: address):
-    assert not self.is_killed, "reaper is dead"
-
-    farm_token: address = Minter(ReaperController(self.controller).minter()).token()
-    rate_integral: uint256 = Farmable(farm_token).rateIntegral()
-    vote_integral: uint256 = VotingController(self.voting_controller).reaper_integrated_votes(self)
-
-    new_unit_cost_integral: uint256 = self.unit_cost_integral + (rate_integral - self.last_rate_integral) * (vote_integral - self.last_vote_integral) / self.totalSupply
-    self.last_rate_integral = rate_integral
-    self.last_vote_integral = vote_integral
-
-    self.farm_integral_for[account] += self.balanceOf[account] * (new_unit_cost_integral - self.unit_cost_integral_for[account]) / MULTIPLIER
-    self.farm_total_supply_integral +=  new_unit_cost_integral * self.totalSupply
-    self.unit_cost_integral_for[account] = new_unit_cost_integral
-    self.unit_cost_integral = new_unit_cost_integral
+def _snapshot(_account: address):
+    _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
+    _voteIntegral: uint256 = VotingController(self.votingController).reaperIntegratedVotes(self)
 
 
-@external
-def deposit(amount: uint256, account: address = msg.sender):
-    if account != msg.sender:
-        assert self.allowance[msg.sender][account], "Not approved"
+    _reapIntegralDiff: uint256 = 0
+    _unitCostIntegralDiff: uint256 = 0
+    _unitCostIntegral: uint256 = self.unitCostIntegral
+    if self.isKilled == False:
+        _reapIntegralDiff = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral)
+        _unitCostIntegral += _reapIntegralDiff / self.totalBalances
+        self.emissionIntegral = _emissionIntegral
+        self.voteIntegral = _voteIntegral
+        self.reapIntegral += _reapIntegralDiff
+        self.unitCostIntegral = _unitCostIntegral
 
-    self._snapshot(account)
+    _emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / (block.timestamp - self.lastReapTimestampFor[_account])
+    _adminFee: uint256 = self.adminFee
 
-    if amount != 0:
-        ERC20(self.lp_token).transferFrom(msg.sender, self, amount)
-        deltaBalance: uint256 = amount
+    if _adminFee != 0:
+        self.reapIntegralFor[_account] += _emission * (ADMIN_FEE_MULTIPLYER - _adminFee) / ADMIN_FEE_MULTIPLYER
+        self.reapIntegralFor[self] += _emission * _adminFee / ADMIN_FEE_MULTIPLYER
+    else:
+        self.reapIntegralFor[_account] += _emission
 
-        if self.strategy != ZERO_ADDRESS:
-            deltaBalance = ReaperStrategy(self.strategy).deposit(amount, account)
-        
-        self.balanceOf[account] += deltaBalance
-        self.totalSupply += deltaBalance
-        
-        log Deposit(account, deltaBalance)
+    self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / (block.timestamp - self.lastReapTimestampFor[_account])
+    self.lastReapTimestampFor[_account] = block.timestamp
+    self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
 
 
 @external
-def withdraw(amount: uint256):
+def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False):
+    assert _amount > 0, "amount must be greater 0"
+    
+    if _account != msg.sender:
+        _allowance: uint256 = self.depositAllowance[_account][msg.sender]
+        if _allowance != MAX_UINT256:
+            self.depositAllowance[_account][msg.sender] = _allowance - _amount
+
+    self._snapshot(_account)
+
+    ERC20(self.lpToken).transferFrom(msg.sender, self, _amount)
+    self.totalBalances += _amount
+
+    _reaperStrategy: address = self.reaperStrategy
+    if _reaperStrategy != ZERO_ADDRESS:
+        _availableAmount: uint256 = ReaperStrategy(_reaperStrategy).availableToDeposit(_amount, _account)
+        self.balances[_account] += _availableAmount
+
+        if _amount - _availableAmount > 0:
+            self.balances[self] += _amount - _availableAmount
+
+        if _feeOptimization == False:
+            ReaperStrategy(_reaperStrategy).deposit(_amount)
+    else:
+        self.balances[_account] += _amount
+
+
+@external
+def invest():
+    _amount: uint256 = ERC20(self.lpToken).balanceOf(self)
+    if _amount > 0:
+        ReaperStrategy(self.reaperStrategy).invest(_amount)
+
+
+@external
+def reap():
+    ReaperStrategy(self.reaperStrategy).reap()
+
+
+@external
+def withdraw(_amount: uint256):
     self._snapshot(msg.sender)
 
-    withdraw_amount: uint256 = ReaperStrategy(self.strategy).withdraw(amount, msg.sender)
-    ERC20(self.lp_token).transfer(msg.sender, withdraw_amount)
+    _availableAmount: uint256 = _amount
+    _reaperStrategy: address = self.reaperStrategy
+    if _reaperStrategy != ZERO_ADDRESS:
+        _availableAmount = ReaperStrategy(_reaperStrategy).availableToWithdraw(_amount, msg.sender)
+
+        if _availableAmount > 0:
+            _lpToken: address = self.lpToken
+            _lpBalance: uint256 = ERC20(_lpToken).balanceOf(self)
+
+            if _lpBalance >= _availableAmount:
+                ERC20(self.lpToken).transfer(msg.sender, _availableAmount)
+            elif _lpBalance > 0:
+                ERC20(self.lpToken).transfer(msg.sender, _lpBalance)
+                ReaperStrategy(_reaperStrategy).withdraw(_availableAmount - _lpBalance, msg.sender)
+            else:
+                ReaperStrategy(_reaperStrategy).withdraw(_availableAmount, msg.sender)
+
+            if _amount - _availableAmount > 0:
+                self.balances[self] += _amount - _availableAmount
+    else:
+        ERC20(self.lpToken).transfer(msg.sender, _amount)
     
-    self.balanceOf[msg.sender] -= amount
-    self.totalSupply -= amount
-    log Withdraw(msg.sender, amount)
+    self.balances[msg.sender] -= _availableAmount
+    self.totalBalances -= _availableAmount
 
 
 @external
-def snapshot(account: address):
-    self._snapshot(account)
+def snapshot(_account: address = msg.sender):
+    self._snapshot(_account)
+
+
+@external
+def setReaperStrategy(_reaperStrategy: address):
+    assert msg.sender == self.owner, "owner only"
+    ERC20(self.lpToken).approve(_reaperStrategy, MAX_UINT256)
+    self.depositAllowance[self][_reaperStrategy] = MAX_UINT256
+    self.reaperStrategy = _reaperStrategy
 
 
 @external
 def kill():
     assert msg.sender == self.owner, "owner only"
-    self.is_killed = True
+    self.isKilled = True
 
 
 @external
-def setStrategy(_strategy: address):
+def setAdminFee(_percent: uint256):
     assert msg.sender == self.owner, "owner only"
-    ERC20(self.lp_token).approve(_strategy, MAX_UINT256)
-    self.strategy = _strategy
+    assert _percent <= ADMIN_FEE_MULTIPLYER, "_adminFee > 100%"
+    self.adminFee = _percent
 
 
 @external
-def setVotingController(_voting_controller: address):
+def transferOwnership(_futureOwner: address):
     assert msg.sender == self.owner, "owner only"
-    self.voting_controller = _voting_controller
-
-
-@external
-def setController(_controller: address):
-    assert msg.sender == self.owner, "owner only"
-    self.controller = _controller
-
-
-@external
-def transferOwnership(_future_owner: address):
-    assert msg.sender == self.owner, "owner only"
-
-    self.future_owner = _future_owner
-    log CommitOwnership(_future_owner)
+    self.futureOwner = _futureOwner
+    log CommitOwnership(_futureOwner)
 
 
 @external
 def applyOwnership():
     assert msg.sender == self.owner, "owner only"
-    _owner: address = self.future_owner
+    _owner: address = self.futureOwner
     assert _owner != ZERO_ADDRESS, "owner not set"
     self.owner = _owner
     log ApplyOwnership(_owner)

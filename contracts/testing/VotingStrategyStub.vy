@@ -13,7 +13,19 @@ def __init__():
 
 @view
 @external
+def votingController() -> address: 
+    return ZERO_ADDRESS
+
+
+@view
+@external
 def coinToVotes(amount: uint256) -> uint256: 
+    return amount
+
+
+@view
+@external
+def availableToVote(account: address, amount: uint256) -> uint256: 
     return amount
 
 

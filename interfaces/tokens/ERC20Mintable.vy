@@ -1,11 +1,17 @@
 # @version ^0.2.0
 
 
-@external    
-def mint(account: address, amount: uint256) -> bool:
-    return False
+@view
+@external
+def minter() -> address:
+    return ZERO_ADDRESS
 
 
-@external    
-def setMinter(_minter: address) -> bool:
-    return False
+@external
+def mint(_account: address, _amount: uint256):
+    pass
+
+
+@external
+def setMinter(_minter: address):
+    pass
