@@ -6,6 +6,8 @@ from brownie import (
     StakableERC20,
     Controller,
     VotingController,
+    FarmTokenVotingStrategy,
+    Reaper,
 )
 from pathlib import Path
 from . import utils
@@ -44,8 +46,8 @@ def deploy():
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
         DEPLOYER, {'from': DEPLOYER})
-    uniswap_factory.createPair(usdn, usdt)  # USDN/USDT
-    uniswap_factory.createPair(usdn, crv)   # USDN/CRV
+    usdn_usdt_lp = uniswap_factory.createPair.call(usdn, usdt)  # USDN/USDT
+    usdn_crv_lp = uniswap_factory.createPair.call(usdn, crv)   # USDN/CRV
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
@@ -102,14 +104,21 @@ def deploy():
     dft.setMinter(controller, {'from': DEPLOYER})
 
     voting_controller = VotingController.deploy(controller, {'from': DEPLOYER})
-    # simple_voting_strategy = SimpleVotingStrategy.deploy(
-    #     farm_token, 1, DAY, {'from': DEPLOYER})
-    # voting_controller.setStrategy(
-    #     farm_token, simple_voting_strategy, {'from': DEPLOYER})
+    dft_voting_strategy = FarmTokenVotingStrategy.deploy(
+        voting_controller, dft, 1, WEEK, {'from': DEPLOYER})
+    voting_controller.setVotingStrategy(
+        dft, dft_voting_strategy, {'from': DEPLOYER})
 
     # Reapers
-    # uniswapReaper = Reaper.deploy(_lp_token: address, reaper_controller, voting_controller, {'from': DEPLOYER})
-    # minter.setReaperController(reaperController, {'from': DEPLOYER})
+    usdn_usdt_reaper = Reaper.deploy(
+        usdn_usdt_lp, dft, controller, voting_controller, 15, {'from': DEPLOYER})   # 1,5%
+    controller.addReaper(usdn_usdt_reaper, {'from': DEPLOYER})
+    usdn_crv_reaper = Reaper.deploy(
+        usdn_crv_lp, dft, controller, voting_controller, 25, {'from': DEPLOYER})    # 2,5%
+    controller.addReaper(usdn_crv_reaper, {'from': DEPLOYER})
+    usdn_mpool_reaper = Reaper.deploy(
+        usdn_mpool_lp, dft, controller, voting_controller, 42, {'from': DEPLOYER})  # 4,2%
+    controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
 
 
 def deploy_erc20(name, symbol, decimals, mint):
