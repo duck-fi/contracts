@@ -34,7 +34,7 @@ event ApplyOwnership:
 
 
 YEAR: constant(uint256) = 86_400 * 365
-INITIAL_EMISSION: constant(uint256) = 1_000_000
+INITIAL_YEAR_EMISSION: constant(uint256) = 1_000_000
 EMISSION_REDUCTION_TIME: constant(uint256) = YEAR
 EMISSION_REDUCTION_DELIMITER: constant(uint256) = 2
 
@@ -84,7 +84,7 @@ def setName(_name: String[64], _symbol: String[32]):
 def startEmission():
     assert msg.sender == self.owner, "owner only"
     assert self.lastEmissionUpdateTimestamp == 0, "emission already started"
-    self._yearEmission = INITIAL_EMISSION * 10 ** self.decimals
+    self._yearEmission = INITIAL_YEAR_EMISSION * 10 ** self.decimals
     self.lastEmissionUpdateTimestamp = block.timestamp
     self.startEmissionTimestamp = block.timestamp
 
@@ -111,7 +111,8 @@ def yearEmission() -> uint256:
 
 @internal
 def _currentEmissionIntegral() -> uint256:
-    return self._updateYearEmission() * (block.timestamp - self.lastEmissionUpdateTimestamp) / YEAR + self._emissionIntegral
+    currentYearMaxEmission: uint256 = self._updateYearEmission() 
+    return self._emissionIntegral + currentYearMaxEmission * (block.timestamp - self.lastEmissionUpdateTimestamp) / YEAR
 
 
 @external
