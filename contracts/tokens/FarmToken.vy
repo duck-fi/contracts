@@ -34,19 +34,19 @@ event ApplyOwnership:
 
 
 YEAR: constant(uint256) = 86_400 * 365
-INITIAL_YEAR_EMISSION: constant(uint256) = 1_000_000
+DECIMALS: constant(uint256) = 18
+INITIAL_SUPPLY: constant(uint256) = 100_000 * 10 ** DECIMALS
+INITIAL_YEAR_EMISSION: constant(uint256) = 1_000_000 * 10 ** DECIMALS
 EMISSION_REDUCTION_TIME: constant(uint256) = YEAR
 EMISSION_REDUCTION_DELIMITER: constant(uint256) = 2
 
 
 name: public(String[64])
 symbol: public(String[32])
-decimals: public(uint256)
 balanceOf: public(HashMap[address, uint256])
 totalSupply: public(uint256)
 allowance: public(HashMap[address, HashMap[address, uint256]])
 
-_init_supply: uint256 # TODO consider to optimize: possible assign init_supply to _emissionIntegral in constructor
 _yearEmission: uint256
 _emissionIntegral: uint256
 startEmissionTimestamp: public(uint256)
@@ -58,19 +58,16 @@ futureOwner: public(address)
 
 
 @external
-def __init__(_name: String[64], _symbol: String[32], _decimals: uint256, _supply: uint256):
+def __init__(_name: String[64], _symbol: String[32]):
     self.name = _name
     self.symbol = _symbol
-    self.decimals = _decimals
 
-    init_supply: uint256 = _supply * 10 ** _decimals
-    self.balanceOf[msg.sender] = init_supply
-    self.totalSupply = init_supply
+    self.balanceOf[msg.sender] = INITIAL_SUPPLY
+    self.totalSupply = INITIAL_SUPPLY
     self.minter = msg.sender
     self.owner = msg.sender
-    self._init_supply = init_supply
 
-    log Transfer(ZERO_ADDRESS, msg.sender, init_supply)
+    log Transfer(ZERO_ADDRESS, msg.sender, INITIAL_SUPPLY)
 
 
 @external
@@ -84,7 +81,7 @@ def setName(_name: String[64], _symbol: String[32]):
 def startEmission():
     assert msg.sender == self.owner, "owner only"
     assert self.lastEmissionUpdateTimestamp == 0, "emission already started"
-    self._yearEmission = INITIAL_YEAR_EMISSION * 10 ** self.decimals
+    self._yearEmission = INITIAL_YEAR_EMISSION
     self.lastEmissionUpdateTimestamp = block.timestamp
     self.startEmissionTimestamp = block.timestamp
 
@@ -120,6 +117,11 @@ def emissionIntegral() -> uint256:
     return self._currentEmissionIntegral()
 
 
+@view
+@external
+def decimals() -> uint256:
+    return DECIMALS
+
 @external
 def transfer(_to : address, _value : uint256) -> bool:
     self.balanceOf[msg.sender] -= _value
@@ -153,19 +155,19 @@ def approve(_spender : address, _amount : uint256) -> bool:
 @external
 def setMinter(_minter: address):
     assert msg.sender == self.owner, "owner only"
-    assert _minter != ZERO_ADDRESS
+    assert _minter != ZERO_ADDRESS, "zero address"
     self.minter = _minter
 
 
 @external
 def mint(account: address, _amount: uint256):
-    assert msg.sender == self.minter # dev: not minter
-    assert account != ZERO_ADDRESS # dev: ZERO_ADDRESS
+    assert msg.sender == self.minter, "not minter"
+    assert account != ZERO_ADDRESS, "zero address"
 
     _totalSupply: uint256 = self.totalSupply
     self.totalSupply = _totalSupply + _amount
     self.balanceOf[account] += _amount
-    assert self._currentEmissionIntegral() + self._init_supply >= _totalSupply + _amount, "exceeds allowable mint amount"
+    assert self._currentEmissionIntegral() + INITIAL_SUPPLY >= _totalSupply + _amount, "exceeds allowable mint amount"
 
     log Transfer(ZERO_ADDRESS, account, _amount)
 

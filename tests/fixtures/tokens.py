@@ -14,7 +14,7 @@ USDN_TOKEN_DECIMALS = 18
 @pytest.fixture(scope="module")
 def farm_token(FarmToken, neo, minter):
     farm_token = FarmToken.deploy(
-        FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, FARM_TOKEN_DECIMALS, FARM_TOKEN_INITIAL_SUPPLY, {'from': neo})
+        FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, {'from': neo})
     farm_token.setMinter(minter)
     yield farm_token
 

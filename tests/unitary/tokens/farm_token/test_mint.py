@@ -118,11 +118,11 @@ def test_emission_overflow(farm_token, minter, trinity):
 
 @given(amount=strategy('uint256', min_value=1))
 def test_mint_not_minter(farm_token, neo, amount):
-    with brownie.reverts("dev: not minter"):
+    with brownie.reverts("not minter"):
         farm_token.mint(neo, amount, {'from': neo})
 
 
 @given(amount=strategy('uint256', min_value=1))
 def test_mint_zero_address(ZERO_ADDRESS, farm_token, minter, amount):
-    with brownie.reverts("dev: ZERO_ADDRESS"):
+    with brownie.reverts("zero address"):
         farm_token.mint(ZERO_ADDRESS, amount, {'from': minter})
