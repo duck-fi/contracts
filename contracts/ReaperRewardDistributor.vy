@@ -5,10 +5,13 @@ from vyper.interfaces import ERC20
 import interfaces.Ownable as Ownable
 import interfaces.ReaperRewardDistributor as ReaperRewardDistributor
 import interfaces.Reaper as Reaper
+import interfaces.GasToken as GasToken
+import interfaces.GasReducible as GasReducible
 
 
 implements: Ownable
 implements: ReaperRewardDistributor
+implements: GasReducible
 
 
 event CommitOwnership:
@@ -18,6 +21,9 @@ event ApplyOwnership:
     owner: address
 
 
+MIN_GAS_CONSTANT: constant(uint256) = 21_000
+
+
 reaper: public(address)
 lastBalance: public(HashMap[address, uint256])
 rewardIntegral: public(HashMap[address, uint256])
@@ -25,6 +31,7 @@ rewardIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 reapIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 totalReapIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 claimAllowance: public(HashMap[address, HashMap[address, HashMap[address, bool]]])
+gasTokens: public(HashMap[address, bool])
 
 owner: public(address)
 futureOwner: public(address)
@@ -35,6 +42,17 @@ def __init__(_reaper: address):
     assert _reaper != ZERO_ADDRESS, "reaper is not set"
     self.reaper = _reaper
     self.owner = msg.sender
+
+
+@internal
+def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    if _gasToken == ZERO_ADDRESS:
+        return
+
+    assert self.gasTokens[_gasToken], "unsupported gas token" 
+
+    gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
+    GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
 
 @external
@@ -53,7 +71,7 @@ def _claim(_coin: address, _account: address, _recipient: address):
 
     _rewardDiff: uint256 = _rewardIntegral - self.rewardIntegralFor[_coin][_account]
     _reaper: address = self.reaper
-    Reaper(_reaper).snapshot(_account)
+    Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
     _reapIntegralFor: uint256 = Reaper(_reaper).reapIntegralFor(_account)
     _reapIntegral: uint256 = Reaper(_reaper).reapIntegral()
     ERC20(_coin).transfer(_recipient, _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / (_reapIntegral - self.totalReapIntegralFor[_coin][_account]))
@@ -64,10 +82,14 @@ def _claim(_coin: address, _account: address, _recipient: address):
 
 
 @external
-def claim(_coin: address, _account: address):
+def claim(_coin: address, _account: address, _gasToken: address = ZERO_ADDRESS):
+    _gasStart: uint256 = msg.gas
+
     if _account != msg.sender:
         assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
     self._claim(_coin, _account, _account)
+
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
 
 @external
@@ -79,11 +101,19 @@ def claimableTokens(_coin: address, _account: address) -> uint256:
         _rewardDiff += _balance - _lastBalance
 
     _reaper: address = self.reaper
-    Reaper(_reaper).snapshot(_account)
+    Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
     _reapDiff: uint256 = Reaper(_reaper).reapIntegralFor(_account) - self.reapIntegralFor[_coin][_account]
     _totalReapDiff: uint256 = Reaper(_reaper).reapIntegral() - self.totalReapIntegralFor[_coin][_account]
 
     return _rewardDiff * _reapDiff / _totalReapDiff
+
+
+@external
+def setGasToken(_gasToken: address, _value: bool):
+    assert msg.sender == self.owner, "owner only"
+    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
+    
+    self.gasTokens[_gasToken] = _value
 
 
 @external
@@ -93,9 +123,14 @@ def emergencyWithdraw(_coin: address):
 
 
 @external
-def claimAdminFee(_coin: address):
+def claimAdminFee(_coin: address, _gasToken: address = ZERO_ADDRESS):
     assert msg.sender == self.owner, "owner only"
+
+    _gasStart: uint256 = msg.gas
+
     self._claim(_coin, self.reaper, msg.sender)
+
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
 @external

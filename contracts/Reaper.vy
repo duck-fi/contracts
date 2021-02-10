@@ -7,10 +7,13 @@ import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.tokens.Farmable as Farmable
 import interfaces.VotingController as VotingController
+import interfaces.GasToken as GasToken
+import interfaces.GasReducible as GasReducible
 
 
 implements: Reaper
 implements: Ownable
+implements: GasReducible
 
 
 event CommitOwnership:
@@ -22,6 +25,7 @@ event ApplyOwnership:
 
 VOTE_DIVIDER: constant(uint256) = 10 ** 18
 ADMIN_FEE_MULTIPLYER: constant(uint256) = 10 ** 3
+MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
 lpToken: public(address)
@@ -41,6 +45,7 @@ lastUnitCostIntegralFor: public(HashMap[address, uint256])
 emissionIntegral: public(uint256)
 voteIntegral: public(uint256)
 adminFee: public(uint256)
+gasTokens: public(HashMap[address, bool])
 
 owner: public(address)
 futureOwner: public(address)
@@ -63,8 +68,19 @@ def __init__(_lpToken: address, _farmToken: address, _controller: address, _voti
     ERC20(_farmToken).approve(_controller, MAX_UINT256)
 
 
+@internal
+def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    if _gasToken == ZERO_ADDRESS:
+        return
+
+    assert self.gasTokens[_gasToken], "unsupported gas token" 
+
+    gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
+    GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
+
+
 @external
-def depositApprove(_spender: address, _amount:uint256):
+def depositApprove(_spender: address, _amount: uint256):
     assert _amount == 0 or self.depositAllowance[msg.sender][_spender] == 0, "already approved"
     self.depositAllowance[msg.sender][_spender] = _amount
 
@@ -101,8 +117,10 @@ def _snapshot(_account: address):
 
 
 @external
-def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False):
+def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False, _gasToken: address = ZERO_ADDRESS):
     assert _amount > 0, "amount must be greater 0"
+
+    _gasStart: uint256 = msg.gas
     
     if _account != msg.sender:
         _allowance: uint256 = self.depositAllowance[_account][msg.sender]
@@ -127,21 +145,35 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
     else:
         self.balances[_account] += _amount
 
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 4)
+
 
 @external
-def invest():
+def invest(_gasToken: address = ZERO_ADDRESS):
+    _gasStart: uint256 = msg.gas
+
     _amount: uint256 = ERC20(self.lpToken).balanceOf(self)
-    if _amount > 0:
-        ReaperStrategy(self.reaperStrategy).invest(_amount)
+    if _amount == 0:
+        return
+
+    ReaperStrategy(self.reaperStrategy).invest(_amount)
+
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
 
 
 @external
-def reap():
+def reap(_gasToken: address = ZERO_ADDRESS):
+    _gasStart: uint256 = msg.gas
+
     ReaperStrategy(self.reaperStrategy).reap()
 
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
+
 
 @external
-def withdraw(_amount: uint256):
+def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):    
+    _gasStart: uint256 = msg.gas
+
     self._snapshot(msg.sender)
 
     _availableAmount: uint256 = _amount
@@ -169,10 +201,24 @@ def withdraw(_amount: uint256):
     self.balances[msg.sender] -= _availableAmount
     self.totalBalances -= _availableAmount
 
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
+
 
 @external
-def snapshot(_account: address = msg.sender):
+def snapshot(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):    
+    _gasStart: uint256 = msg.gas
+
     self._snapshot(_account)
+
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
+
+
+@external
+def setGasToken(_gasToken: address, _value: bool):
+    assert msg.sender == self.owner, "owner only"
+    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
+    
+    self.gasTokens[_gasToken] = _value
 
 
 @external

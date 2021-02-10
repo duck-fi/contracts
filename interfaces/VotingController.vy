@@ -80,17 +80,17 @@ def voteAllowance(_reaper: address, _coin: address, _owner: address, _voter: add
 
 
 @external
-def snapshot():
+def snapshot(_gasToken: address):
     pass
 
 
 @external
-def vote(_reaper: address, _coin: address, _amount: uint256, _account: address):
+def vote(_reaper: address, _coin: address, _amount: uint256, _account: address, _gasToken: address):
     pass
 
 
 @external
-def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address):
+def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address, _gasToken: address):
     pass
 
 
