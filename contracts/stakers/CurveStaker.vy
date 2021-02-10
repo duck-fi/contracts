@@ -72,7 +72,7 @@ def __init__(_stakeContract: address, _stakeToken: address, _rewardToken: addres
 @external
 def setLockingPeriod(_lockingPeriod: uint256):
     assert msg.sender == self.owner, "owner only"
-    assert MONTH <= _lockingPeriod and _lockingPeriod <= 4 * YEAR, "invalid param"
+    assert MONTH <= _lockingPeriod and _lockingPeriod <= 4 * YEAR, "month <= locking period <= 4 year"
     self.lockingPeriod = _lockingPeriod
 
 
