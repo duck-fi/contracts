@@ -71,7 +71,9 @@ def __init__(_lpToken: address, _farmToken: address, _controller: address, _voti
 @internal
 def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
     if _gasToken == ZERO_ADDRESS:
-        pass
+        return
+
+    assert self.gasTokens[_gasToken], "unsupported gas token" 
 
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
@@ -117,7 +119,6 @@ def _snapshot(_account: address):
 @external
 def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False, _gasToken: address = ZERO_ADDRESS):
     assert _amount > 0, "amount must be greater 0"
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
 
     _gasStart: uint256 = msg.gas
     
@@ -149,8 +150,6 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
 
 @external
 def invest(_gasToken: address = ZERO_ADDRESS):
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
-
     _gasStart: uint256 = msg.gas
 
     _amount: uint256 = ERC20(self.lpToken).balanceOf(self)
@@ -164,8 +163,6 @@ def invest(_gasToken: address = ZERO_ADDRESS):
 
 @external
 def reap(_gasToken: address = ZERO_ADDRESS):
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
-
     _gasStart: uint256 = msg.gas
 
     ReaperStrategy(self.reaperStrategy).reap()
@@ -174,9 +171,7 @@ def reap(_gasToken: address = ZERO_ADDRESS):
 
 
 @external
-def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
-    
+def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):    
     _gasStart: uint256 = msg.gas
 
     self._snapshot(msg.sender)
@@ -210,9 +205,7 @@ def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):
 
 
 @external
-def snapshot(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
-    
+def snapshot(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):    
     _gasStart: uint256 = msg.gas
 
     self._snapshot(_account)

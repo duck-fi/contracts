@@ -85,7 +85,9 @@ def __init__(_controller: address):
 @internal
 def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
     if _gasToken == ZERO_ADDRESS:
-        pass
+        return
+
+    assert self.gasTokens[_gasToken], "unsupported gas token" 
 
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
@@ -99,7 +101,6 @@ def snapshot(_gasToken: address = ZERO_ADDRESS):
     @dev Only possible to call it once per voting period
     """
     assert self.lastSnapshotTimestamp + self.votingPeriod < block.timestamp, "already snapshotted"
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
 
     _gasStart: uint256 = msg.gas
     
@@ -169,7 +170,6 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
     assert _amount > 0, "amount must be greater 0"
     assert self.indexByCoin[_coin] > 0 and self.strategyByCoin[_coin] != ZERO_ADDRESS, "invalid coin"
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
 
     _gasStart: uint256 = msg.gas
 
@@ -204,7 +204,6 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     @param _account Account who is unvoting
     """
     assert _amount > 0, "amount should be > 0"
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
 
     _gasStart: uint256 = msg.gas
 

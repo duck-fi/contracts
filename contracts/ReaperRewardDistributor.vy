@@ -47,7 +47,9 @@ def __init__(_reaper: address):
 @internal
 def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
     if _gasToken == ZERO_ADDRESS:
-        pass
+        return
+
+    assert self.gasTokens[_gasToken], "unsupported gas token" 
 
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
@@ -81,8 +83,6 @@ def _claim(_coin: address, _account: address, _recipient: address):
 
 @external
 def claim(_coin: address, _account: address, _gasToken: address = ZERO_ADDRESS):
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
-
     _gasStart: uint256 = msg.gas
 
     if _account != msg.sender:
@@ -125,7 +125,6 @@ def emergencyWithdraw(_coin: address):
 @external
 def claimAdminFee(_coin: address, _gasToken: address = ZERO_ADDRESS):
     assert msg.sender == self.owner, "owner only"
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
 
     _gasStart: uint256 = msg.gas
 

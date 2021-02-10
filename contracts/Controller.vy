@@ -49,7 +49,9 @@ def __init__(_farmToken: address):
 @internal
 def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
     if _gasToken == ZERO_ADDRESS:
-        pass
+        return
+
+    assert self.gasTokens[_gasToken], "unsupported gas token" 
 
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
@@ -59,7 +61,6 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
 @nonreentrant('lock')
 def mintFor(_reaper: address, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
 
     _gasStart: uint256 = msg.gas
 
@@ -129,7 +130,6 @@ def removeReaper(_reaper: address):
 def claimAdminFee(_reaper: address, _gasToken: address = ZERO_ADDRESS):
     assert msg.sender == self.owner, "owner only"
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
-    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
 
     _gasStart: uint256 = msg.gas
 
