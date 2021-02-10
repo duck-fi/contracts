@@ -49,7 +49,7 @@ def claimApprove(_coin: address, _claimer: address, _canClaim: bool):
 
 
 @external
-def claim(_coin: address, _account: address):
+def claim(_coin: address, _account: address, _gasToken: address):
     pass
 
 
@@ -65,5 +65,5 @@ def emergencyWithdraw(_coin: address):
 
 
 @external
-def claimAdminFee(_coin: address):
+def claimAdminFee(_coin: address, _gasToken: address):
     pass

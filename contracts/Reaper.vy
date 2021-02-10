@@ -7,10 +7,13 @@ import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.tokens.Farmable as Farmable
 import interfaces.VotingController as VotingController
+import interfaces.GasToken as GasToken
+import interfaces.GasReducible as GasReducible
 
 
 implements: Reaper
 implements: Ownable
+implements: GasReducible
 
 
 event CommitOwnership:
@@ -41,6 +44,7 @@ lastUnitCostIntegralFor: public(HashMap[address, uint256])
 emissionIntegral: public(uint256)
 voteIntegral: public(uint256)
 adminFee: public(uint256)
+gasTokens: public(HashMap[address, bool])
 
 owner: public(address)
 futureOwner: public(address)
@@ -64,7 +68,7 @@ def __init__(_lpToken: address, _farmToken: address, _controller: address, _voti
 
 
 @external
-def depositApprove(_spender: address, _amount:uint256):
+def depositApprove(_spender: address, _amount: uint256):
     assert _amount == 0 or self.depositAllowance[msg.sender][_spender] == 0, "already approved"
     self.depositAllowance[msg.sender][_spender] = _amount
 
@@ -101,8 +105,11 @@ def _snapshot(_account: address):
 
 
 @external
-def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False):
+def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False, _gasToken: address = ZERO_ADDRESS):
     assert _amount > 0, "amount must be greater 0"
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+
+    _gasStart: uint256 = msg.gas
     
     if _account != msg.sender:
         _allowance: uint256 = self.depositAllowance[_account][msg.sender]
@@ -127,21 +134,47 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
     else:
         self.balances[_account] += _amount
 
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 4)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+
 
 @external
-def invest():
+def invest(_gasToken: address = ZERO_ADDRESS):
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+
+    _gasStart: uint256 = msg.gas
+
     _amount: uint256 = ERC20(self.lpToken).balanceOf(self)
-    if _amount > 0:
-        ReaperStrategy(self.reaperStrategy).invest(_amount)
+    if _amount == 0:
+        return
+
+    ReaperStrategy(self.reaperStrategy).invest(_amount)
+
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 1)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
 
 
 @external
-def reap():
+def reap(_gasToken: address = ZERO_ADDRESS):
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+
+    _gasStart: uint256 = msg.gas
+
     ReaperStrategy(self.reaperStrategy).reap()
 
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 1)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+
 
 @external
-def withdraw(_amount: uint256):
+def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+    
+    _gasStart: uint256 = msg.gas
+
     self._snapshot(msg.sender)
 
     _availableAmount: uint256 = _amount
@@ -169,10 +202,30 @@ def withdraw(_amount: uint256):
     self.balances[msg.sender] -= _availableAmount
     self.totalBalances -= _availableAmount
 
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 2)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+
 
 @external
-def snapshot(_account: address = msg.sender):
+def snapshot(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+    
+    _gasStart: uint256 = msg.gas
+
     self._snapshot(_account)
+
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 2)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+
+
+@external
+def setGasToken(_gasToken: address, _value: bool):
+    assert msg.sender == self.owner, "owner only"
+    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
+    
+    self.gasTokens[_gasToken] = _value
 
 
 @external

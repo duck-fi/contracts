@@ -98,32 +98,32 @@ def lastUnitCostIntegralFor(_account: address) -> uint256:
 
 
 @external
-def depositApprove(_spender: address, _amount:uint256):
+def depositApprove(_spender: address, _amount: uint256):
     pass
 
 
 @external
-def deposit(_amount: uint256, _account: address, _feeOptimization: bool):
+def deposit(_amount: uint256, _account: address, _feeOptimization: bool, _gasToken: address):
     pass
 
 
 @external
-def invest():
+def invest(_gasToken: address):
     pass
 
 
 @external
-def reap():
+def reap(_gasToken: address):
     pass
 
 
 @external
-def withdraw(_amount: uint256):
+def withdraw(_amount: uint256, _gasToken: address):
     pass
 
 
 @external
-def snapshot(_account: address):
+def snapshot(_account: address, _gasToken: address):
     pass
 
 

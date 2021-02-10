@@ -2,7 +2,7 @@
 
 
 @external
-def mintFor(_reaper: address, _account: address): 
+def mintFor(_reaper: address, _account: address, _gasToken: address): 
     pass
 
 

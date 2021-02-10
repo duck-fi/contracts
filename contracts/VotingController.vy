@@ -5,10 +5,13 @@ import interfaces.Ownable as Ownable
 import interfaces.Controller as Controller
 import interfaces.VotingController as VotingController
 import interfaces.strategies.VotingStrategy as VotingStrategy
+import interfaces.GasToken as GasToken
+import interfaces.GasReducible as GasReducible
 
 
 implements: Ownable
 implements: VotingController
+implements: GasReducible
 
 
 struct VoteReaperSnapshot:
@@ -64,6 +67,7 @@ lastSnapshotTimestamp: public(uint256)
 lastSnapshotIndex: public(uint256)
 snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER]) # [snapshot index, record index]
 voteAllowance: public(HashMap[address, HashMap[address, HashMap[address, HashMap[address, bool]]]]) # reaper -> coin -> owner -> voter -> canVote
+gasTokens: public(HashMap[address, bool])
 
 
 @external
@@ -78,12 +82,15 @@ def __init__(_controller: address):
 
 @external
 @nonreentrant('lock')
-def snapshot():
+def snapshot(_gasToken: address = ZERO_ADDRESS):
     """
     @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
     @dev Only possible to call it once per voting period
     """
     assert self.lastSnapshotTimestamp + self.votingPeriod < block.timestamp, "already snapshotted"
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+
+    _gasStart: uint256 = msg.gas
     
     _lastReaperIndex: uint256 = Controller(self.controller).lastReaperIndex()
     
@@ -134,11 +141,15 @@ def snapshot():
         self.snapshots[self.lastSnapshotIndex][i].share = _reaperShare
         self.reaperIntegratedVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] += self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] * _dt
         self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] = _reaperShare
+    
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 1)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
 
 
 @external
 @nonreentrant('lock')
-def vote(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender):
+def vote(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     """
     @notice Vote for reaper `_reaper` using tokens `_coin` with amount `_amount` for user `_account`
     @param _reaper Reaper to vote for
@@ -149,6 +160,9 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
     assert _amount > 0, "amount must be greater 0"
     assert self.indexByCoin[_coin] > 0 and self.strategyByCoin[_coin] != ZERO_ADDRESS, "invalid coin"
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+
+    _gasStart: uint256 = msg.gas
 
     if _account != msg.sender:
         assert self.voteAllowance[_reaper][_coin][_account][msg.sender], "voting approve required"
@@ -166,10 +180,14 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
 
     log Vote(_reaper, _coin, _account, _availableAmount)
 
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 5)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+
 
 @external
 @nonreentrant('lock')
-def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender):
+def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     """
     @notice Unvote for reaper `_reaper` and withdraw tokens `_coin` with amount `_amount` for `_account`
     @dev Only possible with unlocked amount
@@ -179,6 +197,9 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     @param _account Account who is unvoting
     """
     assert _amount > 0, "amount should be > 0"
+    assert _gasToken == ZERO_ADDRESS or self.gasTokens[_gasToken], "unsupported gas token"
+
+    _gasStart: uint256 = msg.gas
 
     if _account != msg.sender:
         assert self.voteAllowance[_reaper][_coin][_account][msg.sender], "voting approve required"
@@ -199,6 +220,10 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     ERC20(_coin).transfer(_account, _unvoteAmount)
 
     log Unvote(_reaper, _coin, _account, _unvoteAmount)
+
+    if _gasToken != ZERO_ADDRESS:
+        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 5)
+        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
 
 
 @view
@@ -296,6 +321,14 @@ def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: boo
     self.voteAllowance[_reaper][_coin][msg.sender][_voter] = _canVote
 
     log VoteApproval(_reaper, _coin, msg.sender, _voter, _canVote)
+
+
+@external
+def setGasToken(_gasToken: address, _value: bool):
+    assert msg.sender == self.owner, "owner only"
+    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
+    
+    self.gasTokens[_gasToken] = _value
 
 
 @external
