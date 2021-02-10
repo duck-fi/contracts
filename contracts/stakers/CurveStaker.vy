@@ -34,7 +34,8 @@ event ApplyOwnership:
     owner: address
 
 
-DAY: constant(uint256) = 86400
+DAY: constant(uint256) = 86_400
+MONTH: constant(uint256) = 30 * DAY
 YEAR: constant(uint256) = 365 * DAY
 
 
@@ -71,7 +72,7 @@ def __init__(_stakeContract: address, _stakeToken: address, _rewardToken: addres
 @external
 def setLockingPeriod(_lockingPeriod: uint256):
     assert msg.sender == self.owner, "owner only"
-    assert _lockingPeriod > 0, "invalid param"
+    assert MONTH <= _lockingPeriod and _lockingPeriod <= 4 * YEAR, "invalid param"
     self.lockingPeriod = _lockingPeriod
 
 
@@ -131,31 +132,36 @@ def _depositToEscrow(_crvValue: uint256):
 @external
 @nonreentrant('lock')
 def depositToEscrow(_crvValue: uint256, _renewal: bool = False):
-    assert not (self.lockedFundsFor[msg.sender] > 0 and block.timestamp > self.lockUntilTimestampFor[msg.sender] and not _renewal), "withdrawal unlocked amount or renewal is needed"
+    assert _crvValue > 0, "nothing to deposit"
+    _lockedFunds: uint256 = self.lockedFundsFor[msg.sender]
+    _lockedUntil: uint256 = self.lockUntilTimestampFor[msg.sender]
 
-    if self.lockedFundsFor[msg.sender] > 0 and block.timestamp > self.lockUntilTimestampFor[msg.sender] and _renewal:
-        if _crvValue >= self.lockedFundsFor[msg.sender]:
-            assert ERC20(self.rewardToken).transferFrom(msg.sender, self, _crvValue - self.lockedFundsFor[msg.sender])
-            self._depositToEscrow(_crvValue)
-            self.lockedFundsFor[msg.sender] = _crvValue
-            self.lockUntilTimestampFor[msg.sender] = self.lockUntilTimestamp
-        else: 
-            raise "withdrawal unlocked amount is needed"
-    else:
+    if not _renewal:
+        assert not (_lockedFunds > 0 and block.timestamp > _lockedUntil), "withdrawal unlocked amount or renewal is needed"
         assert ERC20(self.rewardToken).transferFrom(msg.sender, self, _crvValue)
+
         self._depositToEscrow(_crvValue)
         self.lockedFundsFor[msg.sender] += _crvValue
+        self.lockUntilTimestampFor[msg.sender] = self.lockUntilTimestamp
+    else:
+        assert _lockedFunds > 0 and block.timestamp > _lockedUntil, "no unlocked amount for renewal"
+        assert _crvValue >= _lockedFunds, "withdrawal extra unlocked amount is needed"
+        assert ERC20(self.rewardToken).transferFrom(msg.sender, self, _crvValue - _lockedFunds)
+
+        self._depositToEscrow(_crvValue)
+        self.lockedFundsFor[msg.sender] = _crvValue
         self.lockUntilTimestampFor[msg.sender] = self.lockUntilTimestamp
 
 
 @external
 @nonreentrant('lock')
 def withdrawFromEscrow():
-    assert self.lockedFundsFor[msg.sender] > 0, "nothing to withdraw"
-    assert block.timestamp > self.lockUntilTimestampFor[msg.sender], "withdraw is locked"
-    assert ERC20(self.rewardToken).balanceOf(self) >= self.lockedFundsFor[msg.sender], "new lock creation is needed"
+    _lockedFunds: uint256 = self.lockedFundsFor[msg.sender]
+
+    assert _lockedFunds > 0, "nothing to withdraw"
+    assert block.timestamp > self.lockUntilTimestampFor[msg.sender], "withdraw is locked"    
+    assert ERC20(self.rewardToken).transfer(msg.sender, _lockedFunds), "new lock creation is needed before withdraw"
     
-    ERC20(self.rewardToken).transfer(msg.sender, self.lockedFundsFor[msg.sender])
     self.lockedFundsFor[msg.sender] = 0
 
 
