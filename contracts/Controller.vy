@@ -24,6 +24,7 @@ event ApplyOwnership:
 
 
 MAX_REAPERS_COUNT: constant(uint256) = 10 ** 6
+MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
 farmToken: public(address)
@@ -45,6 +46,15 @@ def __init__(_farmToken: address):
     self.owner = msg.sender
 
 
+@internal
+def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    if _gasToken == ZERO_ADDRESS:
+        pass
+
+    gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
+    GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
+
+
 @external
 @nonreentrant('lock')
 def mintFor(_reaper: address, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
@@ -64,9 +74,7 @@ def mintFor(_reaper: address, _account: address = msg.sender, _gasToken: address
         ERC20Mintable(self.farmToken).mint(_account, toMint)
         self.minted[_reaper][_account] = totalMinted
     
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 3)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
 
 @external
@@ -133,9 +141,7 @@ def claimAdminFee(_reaper: address, _gasToken: address = ZERO_ADDRESS):
         ERC20Mintable(self.farmToken).mint(msg.sender, toMint)
         self.minted[_reaper][_reaper] = totalMinted
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 2)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
 @external

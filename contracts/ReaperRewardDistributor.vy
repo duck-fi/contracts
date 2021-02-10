@@ -21,6 +21,9 @@ event ApplyOwnership:
     owner: address
 
 
+MIN_GAS_CONSTANT: constant(uint256) = 21_000
+
+
 reaper: public(address)
 lastBalance: public(HashMap[address, uint256])
 rewardIntegral: public(HashMap[address, uint256])
@@ -39,6 +42,15 @@ def __init__(_reaper: address):
     assert _reaper != ZERO_ADDRESS, "reaper is not set"
     self.reaper = _reaper
     self.owner = msg.sender
+
+
+@internal
+def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    if _gasToken == ZERO_ADDRESS:
+        pass
+
+    gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
+    GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
 
 @external
@@ -77,9 +89,7 @@ def claim(_coin: address, _account: address, _gasToken: address = ZERO_ADDRESS):
         assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
     self._claim(_coin, _account, _account)
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 3)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
 
 @external
@@ -121,9 +131,7 @@ def claimAdminFee(_coin: address, _gasToken: address = ZERO_ADDRESS):
 
     self._claim(_coin, self.reaper, msg.sender)
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 2)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
 @external

@@ -47,8 +47,10 @@ event ApplyOwnership:
 
 
 MULTIPLIER: constant(uint256) = 10 ** 18
-WEEK: constant(uint256) = 604800
-INIT_VOTING_TIME: constant(uint256) = 1609372800 # Thursday, 31 December 2020, 0:00:00 GMT
+WEEK: constant(uint256) = 604_800
+INIT_VOTING_TIME: constant(uint256) = 1_609_372_800 # Thursday, 31 December 2020, 0:00:00 GMT
+MIN_GAS_CONSTANT: constant(uint256) = 21_000
+
 
 owner: public(address)
 futureOwner: public(address)
@@ -78,6 +80,15 @@ def __init__(_controller: address):
     self.controller = _controller
     self.votingPeriod = WEEK
     self.owner = msg.sender
+
+
+@internal
+def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    if _gasToken == ZERO_ADDRESS:
+        pass
+
+    gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
+    GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
 
 @external
@@ -142,9 +153,7 @@ def snapshot(_gasToken: address = ZERO_ADDRESS):
         self.reaperIntegratedVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] += self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] * _dt
         self.lastVotes[self.snapshots[self.lastSnapshotIndex][i].reaper] = _reaperShare
     
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 1)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
 
 
 @external
@@ -180,9 +189,7 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
 
     log Vote(_reaper, _coin, _account, _availableAmount)
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 5)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
 
 
 @external
@@ -221,9 +228,7 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
 
     log Unvote(_reaper, _coin, _account, _unvoteAmount)
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 5)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
 
 
 @view

@@ -25,6 +25,7 @@ event ApplyOwnership:
 
 VOTE_DIVIDER: constant(uint256) = 10 ** 18
 ADMIN_FEE_MULTIPLYER: constant(uint256) = 10 ** 3
+MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
 lpToken: public(address)
@@ -65,6 +66,15 @@ def __init__(_lpToken: address, _farmToken: address, _controller: address, _voti
     self.owner = msg.sender
 
     ERC20(_farmToken).approve(_controller, MAX_UINT256)
+
+
+@internal
+def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    if _gasToken == ZERO_ADDRESS:
+        pass
+
+    gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
+    GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
 
 @external
@@ -134,9 +144,7 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
     else:
         self.balances[_account] += _amount
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 4)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 4)
 
 
 @external
@@ -151,9 +159,7 @@ def invest(_gasToken: address = ZERO_ADDRESS):
 
     ReaperStrategy(self.reaperStrategy).invest(_amount)
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 1)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
 
 
 @external
@@ -164,9 +170,7 @@ def reap(_gasToken: address = ZERO_ADDRESS):
 
     ReaperStrategy(self.reaperStrategy).reap()
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 1)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
 
 
 @external
@@ -202,9 +206,7 @@ def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):
     self.balances[msg.sender] -= _availableAmount
     self.totalBalances -= _availableAmount
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 2)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
 @external
@@ -215,9 +217,7 @@ def snapshot(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
 
     self._snapshot(_account)
 
-    if _gasToken != ZERO_ADDRESS:
-        gasSpent: uint256 = 21000 + _gasStart - msg.gas + 16 * (4 + 32 * 2)
-        GasToken(_gasToken).freeFromUpTo(msg.sender, (gasSpent + 14154) / 41130)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
 @external
