@@ -13,8 +13,7 @@ USDN_TOKEN_DECIMALS = 18
 
 @pytest.fixture(scope="module")
 def farm_token(FarmToken, deployer):
-    farm_token = FarmToken.deploy(
-        FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, FARM_TOKEN_DECIMALS, FARM_TOKEN_INITIAL_SUPPLY, {'from': deployer})
+    farm_token = FarmToken.deploy(FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, {'from': neo})
     yield farm_token
 
 
