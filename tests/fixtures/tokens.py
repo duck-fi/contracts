@@ -12,13 +12,12 @@ USDN_TOKEN_DECIMALS = 18
 
 
 @pytest.fixture(scope="module")
-def farm_token(FarmToken, neo, minter):
+def farm_token(FarmToken, deployer):
     farm_token = FarmToken.deploy(
-        FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, FARM_TOKEN_DECIMALS, FARM_TOKEN_INITIAL_SUPPLY, {'from': neo})
-    farm_token.setMinter(minter)
+        FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, FARM_TOKEN_DECIMALS, FARM_TOKEN_INITIAL_SUPPLY, {'from': deployer})
     yield farm_token
 
 
 @pytest.fixture(scope="module")
-def usdn_token(StakableERC20, neo):
-    yield StakableERC20.deploy(USDN_TOKEN_NAME, USDN_TOKEN_SYMBOL, USDN_TOKEN_DECIMALS, {'from': neo})
+def usdn_token(StakableERC20, deployer):
+    yield StakableERC20.deploy(USDN_TOKEN_NAME, USDN_TOKEN_SYMBOL, USDN_TOKEN_DECIMALS, {'from': deployer})

@@ -1,8 +1,3 @@
-import brownie
-import pytest
-from brownie.test import given, strategy
-
-
 def test_complex_v4(usdn_token, accounts):
     usdn_token.deposit(accounts[1], 1)
     usdn_token.deposit(accounts[0], 1000100)
