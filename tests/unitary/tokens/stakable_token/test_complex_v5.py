@@ -1,8 +1,3 @@
-import brownie
-import pytest
-from brownie.test import given, strategy
-
-
 def test_complex_v5(usdn_token, accounts):
     usdn_token.deposit(accounts[0], 100)
     usdn_token.withdraw(accounts[0])

@@ -7,11 +7,6 @@ def deployer(neo):
 
 
 @pytest.fixture(scope="session")
-def minter(accounts):
-    yield accounts[-1]
-
-
-@pytest.fixture(scope="session")
 def neo(accounts):
     yield accounts[0]
 
