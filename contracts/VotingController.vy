@@ -4,7 +4,6 @@ from vyper.interfaces import ERC20
 import interfaces.Ownable as Ownable
 import interfaces.Controller as Controller
 import interfaces.VotingController as VotingController
-import interfaces.strategies.VotingStrategy as VotingStrategy
 import interfaces.GasToken as GasToken
 import interfaces.GasReducible as GasReducible
 
@@ -46,8 +45,9 @@ event ApplyOwnership:
     admin: address
 
 
+DAY: constant(uint256) = 86_400
+WEEK: constant(uint256) = 7 * DAY
 MULTIPLIER: constant(uint256) = 10 ** 18
-WEEK: constant(uint256) = 604_800
 INIT_VOTING_TIME: constant(uint256) = 1_609_372_800 # Thursday, 31 December 2020, 0:00:00 GMT
 MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
@@ -56,14 +56,17 @@ owner: public(address)
 futureOwner: public(address)
 
 controller: public(address)
-coins: public(address[MULTIPLIER])
-lastCoinIndex: public(uint256)
-indexByCoin: public(HashMap[address, uint256]) # coin -> index
-strategyByCoin: public(HashMap[address, address]) # coin -> voting strategy
+farmToken: public(address)
+farmTokenRate: public(uint256)
+votingToken: public(address)
+votingTokenRate: public(uint256)
+votingTokenRateAmplifier: public(uint256)
+votingPeriod: public(uint256)
+lockingPeriod: public(uint256)
 balances: public(HashMap[address, HashMap[address, HashMap[address, uint256]]]) # reaper -> coin -> account -> amount
+balancesUnlockTimestamp: public(HashMap[address, HashMap[address, HashMap[address, uint256]]]) # reaper -> coin -> account -> unlock timestamp
 reaperBalances: public(HashMap[address, HashMap[address, uint256]]) # reaper -> coin -> balance
 lastVotes: public(HashMap[address, uint256])  # reaper -> lastVotes
-votingPeriod: public(uint256)
 reaperIntegratedVotes: public(HashMap[address, uint256]) # reaper -> integrated votes
 lastSnapshotTimestamp: public(uint256)
 lastSnapshotIndex: public(uint256)
@@ -73,12 +76,22 @@ gasTokens: public(HashMap[address, bool])
 
 
 @external
-def __init__(_controller: address):
+def __init__(_controller: address, _farmToken: address, _votingToken: address):
     """
     @notice Contract constructor
     """
+    assert _controller != ZERO_ADDRESS, "controller is not set"
+    assert _farmToken != ZERO_ADDRESS, "farmToken is not set"
+    assert _votingToken != ZERO_ADDRESS, "votingToken is not set"
+
     self.controller = _controller
+    self.farmToken = _farmToken
+    self.farmTokenRate = 1
+    self.votingToken = _votingToken
+    self.votingTokenRate = 2
+    self.votingTokenRateAmplifier = 2
     self.votingPeriod = WEEK
+    self.lockingPeriod = WEEK
     self.owner = msg.sender
 
 
@@ -133,14 +146,11 @@ def snapshot(_gasToken: address = ZERO_ADDRESS):
             break
 
         _currentReaper: address = Controller(self.controller).reapers(i)
-        _reaperVoteBalance: uint256 = 0
-
-        for j in range(1, MULTIPLIER):
-            if j > self.lastCoinIndex:
-                break
-
-            _coin: address = self.coins[j]
-            _reaperVoteBalance += VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.reaperBalances[_currentReaper][_coin])
+        
+        _farmTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.farmToken]
+        _votingTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.votingToken]
+        _votingTokenRate: uint256 = self.votingTokenRate + self.votingTokenRateAmplifier * (MULTIPLIER * _farmTokenBalance) / (_farmTokenBalance + _votingTokenBalance) / MULTIPLIER
+        _reaperVoteBalance: uint256 = _votingTokenRate * _votingTokenBalance + _farmTokenBalance * self.farmTokenRate
 
         self.snapshots[self.lastSnapshotIndex][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: _reaperVoteBalance, share: 0})
         _totalVoteBalance += _reaperVoteBalance
@@ -169,25 +179,20 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
     """
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
     assert _amount > 0, "amount must be greater 0"
-    assert self.indexByCoin[_coin] > 0 and self.strategyByCoin[_coin] != ZERO_ADDRESS, "invalid coin"
+    assert _coin == self.farmToken or _coin == self.votingToken, "invalid coin"
 
     _gasStart: uint256 = msg.gas
 
     if _account != msg.sender:
         assert self.voteAllowance[_reaper][_coin][_account][msg.sender], "voting approve required"
+
+    self.balances[_reaper][_coin][_account] += _amount
+    self.balancesUnlockTimestamp[_reaper][_coin][_account] = block.timestamp + self.votingPeriod
+    self.reaperBalances[_reaper][_coin] += _amount
     
-    ERC20(_coin).transferFrom(_account, self, _amount)
+    assert ERC20(_coin).transferFrom(_account, self, _amount), "ERC20 transferFrom revert"
 
-    _availableAmount: uint256 = VotingStrategy(self.strategyByCoin[_coin]).availableToVote(_account, _amount)
-    self.balances[_reaper][_coin][_account] += _availableAmount
-    self.reaperBalances[_reaper][_coin] += _availableAmount
-
-    if _amount - _availableAmount > 0:
-        self.balances[_reaper][_coin][self] += _amount - _availableAmount
-
-    VotingStrategy(self.strategyByCoin[_coin]).vote(_account, _amount)
-
-    log Vote(_reaper, _coin, _account, _availableAmount)
+    log Vote(_reaper, _coin, _account, _amount)
 
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
 
@@ -210,22 +215,15 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     if _account != msg.sender:
         assert self.voteAllowance[_reaper][_coin][_account][msg.sender], "voting approve required"
 
-    _unvoteAmount: uint256 = 0
-    if self.strategyByCoin[_coin] == ZERO_ADDRESS:
-        assert self.balances[_reaper][_coin][_account] >=  _amount, "insufficiend funds"
-        _unvoteAmount = _amount
-    else:
-        _availableAmount: uint256 = VotingStrategy(self.strategyByCoin[_coin]).availableToUnvote(_account, _amount)
-        assert self.balances[_reaper][_coin][_account] >= _availableAmount, "insufficiend funds"
-        assert _availableAmount > 0, "tokens are locked"
-        _unvoteAmount = VotingStrategy(self.strategyByCoin[_coin]).unvote(_account, _amount)
+    assert self.balances[_reaper][_coin][_account] >= _amount, "insufficiend funds"
+    assert self.balancesUnlockTimestamp[_reaper][_coin][_account] < block.timestamp, "tokens are locked"
 
-    self.balances[_reaper][_coin][_account] -= _unvoteAmount
-    self.reaperBalances[_reaper][_coin] -= _unvoteAmount
+    self.balances[_reaper][_coin][_account] -= _amount
+    self.reaperBalances[_reaper][_coin] -= _amount
     
-    ERC20(_coin).transfer(_account, _unvoteAmount)
+    assert ERC20(_coin).transfer(_account, _amount), "ERC20 transfer revert"
 
-    log Unvote(_reaper, _coin, _account, _unvoteAmount)
+    log Unvote(_reaper, _coin, _account, _amount)
 
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
 
@@ -240,10 +238,10 @@ def availableToUnvote(_reaper: address, _coin: address, _account: address) -> ui
     @param _account Account who is unvoting
     @return Unlocked amount to withdraw
     """
-    if self.strategyByCoin[_coin] == ZERO_ADDRESS:
-        return self.balances[_reaper][_coin][_account]
-    else:
-        return VotingStrategy(self.strategyByCoin[_coin]).availableToUnvote(_account, self.balances[_reaper][_coin][_account])
+    if self.balancesUnlockTimestamp[_reaper][_coin][_account] >= block.timestamp:
+        return 0
+    
+    return self.balances[_reaper][_coin][_account]
 
 
 @view
@@ -277,14 +275,11 @@ def reaperVotePower(_reaper: address) -> uint256:
             break
 
         _currentReaper: address = Controller(self.controller).reapers(i)
-        _reaperVoteBalance: uint256 = 0
-
-        for j in range(1, MULTIPLIER):
-            if j > self.lastCoinIndex:
-                break
-
-            _coin: address = self.coins[j]
-            _reaperVoteBalance += VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.reaperBalances[_currentReaper][_coin])
+        
+        _farmTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.farmToken]
+        _votingTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.votingToken]
+        _votingTokenRate: uint256 = self.votingTokenRate + self.votingTokenRateAmplifier * (MULTIPLIER * _farmTokenBalance) / (_farmTokenBalance + _votingTokenBalance) / MULTIPLIER
+        _reaperVoteBalance: uint256 = _votingTokenRate * _votingTokenBalance + _farmTokenBalance * self.farmTokenRate
 
         if _reaper == _currentReaper:
             _targetVoteBalance = _reaperVoteBalance
@@ -299,18 +294,18 @@ def reaperVotePower(_reaper: address) -> uint256:
 
 @view
 @external
-def accountVotePower(_reaper: address, _coin: address, _account: address) -> uint256:
+def accountVotePower(_reaper: address, _account: address) -> uint256:
     """
     @notice Returns vote power share for account `_account` for reaper `_reaper` multiplied on 1e18
     @param _reaper Reaper to get its vote power for
-    @param _coin Coin which has been used to vote
     @param _account Account to get its vote power for
     @return Vote power multiplied on 1e18
     """
-    if self.strategyByCoin[_coin] == ZERO_ADDRESS:
-        return 0
-    
-    return VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.balances[_reaper][_coin][_account])
+    _farmTokenBalance: uint256 = self.reaperBalances[_reaper][self.farmToken]
+    _votingTokenBalance: uint256 = self.reaperBalances[_reaper][self.votingToken]
+    _votingTokenRate: uint256 = self.votingTokenRate + self.votingTokenRateAmplifier * (MULTIPLIER * _farmTokenBalance) / (_farmTokenBalance + _votingTokenBalance) / MULTIPLIER
+
+    return _votingTokenRate * self.balances[_reaper][self.votingToken][_account] + self.balances[_reaper][self.farmToken][_account] * self.farmTokenRate
 
 
 @external
@@ -336,45 +331,6 @@ def setGasToken(_gasToken: address, _value: bool):
 
 
 @external
-def setVotingStrategy(_coin: address, _votingStrategy: address = ZERO_ADDRESS):
-    """
-    @notice Sets or removes strategy `_votingStrategy` for coin `_coin`
-    @dev Callable by owner only
-    @param _coin Coin to set or remove strategy for
-    @param _votingStrategy Strategy contract address (ZERO_ADDRESS to remove)
-    """
-    assert self.owner == msg.sender, "owner only"
-
-    if self.indexByCoin[_coin] == 0:
-        # new coin addition with strategy
-        assert _votingStrategy != ZERO_ADDRESS, "invalid strategy"
-
-        _newCoinIndex: uint256 = self.lastCoinIndex + 1
-        self.coins[_newCoinIndex] = _coin
-        self.indexByCoin[_coin] = _newCoinIndex
-        self.lastCoinIndex = _newCoinIndex
-    elif _votingStrategy == ZERO_ADDRESS:
-        # removing coin and strategy
-        _removingCoinIndex: uint256 = self.indexByCoin[_coin]
-        lastCoinIndex: uint256 = self.lastCoinIndex
-        
-        if _removingCoinIndex < lastCoinIndex:
-            self.indexByCoin[_coin] = 0
-            last_coin: address = self.coins[lastCoinIndex]
-            self.coins[lastCoinIndex] = ZERO_ADDRESS
-            self.indexByCoin[last_coin] = _removingCoinIndex
-            self.coins[_removingCoinIndex] = last_coin
-        else:
-            self.coins[lastCoinIndex] = ZERO_ADDRESS
-        
-        self.indexByCoin[_coin] = 0
-        self.lastCoinIndex -= 1
-    
-    # updating strategy
-    self.strategyByCoin[_coin] = _votingStrategy
-
-
-@external
 def setVotingPeriod(_votingPeriod: uint256):
     """
     @notice Sets voting period `_votingPeriod` in unixtime
@@ -385,6 +341,44 @@ def setVotingPeriod(_votingPeriod: uint256):
     assert _votingPeriod > 0, "invalid params"
 
     self.votingPeriod = _votingPeriod
+
+
+@external
+def setLockingPeriod(_lockingPeriod: uint256):
+    """
+    @notice Sets locking period `_lockingPeriod` in unixtime
+    @dev Callable by owner only
+    @param _lockingPeriod Locking period in unixtime
+    """
+    assert self.owner == msg.sender, "owner only"
+    assert _lockingPeriod > 0, "invalid params"
+
+    self.lockingPeriod = _lockingPeriod
+
+
+@external
+def setFarmTokenRate(_rate: uint256):
+    """
+    @notice Sets new rate `_rate` for FarmToken
+    @dev Callable by owner only
+    @param _rate New FarmToken rate
+    """
+    assert self.owner == msg.sender, "owner only"
+
+    self.farmTokenRate = _rate
+
+
+@external
+def setVotingTokenRate(_rate: uint256, _amplifier: uint256):
+    """
+    @notice Sets new rate `_rate` for VotingToken
+    @dev Callable by owner only
+    @param _rate New VotingToken rate
+    """
+    assert self.owner == msg.sender, "owner only"
+
+    self.votingTokenRate = _rate
+    self.votingTokenRateAmplifier = _amplifier
 
 
 @external

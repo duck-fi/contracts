@@ -9,31 +9,55 @@ def controller() -> address:
 
 @view
 @external
-def coins(_index: uint256) -> address:
+def farmToken() -> address:
     return ZERO_ADDRESS
 
 
 @view
 @external
-def lastCoinIndex() -> uint256:
+def farmTokenRate() -> uint256:
     return 0
 
 
 @view
 @external
-def indexByCoin(_coin: address) -> uint256:
-    return 0
-
-
-@view
-@external
-def strategyByCoin(_coin: address) -> address:
+def votingToken() -> address:
     return ZERO_ADDRESS
+
+
+@view
+@external
+def votingTokenRate() -> uint256:
+    return 0
+
+
+@view
+@external
+def votingTokenRateAmplifier() -> uint256:
+    return 0
+
+
+@view
+@external
+def votingPeriod() -> uint256:
+    return 0
+
+
+@view
+@external
+def lockingPeriod() -> uint256:
+    return 0
 
 
 @view
 @external
 def balances(_reaper: address, _coin: address, _account: address) -> uint256:
+    return 0
+
+
+@view
+@external
+def balancesUnlockTimestamp(_reaper: address, _coin: address, _account: address) -> uint256:
     return 0
 
 
@@ -46,12 +70,6 @@ def reaperBalances(_reaper: address, _coin: address) -> uint256:
 @view
 @external
 def lastVotes(_reaper: address) -> uint256:
-    return 0
-
-
-@view
-@external
-def votingPeriod() -> uint256:
     return 0
 
 
@@ -114,7 +132,7 @@ def reaperVotePower(_reaper: address) -> uint256:
 
 @view
 @external
-def accountVotePower(_reaper: address, _coin: address, _account: address) -> uint256:
+def accountVotePower(_reaper: address, _account: address) -> uint256:
     return 0
 
 
@@ -124,10 +142,20 @@ def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: boo
 
 
 @external
-def setVotingStrategy(_coin: address, _votingStrategy: address):
+def setVotingPeriod(_votingPeriod: uint256):
     pass
 
 
 @external
-def setVotingPeriod(_votingPeriod: uint256):
+def setLockingPeriod(_lockingPeriod: uint256):
+    pass
+
+
+@external
+def setFarmTokenRate(_rate: uint256):
+    pass
+
+
+@external
+def setVotingTokenRate(_rate: uint256, _amplifier: uint256):
     pass
