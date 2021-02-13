@@ -36,18 +36,17 @@ name: public(String[32])
 symbol: public(String[8])
 decimals: public(uint256)
 
-isDeprecated: public(bool)
+isDeprecated: public(bool)                                      # deprecate transfer, stake, deposit, withdraw 
 
-percents: public(uint256[MAX_RECORDS_LENGTH])
-percentsLength: public(uint256)
-deposits: public(HashMap[address, uint256])
-rewardIndexForAccount: public(HashMap[address, uint256])
-allowance: public(HashMap[address, HashMap[address, uint256]])
+percents: public(uint256[MAX_RECORDS_LENGTH])                   # percents(n) = percents(n-1) * (PERCENT_FACTOR + (PERCENT_FACTOR * reward) / _liquidTotalSupply), percents(0) = PERCENT_FACTOR
+percentsLength: public(uint256)                                 # percents array length
+deposits: public(HashMap[address, uint256])                     # all deposits after last stake by account
+rewardIndexForAccount: public(HashMap[address, uint256])        # index of last percent by account
+allowance: public(HashMap[address, HashMap[address, uint256]])  # ERC20 allowance
 
-_balances: HashMap[address, uint256]
-
-_liquidDeposit: uint256
-_liquidTotalSupply: uint256
+_balances: HashMap[address, uint256]                            # balance of account at percents[rewardIndexForAccount[account]]
+_liquidDeposit: uint256                                         # all deposits after last stake
+_liquidTotalSupply: uint256                                     # totalSupply - _liquidDeposit
 
 
 @external
