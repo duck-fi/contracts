@@ -1,15 +1,16 @@
-#!/usr/bin/python3
-
-import pytest
 import brownie
 from brownie.test import given, strategy
 
 # TODO consider to move into shared place/module
+
+
 def to_raw_farm_token(dec_amount: float) -> int:
     return dec_amount * (10 ** FARM_TOKEN_DECIMALS)
 
+
 def to_dec_farm_token(raw_amount: int) -> float:
     return raw_amount / (10 ** FARM_TOKEN_DECIMALS)
+
 
 FARM_TOKEN_DECIMALS = 18
 FARM_TOKEN_INITIAL_SUPPLY_DEC = 100_000
@@ -19,41 +20,39 @@ SECONDS_IN_YEAR = 86_400 * 365
 EMISSION_REDUCTION_SECONDS = SECONDS_IN_YEAR
 
 
-def test_fail_to_update_minter_not_by_owner(farm_token, minter, neo, morpheus):
+def test_fail_to_update_minter_not_by_owner(farm_token, thomas, morpheus):
     with brownie.reverts("owner only"):
-        farm_token.setMinter(morpheus, {'from': minter})
+        farm_token.setMinter(morpheus, {'from': thomas})
 
 
-def test_success_update_minter_by_owner(farm_token, minter, neo, morpheus):
-    farm_token.setMinter(morpheus, {'from': neo})
-    farm_token.setMinter(minter, {'from': neo})
+def test_success_update_minter_by_owner(farm_token, deployer, morpheus):
+    farm_token.setMinter(morpheus, {'from': deployer})
+    farm_token.setMinter(deployer, {'from': deployer})
 
 
-def test_transferFrom_without_approval_by_minter(farm_token, minter, neo, morpheus):
-    balance = farm_token.balanceOf(neo)
+def test_transferFrom_without_approval_by_minter(farm_token, deployer, morpheus):
+    balance = farm_token.balanceOf(deployer)
     amount = balance / 2
+    farm_token.transfer(morpheus, amount, {'from': deployer})
 
-    # minter should be able to call transferFrom without prior approval
-    farm_token.transferFrom(neo, morpheus, amount, {
-                               'from': minter})
-
-    assert farm_token.balanceOf(neo) == balance - amount
+    assert farm_token.balanceOf(deployer) == balance - amount
     assert farm_token.balanceOf(morpheus) == amount
 
 
 @given(amount=strategy('uint256', min_value=1))
-def test_fail_to_mint_beforeStartEmission(farm_token, minter, trinity, amount):
+def test_fail_to_mint_beforeStartEmission(farm_token, deployer, trinity, amount):
     with brownie.reverts("exceeds allowable mint amount"):
-        farm_token.mint(trinity, amount, {'from': minter})
+        farm_token.mint(trinity, amount, {'from': deployer})
 
 
 def assert_emission(farm_token, expected_yearEmission):
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
-    tx = farm_token.yearEmission()
-    assert tx.return_value == expected_yearEmission, "invalid yearEmission"
-    tx_emissionIntegral = farm_token.emissionIntegral()
-    dt = tx_emissionIntegral.timestamp - lastEmissionUpdateTimestamp
-    assert tx_emissionIntegral.return_value == dt * expected_yearEmission / SECONDS_IN_YEAR, "invalid emissionIntegral"
+    assert farm_token.yearEmission(
+    ).return_value == expected_yearEmission, "invalid yearEmission"
+    missionIntegralTx = farm_token.emissionIntegral()
+    dt = missionIntegralTx.timestamp - lastEmissionUpdateTimestamp
+    assert missionIntegralTx.return_value == dt * \
+        expected_yearEmission / SECONDS_IN_YEAR, "invalid emissionIntegral"
 
 
 def test_yearEmission_beforeStartEmission(farm_token):
@@ -61,18 +60,18 @@ def test_yearEmission_beforeStartEmission(farm_token):
 
 
 def test_yearEmission_inNextYear_beforeStartEmission(farm_token, chain):
-    chain.mine(100, chain.time() + EMISSION_REDUCTION_SECONDS + 100)
+    chain.mine(100, None, EMISSION_REDUCTION_SECONDS + 100)
     test_yearEmission_beforeStartEmission(farm_token)
 
 
-def test_fail_to_startEmission_not_by_owner(farm_token, minter):
+def test_fail_to_startEmission_not_by_owner(farm_token, thomas):
     with brownie.reverts("owner only"):
-        farm_token.startEmission({'from': minter})
+        farm_token.startEmission({'from': thomas})
 
 
-def test_success_startEmission(farm_token, neo, chain):
+def test_success_startEmission(farm_token, deployer, chain):
     t1 = chain.time()
-    farm_token.startEmission({'from': neo})
+    farm_token.startEmission({'from': deployer})
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
     startEmissionTimestamp = farm_token.startEmissionTimestamp()
     t2 = chain.time()
@@ -82,11 +81,11 @@ def test_success_startEmission(farm_token, neo, chain):
     assert_emission(farm_token, INITIAL_EMISSION_RAW)
 
 
-def test_emissionIntegral_progress(farm_token, chain, trinity, minter):
+def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_ADDRESS):
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
 
-    for quarter in range(1, 12): # 3 years 
-        prev_val = farm_token.emissionIntegral().return_value
+    for quarter in range(1, 12):  # 3 years
+        old_emission_integral = farm_token.emissionIntegral().return_value
 
         time_move = quarter * SECONDS_IN_YEAR / 4
         chain.mine(100, lastEmissionUpdateTimestamp + time_move)
@@ -95,34 +94,43 @@ def test_emissionIntegral_progress(farm_token, chain, trinity, minter):
         quater_max_minting_amount = year_emission / 4
 
         # emission integral always increase its' value
-        new_val = farm_token.emissionIntegral().return_value
-        assert new_val > prev_val, "current emissionIntegral value must be greater than prev: quarter={quarter} time_move={time_move}"
+        emission_integral = farm_token.emissionIntegral().return_value
+        assert emission_integral > old_emission_integral, "current emissionIntegral value must be greater than prev: quarter={quarter} time_move={time_move}"
 
         # mint process affects user's balance and total supply
         balance_before = farm_token.balanceOf(trinity)
         total_supply = farm_token.totalSupply()
-        farm_token.mint(trinity, quater_max_minting_amount, {'from': minter})
-        assert farm_token.balanceOf(trinity) == balance_before + quater_max_minting_amount, "minting process affects user's balance: quarter={quarter}"
-        assert farm_token.totalSupply() == total_supply + quater_max_minting_amount, "minting process affects total supply: quarter={quarter}"
+
+        mint_tx = farm_token.mint(
+            trinity, quater_max_minting_amount, {'from': deployer})
+        assert len(mint_tx.events) == 1
+        assert mint_tx.events["Transfer"].values(
+        ) == [ZERO_ADDRESS, trinity, quater_max_minting_amount]
+
+        assert farm_token.balanceOf(trinity) == balance_before + \
+            quater_max_minting_amount, "minting process affects user's balance: quarter={quarter}"
+        assert farm_token.totalSupply() == total_supply + \
+            quater_max_minting_amount, "minting process affects total supply: quarter={quarter}"
 
         # fail to mint more than allowed
         with brownie.reverts("exceeds allowable mint amount"):
-            farm_token.mint(trinity, to_raw_farm_token(100), {'from': minter})
+            farm_token.mint(trinity, to_raw_farm_token(100),
+                            {'from': deployer})
 
 
-def test_emission_overflow(farm_token, minter, trinity):
+def test_emission_overflow(farm_token, deployer, trinity):
     amount = farm_token.yearEmission().return_value + 1
     with brownie.reverts("exceeds allowable mint amount"):
-        farm_token.mint(trinity, amount, {'from': minter})
+        farm_token.mint(trinity, amount, {'from': deployer})
 
 
 @given(amount=strategy('uint256', min_value=1))
-def test_mint_not_minter(farm_token, neo, amount):
-    with brownie.reverts("not minter"):
-        farm_token.mint(neo, amount, {'from': neo})
+def test_mint_not_minter(farm_token, thomas, amount):
+    with brownie.reverts("minter only"):
+        farm_token.mint(thomas, amount, {'from': thomas})
 
 
 @given(amount=strategy('uint256', min_value=1))
-def test_mint_zero_address(ZERO_ADDRESS, farm_token, minter, amount):
+def test_mint_zero_address(ZERO_ADDRESS, farm_token, deployer, amount):
     with brownie.reverts("zero address"):
-        farm_token.mint(ZERO_ADDRESS, amount, {'from': minter})
+        farm_token.mint(ZERO_ADDRESS, amount, {'from': deployer})

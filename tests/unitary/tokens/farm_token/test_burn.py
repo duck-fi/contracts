@@ -4,13 +4,15 @@ from brownie.test import given, strategy
 
 
 @given(amount=strategy('uint256', min_value=2, max_value=10000*10**18))
-def test_burn_affects_balance(farm_token, neo, amount):
+def test_burn_affects_balance(farm_token, neo, amount, ZERO_ADDRESS):
     total_supply = farm_token.totalSupply()
     balance = farm_token.balanceOf(neo)
 
-    farm_token.burn(amount, {'from': neo})
+    tx = farm_token.burn(amount, {'from': neo})
     assert farm_token.balanceOf(neo) == balance - amount
     assert farm_token.totalSupply() == total_supply - amount
+    assert len(tx.events) == 1
+    assert tx.events["Transfer"].values() == [neo, ZERO_ADDRESS, amount]
 
     burnAmount = floor(amount / 2)
     farm_token.burn(burnAmount, {'from': neo})

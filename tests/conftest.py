@@ -1,5 +1,4 @@
 import pytest
-import brownie
 
 pytest_plugins = [
     "fixtures.accounts",

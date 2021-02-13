@@ -1,7 +1,4 @@
-#!/usr/bin/python3
-
 import brownie
-import pytest
 from brownie.test import given, strategy
 
 
@@ -18,7 +15,7 @@ def test_approve(farm_token, neo, morpheus):
 
 
 @given(
-    amount=strategy('uint256', min_value=1), 
+    amount=strategy('uint256', min_value=1),
     another_amount=strategy('uint256', min_value=1),
 )
 def test_modify_approve_nonzero(farm_token, neo, morpheus, amount, another_amount):
@@ -30,7 +27,7 @@ def test_modify_approve_nonzero(farm_token, neo, morpheus, amount, another_amoun
 
 @given(
     amount=strategy('uint256', min_value=1),
-    another_amount=strategy('uint256', min_value=1),  
+    another_amount=strategy('uint256', min_value=1),
 )
 def test_modify_approve_zero_nonzero(farm_token, neo, morpheus, amount, another_amount):
     farm_token.approve(morpheus, 0, {'from': neo})

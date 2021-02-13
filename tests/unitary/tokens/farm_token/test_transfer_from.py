@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import brownie
 from brownie.test import given, strategy
 
@@ -26,7 +24,7 @@ def test_sender_balance_decreases(farm_token, neo, morpheus, trinity, amount):
     assert farm_token.allowance(neo, trinity) == sender_balance
 
 
-@given(amount=strategy('uint256', min_value=1, max_value=10000*10**18))
+@given(amount=strategy('uint256', min_value=1, max_value=100*10**18))
 def test_max_allowance(farm_token, neo, morpheus, trinity, amount):
     farm_token.approve(morpheus, 0, {'from': neo})
     farm_token.approve(morpheus, 2**256 - 1, {'from': neo})
@@ -70,9 +68,8 @@ def test_insufficient_approval(farm_token, neo, morpheus, trinity):
         farm_token.transferFrom(neo, trinity, balance, {'from': morpheus})
 
 
-def test_transfer_to_self_no_approval(farm_token, neo, minter):
+def test_transfer_to_self_no_approval(farm_token, neo):
     amount = farm_token.balanceOf(neo)
-
     with brownie.reverts():
         farm_token.transferFrom(neo, neo, amount, {'from': neo})
 
@@ -118,19 +115,11 @@ def test_transfer_full_balance(farm_token, neo, morpheus, trinity):
     assert farm_token.balanceOf(trinity) == receiver_balance + amount
 
 
-@given(amount=strategy('uint256', min_value=1, max_value=10000*10**18))
-def test_approve_minter(farm_token, neo, oracle, amount, minter):
-    sender_balance = farm_token.balanceOf(neo)
-    receiver_balance = farm_token.balanceOf(oracle)
-    caller_balance = farm_token.balanceOf(minter)
-    total_supply = farm_token.totalSupply()
+def test_transfer_to_zero(farm_token, neo, ZERO_ADDRESS):
+    with brownie.reverts("recipient is zero address"):
+        farm_token.transferFrom(neo, ZERO_ADDRESS, 1, {'from': neo})
 
-    farm_token.approve(neo, 0, {'from': oracle})
-    farm_token.approve(oracle, 0, {'from': neo})
-    farm_token.transferFrom(
-        neo, oracle, amount, {'from': minter})
 
-    assert farm_token.balanceOf(neo) == sender_balance - amount
-    assert farm_token.balanceOf(oracle) == receiver_balance + amount
-    assert farm_token.balanceOf(minter) == caller_balance
-    assert farm_token.totalSupply() == total_supply
+def test_transfer_from_zero(farm_token, neo, ZERO_ADDRESS):
+    with brownie.reverts("sender is zero address"):
+        farm_token.transferFrom(ZERO_ADDRESS, neo, 1, {'from': neo})

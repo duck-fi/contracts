@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import brownie
 from brownie.test import given, strategy
 
@@ -60,3 +58,8 @@ def test_transfer_event_fires(farm_token, neo, morpheus):
 
     assert len(tx.events) == 1
     assert tx.events["Transfer"].values() == [neo, morpheus, amount]
+
+
+def test_transfer_to_zero(farm_token, neo, ZERO_ADDRESS):
+    with brownie.reverts("recipient is zero address"):
+        farm_token.transfer(ZERO_ADDRESS, 1, {'from': neo})

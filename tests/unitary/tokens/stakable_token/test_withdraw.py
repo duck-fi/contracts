@@ -2,7 +2,7 @@ import brownie
 
 
 def test_withdraw_not_owner(usdn_token, morpheus):
-    with brownie.reverts("only owner or admin"):
+    with brownie.reverts("owner or admin only"):
         usdn_token.withdraw(morpheus, {'from': morpheus})
 
 

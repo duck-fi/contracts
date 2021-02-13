@@ -2,17 +2,17 @@ import brownie
 
 
 def test_ownable_not_owner(usdn_token, neo, morpheus):
-    with brownie.reverts("only owner or admin"):
+    with brownie.reverts("owner or admin only"):
         usdn_token.deposit(neo, 1, {'from': morpheus})
 
 
 def test_ownable_transfer_ownership_not_owner(usdn_token, thomas, morpheus):
-    with brownie.reverts("only owner"):
+    with brownie.reverts("owner only"):
         usdn_token.transferOwnership(morpheus, {'from': thomas})
 
 
 def test_ownable_set_admin_not_owner(usdn_token, thomas, morpheus):
-    with brownie.reverts("only owner or admin"):
+    with brownie.reverts("owner or admin only"):
         usdn_token.setAdmin(morpheus, {'from': thomas})
 
 

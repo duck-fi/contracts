@@ -2,7 +2,7 @@ import brownie
 
 
 def test_staking_ownership(usdn_token, morpheus):
-    with brownie.reverts("only owner or admin"):
+    with brownie.reverts("owner or admin only"):
         usdn_token.stake(1, {'from': morpheus})
 
 
