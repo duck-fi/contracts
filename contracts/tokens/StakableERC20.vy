@@ -234,7 +234,15 @@ def totalSupply() -> uint256:
 
 
 @external
-def transferOwnership(_newAdmin: address):
+def transferOwnership(_newOwner: address):
+    assert self.owner == msg.sender, "only owner"
+    assert _newOwner != ZERO_ADDRESS, "zero address"
+    self.owner = _newOwner
+
+
+
+@external
+def setAdmin(_newAdmin: address):
     assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
     assert _newAdmin != ZERO_ADDRESS, "zero address"
     self.admin = _newAdmin
