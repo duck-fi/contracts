@@ -24,7 +24,7 @@ def test_transferOwnership(voting_controller, accounts):
     voting_controller.transferOwnership(accounts[1], {'from': accounts[0]})
 
     assert voting_controller.owner() == accounts[0]
-    assert voting_controller.future_owner() == accounts[1]
+    assert voting_controller.futureOwner() == accounts[1]
 
 
 def test_applyOwnership(voting_controller, accounts):
@@ -32,4 +32,4 @@ def test_applyOwnership(voting_controller, accounts):
     voting_controller.applyOwnership({'from': accounts[0]})
 
     assert voting_controller.owner() == accounts[1]
-    assert  voting_controller.future_owner() == accounts[1]
+    assert  voting_controller.futureOwner() == accounts[1]

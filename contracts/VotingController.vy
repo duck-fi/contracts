@@ -141,16 +141,22 @@ def snapshot(_gasToken: address = ZERO_ADDRESS):
     self.lastSnapshotIndex += 1
     _totalVoteBalance: uint256 = 0
 
+    _farmToken: address = self.farmToken
+    _votingToken: address = self.votingToken
+
+    _farmTokenBalance: uint256 = ERC20(_farmToken).balanceOf(self)
+    _votingTokenBalance: uint256 = ERC20(_votingToken).balanceOf(self)
+
     for i in range(1, MULTIPLIER):
         if i > _lastReaperIndex:
             break
 
         _currentReaper: address = Controller(self.controller).reapers(i)
-        
-        _farmTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.farmToken]
-        _votingTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.votingToken]
-        _votingTokenRate: uint256 = self.votingTokenRate + self.votingTokenRateAmplifier * (MULTIPLIER * _farmTokenBalance) / (_farmTokenBalance + _votingTokenBalance) / MULTIPLIER
-        _reaperVoteBalance: uint256 = _votingTokenRate * _votingTokenBalance + _farmTokenBalance * self.farmTokenRate
+        _reaperVoteBalance: uint256 = 0
+
+        if _farmTokenBalance + _votingTokenBalance > 0:
+            _votingTokenRate: uint256 = MULTIPLIER * self.votingTokenRate + MULTIPLIER * self.votingTokenRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+            _reaperVoteBalance = self.reaperBalances[_currentReaper][_votingToken] * _votingTokenRate / MULTIPLIER + self.reaperBalances[_currentReaper][_farmToken] * self.farmTokenRate
 
         self.snapshots[self.lastSnapshotIndex][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: _reaperVoteBalance, share: 0})
         _totalVoteBalance += _reaperVoteBalance
@@ -190,7 +196,7 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _account: address =
     self.balancesUnlockTimestamp[_reaper][_coin][_account] = block.timestamp + self.votingPeriod
     self.reaperBalances[_reaper][_coin] += _amount
     
-    assert ERC20(_coin).transferFrom(_account, self, _amount), "ERC20 transferFrom revert"
+    ERC20(_coin).transferFrom(_account, self, _amount)
 
     log Vote(_reaper, _coin, _account, _amount)
 
@@ -221,7 +227,7 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address
     self.balances[_reaper][_coin][_account] -= _amount
     self.reaperBalances[_reaper][_coin] -= _amount
     
-    assert ERC20(_coin).transfer(_account, _amount), "ERC20 transfer revert"
+    ERC20(_coin).transfer(_account, _amount)
 
     log Unvote(_reaper, _coin, _account, _amount)
 
@@ -270,16 +276,22 @@ def reaperVotePower(_reaper: address) -> uint256:
     _totalVoteBalance: uint256 = 0
     _targetVoteBalance: uint256 = 0
 
+    _farmToken: address = self.farmToken
+    _votingToken: address = self.votingToken
+
+    _farmTokenBalance: uint256 = ERC20(_farmToken).balanceOf(self)
+    _votingTokenBalance: uint256 = ERC20(_votingToken).balanceOf(self)
+
     for i in range(1, MULTIPLIER):
         if i > _lastReaperIndex:
             break
 
         _currentReaper: address = Controller(self.controller).reapers(i)
-        
-        _farmTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.farmToken]
-        _votingTokenBalance: uint256 = self.reaperBalances[_currentReaper][self.votingToken]
-        _votingTokenRate: uint256 = self.votingTokenRate + self.votingTokenRateAmplifier * (MULTIPLIER * _farmTokenBalance) / (_farmTokenBalance + _votingTokenBalance) / MULTIPLIER
-        _reaperVoteBalance: uint256 = _votingTokenRate * _votingTokenBalance + _farmTokenBalance * self.farmTokenRate
+        _reaperVoteBalance: uint256 = 0
+
+        if _farmTokenBalance + _votingTokenBalance > 0:
+            _votingTokenRate: uint256 = MULTIPLIER * self.votingTokenRate + MULTIPLIER * self.votingTokenRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+            _reaperVoteBalance = self.reaperBalances[_currentReaper][_votingToken] * _votingTokenRate / MULTIPLIER + self.reaperBalances[_currentReaper][_farmToken] * self.farmTokenRate
 
         if _reaper == _currentReaper:
             _targetVoteBalance = _reaperVoteBalance
@@ -301,11 +313,18 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
     @param _account Account to get its vote power for
     @return Vote power multiplied on 1e18
     """
-    _farmTokenBalance: uint256 = self.reaperBalances[_reaper][self.farmToken]
-    _votingTokenBalance: uint256 = self.reaperBalances[_reaper][self.votingToken]
-    _votingTokenRate: uint256 = self.votingTokenRate + self.votingTokenRateAmplifier * (MULTIPLIER * _farmTokenBalance) / (_farmTokenBalance + _votingTokenBalance) / MULTIPLIER
+    _farmToken: address = self.farmToken
+    _votingToken: address = self.votingToken
 
-    return _votingTokenRate * self.balances[_reaper][self.votingToken][_account] + self.balances[_reaper][self.farmToken][_account] * self.farmTokenRate
+    _farmTokenBalance: uint256 = ERC20(_farmToken).balanceOf(self)
+    _votingTokenBalance: uint256 = ERC20(_votingToken).balanceOf(self)
+
+    if _farmTokenBalance + _votingTokenBalance == 0:
+        return 0
+
+    _votingTokenRate: uint256 = MULTIPLIER * self.votingTokenRate + MULTIPLIER * self.votingTokenRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+
+    return self.balances[_reaper][self.votingToken][_account] * _votingTokenRate / MULTIPLIER + self.balances[_reaper][self.farmToken][_account] * self.farmTokenRate
 
 
 @external
