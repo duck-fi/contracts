@@ -59,8 +59,8 @@ def assert_emission(farm_token, expected_yearEmission):
     ).return_value == expected_yearEmission, "invalid yearEmission"
     missionIntegralTx = farm_token.emissionIntegral()
     dt = missionIntegralTx.timestamp - lastEmissionUpdateTimestamp
-    assert missionIntegralTx.return_value == dt * \
-        expected_yearEmission / SECONDS_IN_YEAR, "invalid emissionIntegral"
+    assert 0 >= missionIntegralTx.return_value - (dt *
+                                                  expected_yearEmission / SECONDS_IN_YEAR) <= missionIntegralTx.return_value * 0.0000001, "invalid emissionIntegral"
 
 
 def test_yearEmission_beforeStartEmission(farm_token):
@@ -84,7 +84,7 @@ def test_success_startEmission(farm_token, deployer, chain):
     assert_emission(farm_token, INITIAL_EMISSION_RAW)
 
 
-def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_ADDRESS):
+def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_ADDRESS, exception_tester):
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
 
     for quarter in range(1, 12):  # 3 years
@@ -106,9 +106,13 @@ def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_AD
 
         mint_tx = farm_token.mint(
             trinity, quater_max_minting_amount, {'from': deployer})
-        assert len(mint_tx.events) == 1
+
+        assert 2 >= len(mint_tx.events) >= 1
         assert mint_tx.events["Transfer"].values(
         ) == [ZERO_ADDRESS, trinity, quater_max_minting_amount]
+        if len(mint_tx.events) == 2:
+            assert mint_tx.events["YearEmissionUpdate"].values() == [
+                year_emission / 2]
 
         assert farm_token.balanceOf(trinity) == balance_before + \
             quater_max_minting_amount, "minting process affects user's balance: quarter={quarter}"
@@ -116,18 +120,16 @@ def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_AD
             quater_max_minting_amount, "minting process affects total supply: quarter={quarter}"
 
         # fail to mint more than allowed
-        with brownie.reverts("exceeds allowable mint amount"):
-            farm_token.mint(trinity, to_raw_farm_token(100),
-                            {'from': deployer})
+        exception_tester("exceeds allowable mint amount",
+                         farm_token.mint, trinity, to_raw_farm_token(100), {'from': deployer})
 
 
-def test_emission_overflow(farm_token, deployer, trinity):
-    amount = farm_token.yearEmission().return_value + 1
-    with brownie.reverts("exceeds allowable mint amount"):
-        farm_token.mint(trinity, amount, {'from': deployer})
+def test_emission_overflow(farm_token, deployer, trinity, exception_tester):
+    exception_tester("exceeds allowable mint amount",
+                     farm_token.mint, trinity, farm_token.yearEmission().return_value + 1, {'from': deployer})
 
 
 @ given(amount=strategy('uint256', min_value=1))
-def test_mint_zero_address(ZERO_ADDRESS, farm_token, deployer, amount):
-    with brownie.reverts("zero address"):
-        farm_token.mint(ZERO_ADDRESS, amount, {'from': deployer})
+def test_mint_zero_address(ZERO_ADDRESS, farm_token, deployer, amount, exception_tester):
+    exception_tester("zero address",
+                     farm_token.mint, ZERO_ADDRESS, amount, {'from': deployer})
