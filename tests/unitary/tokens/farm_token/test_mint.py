@@ -20,9 +20,17 @@ SECONDS_IN_YEAR = 86_400 * 365
 EMISSION_REDUCTION_SECONDS = SECONDS_IN_YEAR
 
 
-def test_fail_to_update_minter_not_by_owner(farm_token, thomas, morpheus):
-    with brownie.reverts("owner only"):
-        farm_token.setMinter(morpheus, {'from': thomas})
+def test_fail_to_update_minter_not_by_owner(farm_token, ownable_exception_tester, thomas, morpheus):
+    ownable_exception_tester(farm_token.setMinter, morpheus, {'from': thomas})
+
+
+def test_fail_to_startEmission_not_by_owner(farm_token, thomas, ownable_exception_tester):
+    ownable_exception_tester(farm_token.startEmission, {'from': thomas})
+
+
+def test_mint_not_minter(farm_token, thomas, exception_tester):
+    exception_tester("minter only", farm_token.mint,
+                     thomas, 1, {'from': thomas})
 
 
 def test_success_update_minter_by_owner(farm_token, deployer, morpheus):
@@ -39,7 +47,7 @@ def test_transferFrom_without_approval_by_minter(farm_token, deployer, morpheus)
     assert farm_token.balanceOf(morpheus) == amount
 
 
-@given(amount=strategy('uint256', min_value=1))
+@ given(amount=strategy('uint256', min_value=1))
 def test_fail_to_mint_beforeStartEmission(farm_token, deployer, trinity, amount):
     with brownie.reverts("exceeds allowable mint amount"):
         farm_token.mint(trinity, amount, {'from': deployer})
@@ -62,11 +70,6 @@ def test_yearEmission_beforeStartEmission(farm_token):
 def test_yearEmission_inNextYear_beforeStartEmission(farm_token, chain):
     chain.mine(100, None, EMISSION_REDUCTION_SECONDS + 100)
     test_yearEmission_beforeStartEmission(farm_token)
-
-
-def test_fail_to_startEmission_not_by_owner(farm_token, thomas):
-    with brownie.reverts("owner only"):
-        farm_token.startEmission({'from': thomas})
 
 
 def test_success_startEmission(farm_token, deployer, chain):
@@ -124,13 +127,7 @@ def test_emission_overflow(farm_token, deployer, trinity):
         farm_token.mint(trinity, amount, {'from': deployer})
 
 
-@given(amount=strategy('uint256', min_value=1))
-def test_mint_not_minter(farm_token, thomas, amount):
-    with brownie.reverts("minter only"):
-        farm_token.mint(thomas, amount, {'from': thomas})
-
-
-@given(amount=strategy('uint256', min_value=1))
+@ given(amount=strategy('uint256', min_value=1))
 def test_mint_zero_address(ZERO_ADDRESS, farm_token, deployer, amount):
     with brownie.reverts("zero address"):
         farm_token.mint(ZERO_ADDRESS, amount, {'from': deployer})

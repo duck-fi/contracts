@@ -1,9 +1,8 @@
 import brownie
 
 
-def test_not_by_owner(farm_token, thomas):
-    with brownie.reverts("owner only"):
-        farm_token.startEmission({'from': thomas})
+def test_not_by_owner(farm_token, thomas, ownable_exception_tester):
+    ownable_exception_tester(farm_token.startEmission, {'from': thomas})
 
 
 def test_success_startEmission(farm_token, deployer, chain):
@@ -17,6 +16,6 @@ def test_success_startEmission(farm_token, deployer, chain):
     assert startEmissionTimestamp >= t1 and startEmissionTimestamp <= t2
 
 
-def test_fail_double_startEmission(farm_token, deployer):
-    with brownie.reverts("emission already started"):
-        farm_token.startEmission({'from': deployer})
+def test_fail_double_startEmission(farm_token, deployer, exception_tester):
+    exception_tester("emission already started",
+                     farm_token.startEmission, {'from': deployer})
