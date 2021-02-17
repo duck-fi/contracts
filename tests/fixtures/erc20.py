@@ -170,7 +170,7 @@ def erc20_tester(deployer, morpheus, trinity, thomas, oracle, ZERO_ADDRESS):
         with brownie.reverts():
             contract.transferFrom(
                 deployer, trinity, sender_balance, {'from': morpheus})
-        # to self withou approve
+        # to self without approve
         with brownie.reverts():
             contract.transferFrom(deployer, deployer,
                                   amount, {'from': deployer})
