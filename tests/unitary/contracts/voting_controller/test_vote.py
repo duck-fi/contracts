@@ -4,12 +4,11 @@ import brownie
 import pytest
 from brownie.test import given, strategy
 
+WEEK = 604800
 
 @given(amount=strategy('uint256', min_value=1, max_value=10**3))
-def test_vote_simple(voting_controller, farm_token, voting_strategy_stub, three_reapers_stub, neo, morpheus, amount):
-    voting_controller.setStrategy(farm_token, voting_strategy_stub)
-
-    with brownie.reverts("insufficient funds"):
+def test_vote_simple(voting_controller, farm_token, three_reapers_stub, neo, morpheus, amount):
+    with brownie.reverts():
         voting_controller.vote(
             three_reapers_stub[0], farm_token, amount, {'from': morpheus})
 
@@ -34,13 +33,22 @@ def test_vote_simple(voting_controller, farm_token, voting_strategy_stub, three_
 
     assert farm_token.balanceOf(neo) == initial_balance - amount
     assert farm_token.balanceOf(voting_controller) == amount
-    assert voting_controller.reaper_balances(
+    assert voting_controller.reaperBalances(
         three_reapers_stub[0], farm_token) == amount
     assert voting_controller.balances(
         three_reapers_stub[0], farm_token, neo) == amount
-    assert voting_controller.availableToUnvote(
-        three_reapers_stub[0], farm_token, neo) == amount
     assert voting_controller.accountVotePower(
+        three_reapers_stub[0], neo) == amount
+    assert voting_controller.availableToUnvote(
+        three_reapers_stub[0], farm_token, neo) == 0
+
+    with brownie.reverts("tokens are locked"):
+        voting_controller.unvote(
+            three_reapers_stub[0], farm_token, amount, {'from': neo})
+
+    brownie.chain.mine(1, brownie.chain.time()+WEEK+1)
+
+    assert voting_controller.availableToUnvote(
         three_reapers_stub[0], farm_token, neo) == amount
 
     tx2 = voting_controller.unvote(
@@ -54,19 +62,19 @@ def test_vote_simple(voting_controller, farm_token, voting_strategy_stub, three_
 
     assert farm_token.balanceOf(neo) == initial_balance
     assert farm_token.balanceOf(voting_controller) == 0
-    assert voting_controller.reaper_balances(
+    assert voting_controller.reaperBalances(
         three_reapers_stub[0], farm_token) == 0
     assert voting_controller.balances(
         three_reapers_stub[0], farm_token, neo) == 0
-    assert voting_controller.availableToUnvote(
-        three_reapers_stub[0], farm_token, neo) == 0
     assert voting_controller.accountVotePower(
+        three_reapers_stub[0], neo) == 0
+    assert voting_controller.availableToUnvote(
         three_reapers_stub[0], farm_token, neo) == 0
 
 
 @given(amount=strategy('uint256', min_value=1, max_value=10**3))
 def test_vote_delegated(voting_controller, farm_token, three_reapers_stub, neo, morpheus, trinity, amount):
-    with brownie.reverts("insufficient funds"):
+    with brownie.reverts():
         voting_controller.vote(
             three_reapers_stub[0], farm_token, amount, {'from': morpheus})
 
@@ -82,16 +90,16 @@ def test_vote_delegated(voting_controller, farm_token, three_reapers_stub, neo, 
         voting_controller.vote(
             three_reapers_stub[0], farm_token, amount, morpheus, {'from': neo})
 
-    assert not voting_controller.vote_allowances(
+    assert not voting_controller.voteAllowance(
         three_reapers_stub[0], farm_token, neo, morpheus)
-    assert not voting_controller.vote_allowances(
+    assert not voting_controller.voteAllowance(
         three_reapers_stub[0], farm_token, morpheus, neo)
 
-    tx1 = voting_controller.approve(
+    tx1 = voting_controller.voteApprove(
         three_reapers_stub[0], farm_token, morpheus, True, {'from': neo})
-    assert voting_controller.vote_allowances(
+    assert voting_controller.voteAllowance(
         three_reapers_stub[0], farm_token, neo, morpheus)
-    assert not voting_controller.vote_allowances(
+    assert not voting_controller.voteAllowance(
         three_reapers_stub[0], farm_token, morpheus, neo)
 
     initial_balance = farm_token.balanceOf(neo)
@@ -102,18 +110,18 @@ def test_vote_delegated(voting_controller, farm_token, three_reapers_stub, neo, 
 
     assert farm_token.balanceOf(neo) == initial_balance - amount
     assert farm_token.balanceOf(voting_controller) == amount
-    assert voting_controller.reaper_balances(
+    assert voting_controller.reaperBalances(
         three_reapers_stub[0], farm_token) == amount
     assert voting_controller.balances(
         three_reapers_stub[0], farm_token, neo) == amount
     assert voting_controller.availableToUnvote(
-        three_reapers_stub[0], farm_token, neo) == amount
+        three_reapers_stub[0], farm_token, neo) == 0 # amount
     assert voting_controller.accountVotePower(
-        three_reapers_stub[0], farm_token, neo) == amount
+        three_reapers_stub[0], neo) == amount
 
-    tx2 = voting_controller.approve(
+    tx2 = voting_controller.voteApprove(
         three_reapers_stub[0], farm_token, morpheus, False, {'from': neo})
-    assert not voting_controller.vote_allowances(
+    assert not voting_controller.voteAllowance(
         three_reapers_stub[0], farm_token, neo, morpheus)
 
     with brownie.reverts("voting approve required"):
@@ -124,9 +132,9 @@ def test_vote_delegated(voting_controller, farm_token, three_reapers_stub, neo, 
         voting_controller.unvote(
             three_reapers_stub[0], farm_token, amount, neo, {'from': morpheus})
 
-    voting_controller.approve(
+    voting_controller.voteApprove(
         three_reapers_stub[0], farm_token, morpheus, True, {'from': neo})
-    assert voting_controller.vote_allowances(
+    assert voting_controller.voteAllowance(
         three_reapers_stub[0], farm_token, neo, morpheus)
 
     voting_controller.vote(
@@ -134,32 +142,38 @@ def test_vote_delegated(voting_controller, farm_token, three_reapers_stub, neo, 
 
     assert farm_token.balanceOf(neo) == initial_balance - 2*amount
     assert farm_token.balanceOf(voting_controller) == 2*amount
-    assert voting_controller.reaper_balances(
+    assert voting_controller.reaperBalances(
         three_reapers_stub[0], farm_token) == 2*amount
     assert voting_controller.balances(
         three_reapers_stub[0], farm_token, neo) == 2*amount
     assert voting_controller.availableToUnvote(
-        three_reapers_stub[0], farm_token, neo) == 2*amount
+        three_reapers_stub[0], farm_token, neo) == 0
     assert voting_controller.accountVotePower(
-        three_reapers_stub[0], farm_token, neo) == 2*amount
+        three_reapers_stub[0], neo) == 2*amount
+
+    with brownie.reverts("tokens are locked"):
+        voting_controller.unvote(
+            three_reapers_stub[0], farm_token, 2*amount, neo, {'from': morpheus})
+
+    brownie.chain.mine(1, brownie.chain.time()+WEEK+1)
 
     voting_controller.unvote(
         three_reapers_stub[0], farm_token, 2*amount, neo, {'from': morpheus})
 
     assert farm_token.balanceOf(neo) == initial_balance
     assert farm_token.balanceOf(voting_controller) == 0
-    assert voting_controller.reaper_balances(
+    assert voting_controller.reaperBalances(
         three_reapers_stub[0], farm_token) == 0
     assert voting_controller.balances(
         three_reapers_stub[0], farm_token, neo) == 0
     assert voting_controller.availableToUnvote(
         three_reapers_stub[0], farm_token, neo) == 0
     assert voting_controller.accountVotePower(
-        three_reapers_stub[0], farm_token, neo) == 0
+        three_reapers_stub[0], neo) == 0
 
-    voting_controller.approve(
+    voting_controller.voteApprove(
         three_reapers_stub[0], farm_token, morpheus, False, {'from': neo})
-    assert not voting_controller.vote_allowances(
+    assert not voting_controller.voteAllowance(
         three_reapers_stub[0], farm_token, neo, morpheus)
 
     assert tx1.return_value is None
