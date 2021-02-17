@@ -32,6 +32,9 @@ event CommitOwnership:
 event ApplyOwnership:
     owner: address
 
+event YearEmissionUpdate:
+    newYearEmission: uint256
+
 
 YEAR: constant(uint256) = 86_400 * 365
 DECIMALS: constant(uint256) = 18
@@ -102,6 +105,7 @@ def _updateYearEmission() -> uint256:
         self.lastEmissionUpdateTimestamp = futureEmissionUpdateTimestamp
         lastYearEmission /= EMISSION_REDUCTION_DELIMITER
         self._yearEmission = lastYearEmission
+        log YearEmissionUpdate(lastYearEmission)
 
     return lastYearEmission
 
@@ -131,6 +135,7 @@ def startEmission():
     self._yearEmission = INITIAL_YEAR_EMISSION
     self.lastEmissionUpdateTimestamp = block.timestamp
     self.startEmissionTimestamp = block.timestamp
+    log YearEmissionUpdate(INITIAL_YEAR_EMISSION)
 
 
 @external
