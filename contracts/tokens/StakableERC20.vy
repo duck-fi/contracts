@@ -88,7 +88,7 @@ def balanceOf(_account: address = msg.sender) -> uint256:
 
 @external
 def deposit(_account: address, _amount: uint256) -> bool:
-    assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
     assert _amount > 0, "amount is 0"
     assert _account != ZERO_ADDRESS, "zero address"
@@ -116,7 +116,7 @@ def deposit(_account: address, _amount: uint256) -> bool:
 
 @external
 def stake(_reward: uint256) -> bool:
-    assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
     assert _reward > 0, "reward is 0"
 
@@ -142,7 +142,7 @@ def stake(_reward: uint256) -> bool:
 
 @external
 def withdraw(_account: address) -> bool:
-    assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
 
     _oldDeposit: uint256 = self.deposits[_account]
@@ -235,7 +235,7 @@ def totalSupply() -> uint256:
 
 @external
 def transferOwnership(_newOwner: address):
-    assert self.owner == msg.sender, "only owner"
+    assert self.owner == msg.sender, "owner only"
     assert _newOwner != ZERO_ADDRESS, "zero address"
     self.owner = _newOwner
 
@@ -243,7 +243,7 @@ def transferOwnership(_newOwner: address):
 
 @external
 def setAdmin(_newAdmin: address):
-    assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert _newAdmin != ZERO_ADDRESS, "zero address"
     self.admin = _newAdmin
 

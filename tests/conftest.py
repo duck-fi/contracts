@@ -1,10 +1,13 @@
 import pytest
-import brownie
 
 pytest_plugins = [
     "fixtures.accounts",
     "fixtures.tokens",
     "fixtures.contracts",
+    "fixtures.ownable",
+    "fixtures.erc20_burnable",
+    "fixtures.erc20",
+    "fixtures.exception",
 ]
 
 

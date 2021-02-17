@@ -2,7 +2,7 @@ import pytest
 
 
 FARM_TOKEN_NAME = "Dispersion Farm Token"
-FARM_TOKEN_SYMBOL = "DFT"
+FARM_TOKEN_SYMBOL = "DSP"
 FARM_TOKEN_DECIMALS = 18
 FARM_TOKEN_INITIAL_SUPPLY = 100000
 
@@ -13,7 +13,8 @@ USDN_TOKEN_DECIMALS = 18
 
 @pytest.fixture(scope="module")
 def farm_token(FarmToken, deployer):
-    farm_token = FarmToken.deploy(FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, {'from': deployer})
+    farm_token = FarmToken.deploy(
+        FARM_TOKEN_NAME, FARM_TOKEN_SYMBOL, {'from': deployer})
     yield farm_token
 
 

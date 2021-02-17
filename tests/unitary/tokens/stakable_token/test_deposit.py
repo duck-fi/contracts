@@ -2,7 +2,7 @@ import brownie
 
 
 def test_not_owner_or_admin_deposit(usdn_token, neo, morpheus):
-    with brownie.reverts("only owner or admin"):
+    with brownie.reverts("owner or admin only"):
         usdn_token.deposit(neo, 1, {'from': morpheus})
 
 

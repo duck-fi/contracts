@@ -3,13 +3,13 @@
 
 @view
 @external
-def name() -> String[64]:
+def name() -> String[32]:
     return ""
 
 
 @view
 @external
-def symbol() -> String[32]:
+def symbol() -> String[8]:
     return ""
 
 
@@ -20,5 +20,5 @@ def decimals() -> uint256:
 
 
 @external
-def setName(_name: String[64], _symbol: String[32]):
+def setName(_name: String[32], _symbol: String[8]):
     pass
