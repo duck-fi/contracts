@@ -57,10 +57,10 @@ def assert_emission(farm_token, expected_yearEmission):
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
     assert farm_token.yearEmission(
     ).return_value == expected_yearEmission, "invalid yearEmission"
-    missionIntegralTx = farm_token.emissionIntegral()
-    dt = missionIntegralTx.timestamp - lastEmissionUpdateTimestamp
-    assert 0 >= missionIntegralTx.return_value - (dt *
-                                                  expected_yearEmission / SECONDS_IN_YEAR) <= missionIntegralTx.return_value * 0.0000001, "invalid emissionIntegral"
+    emissionIntegralTx = farm_token.emissionIntegral()
+    dt = emissionIntegralTx.timestamp - lastEmissionUpdateTimestamp
+    assert 0 >= emissionIntegralTx.return_value - (dt *
+                                                   expected_yearEmission / SECONDS_IN_YEAR) <= emissionIntegralTx.return_value / (10 ** farm_token.decimals()), "invalid emissionIntegral"
 
 
 def test_yearEmission_beforeStartEmission(farm_token):
