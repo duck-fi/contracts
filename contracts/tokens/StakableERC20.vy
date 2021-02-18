@@ -27,167 +27,203 @@ event Reward:
 
 
 PERCENT_FACTOR: constant(uint256) = 10 ** 12
-MULTIPLIER: constant(uint256) = 10 ** 18
-
-
-_percents: uint256[MULTIPLIER]
-_percents_length: uint256
-_liquidTotalSupply: public(uint256)
-_liquidDeposit: uint256
-_balances: HashMap[address, uint256]
-_deposits: HashMap[address, uint256]
-_rewardIndexForAccount: HashMap[address, uint256]
-_allowances: HashMap[address, HashMap[address, uint256]]
-_deprecated: bool
-
-name: public(String[64])
-symbol: public(String[32])
-decimals: public(uint256)
+MAX_RECORDS_LENGTH: constant(uint256) = 10 ** 18
 
 owner: public(address)
 admin: public(address)
 
+name: public(String[32])
+symbol: public(String[8])
+decimals: public(uint256)
+
+isDeprecated: public(bool)                                      # deprecate transfer, stake, deposit, withdraw 
+
+percents: public(uint256[MAX_RECORDS_LENGTH])                   # percents(n) = percents(n-1) * (PERCENT_FACTOR + (PERCENT_FACTOR * reward) / _liquidTotalSupply), percents(0) = PERCENT_FACTOR
+percentsLength: public(uint256)                                 # percents array length
+deposits: public(HashMap[address, uint256])                     # all deposits after last stake by account
+rewardIndexForAccount: public(HashMap[address, uint256])        # index of last percent by account
+allowance: public(HashMap[address, HashMap[address, uint256]])  # ERC20 allowance
+
+_balances: HashMap[address, uint256]                            # balance of account at percents[rewardIndexForAccount[account]]
+_liquidDeposit: uint256                                         # all deposits after last stake
+_liquidTotalSupply: uint256                                     # totalSupply - _liquidDeposit
+
 
 @external
-def __init__(_name: String[32], _symbol: String[4], _decimals: uint256):
+def __init__(_name: String[32], _symbol: String[8], _decimals: uint256):
     self.name = _name
     self.symbol = _symbol
     self.decimals = _decimals
-
-    self._percents[self._percents_length] = PERCENT_FACTOR
-    self._percents_length += 1
-
+    self.percents[0] = PERCENT_FACTOR
+    self.percentsLength = 1
     self.owner = msg.sender
-    self.admin = msg.sender
-
-
-@external
-def transferOwnership(_newOwner: address):
-    assert self.owner == msg.sender or self.admin == msg.sender, "Ownable: caller is not the owner or admin"
-    assert _newOwner != ZERO_ADDRESS, "Ownable: new owner is the zero address"
-
-    self.owner = _newOwner
-
-
-@external
-def deprecate():
-    assert self.owner == msg.sender or self.admin == msg.sender, "Ownable: caller is not the owner or admin"
-    assert not self._deprecated, "Deprecateble: contract is deprecated"
-
-    self._deprecated = True
-
-    log Deprecate(msg.sender)
 
 
 @view
 @internal
-def _balanceOf(account: address) -> uint256:
-    account_balance: uint256 = self._balances[account]
-    oldDeposit: uint256 = self._deposits[account]
+def _balanceOf(_account: address) -> uint256:
+    _accountBalance: uint256 = self._balances[_account]
+    _oldDeposit: uint256 = self.deposits[_account]
+    _percentsLength: uint256 = self.percentsLength
 
-    if account_balance == 0 and oldDeposit == 0:
+    if _accountBalance == 0 and _oldDeposit == 0:
         return 0
     
-    rewardIndex: uint256 = self._rewardIndexForAccount[account]
-    if rewardIndex == self._percents_length - 1:
-        return account_balance + oldDeposit
+    _rewardIndex: uint256 = self.rewardIndexForAccount[_account]
+    if _rewardIndex == _percentsLength - 1:
+        return _accountBalance + _oldDeposit
     
-    if oldDeposit == 0:
-        profit: uint256 = self._percents[self._percents_length - 1]
-        
-        return profit * account_balance / self._percents[rewardIndex]
+    if _oldDeposit == 0:
+        return self.percents[_percentsLength - 1] * _accountBalance / self.percents[_rewardIndex]
     else:
-        newBalance: uint256 = account_balance * self._percents[self._percents_length - 1] / self._percents[rewardIndex]
-        profit: uint256 = oldDeposit * self._percents[self._percents_length - 1] / self._percents[rewardIndex + 1]
-        
-        return profit + newBalance
+        _oldPercent: uint256 = self.percents[_percentsLength - 1]
+        return (_oldDeposit * _oldPercent / self.percents[_rewardIndex + 1]) + (_accountBalance * _oldPercent / self.percents[_rewardIndex])
 
 
 @view
 @external
-def balanceOf(account: address) -> uint256: 
-    return self._balanceOf(account)
+def balanceOf(_account: address = msg.sender) -> uint256: 
+    return self._balanceOf(_account)
 
 
 @external
-def deposit(account: address, amount: uint256) -> bool:
-    assert self.owner == msg.sender or self.admin == msg.sender, "Ownable: caller is not the owner or admin"
-    assert not self._deprecated, "Deprecateble: contract is deprecated"
-    assert amount > 0, "amount should be > 0"
-    assert account != ZERO_ADDRESS, "deposit to the zero address"
+def deposit(_account: address, _amount: uint256) -> bool:
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
+    assert not self.isDeprecated, "deprecated"
+    assert _amount > 0, "amount is 0"
+    assert _account != ZERO_ADDRESS, "zero address"
 
     liquidDeposit: uint256 = self._liquidDeposit
-    self._liquidDeposit = liquidDeposit + amount
+    self._liquidDeposit = liquidDeposit + _amount
 
-    oldDeposit: uint256 = self._deposits[account]
-    if oldDeposit == 0:
-        self._balances[account] = self._balanceOf(account)
-        self._rewardIndexForAccount[account] = self._percents_length - 1
-        self._deposits[account] = amount
+    _oldDeposit: uint256 = self.deposits[_account]
+    if _oldDeposit == 0:
+        self._balances[_account] = self._balanceOf(_account)
+        self.rewardIndexForAccount[_account] = self.percentsLength - 1
+        self.deposits[_account] = _amount
     else:
-        rewardIndex: uint256 = self._rewardIndexForAccount[account]
-        if rewardIndex == self._percents_length - 1:
-            self._deposits[account] = oldDeposit + amount
+        _rewardIndex: uint256 = self.rewardIndexForAccount[_account]
+        if _rewardIndex == self.percentsLength - 1:
+            self.deposits[_account] = _oldDeposit + _amount
         else:
-            self._balances[account] = self._balanceOf(account)
-            self._rewardIndexForAccount[account] = self._percents_length - 1
-            self._deposits[account] = amount
+            self._balances[_account] = self._balanceOf(_account)
+            self.rewardIndexForAccount[_account] = self.percentsLength - 1
+            self.deposits[_account] = _amount
 
-    log Transfer(ZERO_ADDRESS, account, amount)
-
+    log Transfer(ZERO_ADDRESS, _account, _amount)
     return True
 
 
 @external
-def stake(reward: uint256) -> bool:
-    assert self.owner == msg.sender or self.admin == msg.sender, "Ownable: caller is not the owner or admin"
-    assert not self._deprecated, "Deprecateble: contract is deprecated"
-    assert reward > 0, "reward should be > 0"
+def stake(_reward: uint256) -> bool:
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
+    assert not self.isDeprecated, "deprecated"
+    assert _reward > 0, "reward is 0"
 
     liquidTotalSupply: uint256 = self._liquidTotalSupply
     liquidDeposit: uint256 = self._liquidDeposit
+    _percentsLength: uint256 = self.percentsLength
 
     if liquidTotalSupply == 0:
-        self._percents[self._percents_length] = PERCENT_FACTOR
-        self._percents_length += 1
+        self.percents[_percentsLength] = self.percents[_percentsLength - 1]
     else:
-        oldPercent: uint256 = self._percents[self._percents_length - 1]
-        percent: uint256 = reward * PERCENT_FACTOR / liquidTotalSupply
-        newPercent: uint256 = percent + PERCENT_FACTOR
-        self._percents[self._percents_length] = (newPercent * oldPercent / PERCENT_FACTOR)
-        self._percents_length += 1
-        liquidTotalSupply = liquidTotalSupply + reward
+        _oldPercent: uint256 = self.percents[_percentsLength - 1]
+        _newPercent: uint256 = _reward * PERCENT_FACTOR / liquidTotalSupply + PERCENT_FACTOR
+        self.percents[_percentsLength] = (_newPercent * _oldPercent / PERCENT_FACTOR)
+        liquidTotalSupply = liquidTotalSupply + _reward
     
+    self.percentsLength = _percentsLength + 1
     self._liquidTotalSupply = liquidTotalSupply + liquidDeposit
     self._liquidDeposit = 0
 
-    log Reward(self._percents_length, reward)
+    log Reward(_percentsLength + 1, _reward)
     return True
 
 
 @external
-def withdraw(account: address) -> bool:
-    assert self.owner == msg.sender or self.admin == msg.sender, "Ownable: caller is not the owner or admin"
-    assert not self._deprecated, "Deprecateble: contract is deprecated"
+def withdraw(_account: address) -> bool:
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
+    assert not self.isDeprecated, "deprecated"
 
-    oldDeposit: uint256 = self._deposits[account]
-    rewardIndex: uint256 = self._rewardIndexForAccount[account]
+    _oldDeposit: uint256 = self.deposits[_account]
+    _rewardIndex: uint256 = self.rewardIndexForAccount[_account]
 
-    if rewardIndex == self._percents_length - 1:
-        account_balance: uint256 = self._balances[account]
-        self._liquidTotalSupply = self._liquidTotalSupply - account_balance
-        self._liquidDeposit = self._liquidDeposit - oldDeposit
-
-        log Transfer(account, ZERO_ADDRESS, account_balance + oldDeposit)
+    if _rewardIndex == self.percentsLength - 1:
+        _accountBalance: uint256 = self._balances[_account]
+        self._liquidTotalSupply -= _accountBalance
+        self._liquidDeposit -= _oldDeposit
+        log Transfer(_account, ZERO_ADDRESS, _accountBalance + _oldDeposit)
     else:
-        account_balance: uint256 = self._balanceOf(account)
-        self._liquidTotalSupply = self._liquidTotalSupply - account_balance
-
-        log Transfer(account, ZERO_ADDRESS, account_balance)
+        _accountBalance: uint256 = self._balanceOf(_account)
+        self._liquidTotalSupply -=  _accountBalance
+        log Transfer(_account, ZERO_ADDRESS, _accountBalance)
     
-    self._balances[account] = 0
-    self._deposits[account] = 0
+    self._balances[_account] = 0
+    self.deposits[_account] = 0
+    return True
 
+
+@internal
+def _approve(_owner: address, _spender: address, _amount: uint256):
+    assert not self.isDeprecated, "deprecated"
+    assert _owner != ZERO_ADDRESS, "owner is zero address"
+    assert _spender != ZERO_ADDRESS, "spender is zero address"
+
+    self.allowance[_owner][_spender] = _amount
+    log Approval(_owner, _spender, _amount)
+
+
+@external
+def approve(_spender: address, _amount: uint256) -> bool:
+    self._approve(msg.sender, _spender, _amount)
+    return True
+
+
+@internal
+def _transfer(_sender: address, _recipient: address, _amount: uint256): 
+    assert not self.isDeprecated, "deprecated"
+    assert _recipient != ZERO_ADDRESS, "recipient is zero address"
+    _oldDeposit: uint256 = self.deposits[_sender]
+    _rewardIndex: uint256 = self.rewardIndexForAccount[_sender]
+    _percentsLength: uint256 = self.percentsLength
+    _depositDiff: uint256 = 0
+    
+    if _oldDeposit == 0 or _rewardIndex != _percentsLength - 1:
+        self._balances[_sender] = self._balanceOf(_sender) - _amount
+        self.rewardIndexForAccount[_sender] = _percentsLength - 1
+        self.deposits[_sender] = 0
+    elif _amount <= _oldDeposit:
+        self.deposits[_sender] = _oldDeposit - _amount
+        _depositDiff = _amount
+    else:
+        self._balances[_sender] = self._balances[_sender] - (_amount - _oldDeposit)
+        self.deposits[_sender] = 0
+        _depositDiff = _oldDeposit
+
+    _oldDeposit = self.deposits[_recipient]
+    _rewardIndex = self.rewardIndexForAccount[_recipient]
+    if _oldDeposit == 0 or _rewardIndex != _percentsLength - 1:
+        self._balances[_recipient] = self._balanceOf(_recipient) + (_amount - _depositDiff)
+        self.rewardIndexForAccount[_recipient] = _percentsLength - 1
+        self.deposits[_recipient] = _depositDiff
+    else:
+        self._balances[_recipient] = self._balances[_recipient] + (_amount - _depositDiff)
+        self.deposits[_recipient] = _oldDeposit + _depositDiff
+
+    log Transfer(_sender, _recipient, _amount)
+
+
+@external
+def transfer(_recipient: address, _amount:uint256) -> bool:
+    self._transfer(msg.sender, _recipient, _amount)
+    return True
+
+
+@external
+def transferFrom(_sender: address, _recipient: address, _amount: uint256) -> bool:
+    assert _sender != ZERO_ADDRESS, "sender is zero address"
+    self._transfer(_sender, _recipient, _amount)
+    self._approve(_sender, msg.sender, self.allowance[_sender][msg.sender] - _amount)
     return True
 
 
@@ -197,96 +233,24 @@ def totalSupply() -> uint256:
     return self._liquidTotalSupply + self._liquidDeposit
 
 
-@view
 @external
-def allowance(owner: address, spender: address) -> uint256:
-    return self._allowances[owner][spender]
+def transferOwnership(_newOwner: address):
+    assert self.owner == msg.sender, "owner only"
+    assert _newOwner != ZERO_ADDRESS, "zero address"
+    self.owner = _newOwner
 
-
-@internal
-def _approve(owner: address, spender: address, amount: uint256):
-    assert not self._deprecated, "Deprecateble: contract is deprecated"
-    assert owner != ZERO_ADDRESS, "ERC20: approve from the zero address"
-    assert spender != ZERO_ADDRESS, "ERC20: approve to the zero address"
-
-    self._allowances[owner][spender] = amount
-    log Approval(owner, spender, amount)
 
 
 @external
-def approve(spender: address, amount: uint256) -> bool:
-    self._approve(msg.sender, spender, amount)
-    return True
+def setAdmin(_newAdmin: address):
+    assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
+    assert _newAdmin != ZERO_ADDRESS, "zero address"
+    self.admin = _newAdmin
 
-
-@external
-def increaseAllowance(spender: address, addedValue: uint256) -> bool:
-    self._approve(msg.sender, spender, self._allowances[msg.sender][spender] + addedValue)
-    return True
 
 
 @external
-def decreaseAllowance(spender: address, subtractedValue: uint256) -> bool:
-    temp: uint256 = self._allowances[msg.sender][spender]
-    assert subtractedValue <= temp, "ERC20: decreased allowance below zero"
-    self._approve(msg.sender, spender, temp - subtractedValue)
-    return True
-
-
-@internal
-def _transfer(sender: address, recipient: address, amount: uint256): 
-    assert not self._deprecated, "Deprecateble: contract is deprecated"
-    assert amount > 0, "amount should be > 0"
-    assert sender != ZERO_ADDRESS, "ERC20: transfer from the zero address"
-    assert recipient != ZERO_ADDRESS, "ERC20: transfer to the zero address"
-    oldDeposit: uint256 = self._deposits[sender]
-    rewardIndex: uint256 = self._rewardIndexForAccount[sender]
-    depositDiff: uint256 = 0
-    
-    if oldDeposit == 0 or rewardIndex != self._percents_length - 1:
-        senderBalance: uint256 = self._balanceOf(sender)
-        assert amount <= senderBalance, "ERC20: transfer amount exceeds balance"
-        self._balances[sender] = senderBalance - amount
-        self._deposits[sender] = 0
-        self._rewardIndexForAccount[sender] = self._percents_length - 1
-    elif amount <= oldDeposit:
-        self._deposits[sender] = oldDeposit - amount
-        depositDiff = amount
-    else:
-        senderBalance: uint256 = self._balances[sender]
-        assert amount - oldDeposit <= senderBalance, "ERC20: transfer amount exceeds balance"
-        self._balances[sender] = senderBalance - (amount - oldDeposit)
-        self._deposits[sender] = 0
-        depositDiff = oldDeposit
-
-    oldDeposit = self._deposits[recipient]
-    rewardIndex = self._rewardIndexForAccount[recipient]
-    if oldDeposit == 0 or rewardIndex != self._percents_length - 1:
-        recipientBalance: uint256 = self._balanceOf(recipient)
-        assert (amount - depositDiff) + recipientBalance >= recipientBalance, "ERC20: addition overflow for recipient balance"
-        self._balances[recipient] = recipientBalance + (amount - depositDiff)
-        self._rewardIndexForAccount[recipient] = self._percents_length - 1
-        self._deposits[recipient] = depositDiff
-    else:
-        recipientBalance: uint256 = self._balances[recipient]
-        self._balances[recipient] = recipientBalance + (amount - depositDiff)
-        self._deposits[recipient] = oldDeposit + depositDiff
-
-    log Transfer(sender, recipient, amount)
-
-
-@external
-def transfer(recipient: address, amount:uint256) -> bool:
-    self._transfer(msg.sender, recipient, amount)
-    return True
-
-
-@external
-def transferFrom(sender: address, recipient: address, amount: uint256) -> bool:
-    self._transfer(sender, recipient, amount)
-
-    temp: uint256 = self._allowances[sender][msg.sender]
-    assert amount <= temp, "ERC20: transfer amount exceeds allowance"
-    self._approve(sender, msg.sender, temp - amount)
-
-    return True
+def deprecate():
+    assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
+    self.isDeprecated = True
+    log Deprecate(msg.sender)
