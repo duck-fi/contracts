@@ -32,12 +32,12 @@ event Unboost:
     account: address
     amount: uint256
 
-# # event VoteApproval:
-# #     reaper: address
-# #     coin: address
-# #     ownerAccount: address
-# #     voterAccount: address
-# #     canVote: bool
+event BoostApproval:
+    reaper: address
+    coin: address
+    ownerAccount: address
+    boosterAccount: address
+    canBoost: bool
 
 event CommitOwnership:
     admin: address
@@ -76,12 +76,8 @@ lastBoostTimestampFor: public(HashMap[address, uint256]) # account -> last boost
 lockingPeriod: public(uint256)
 warmupTime: public(uint256)
 
-# # reaperBalances: public(HashMap[address, HashMap[address, uint256]]) # reaper -> coin -> balance
-# # lastVotes: public(HashMap[address, uint256])  # reaper -> lastVotes
-# # reaperIntegratedVotes: public(HashMap[address, uint256]) # reaper -> integrated votes
-# # lastSnapshotTimestamp: public(uint256)
-# # lastSnapshotIndex: public(uint256)
-# # snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER]) # [snapshot index, record index]
+coinBalances: public(HashMap[address, uint256]) # coin -> balance
+
 boostAllowance: public(HashMap[address, HashMap[address, HashMap[address, HashMap[address, bool]]]]) # reaper -> coin -> owner -> voter -> canBoost
 gasTokens: public(HashMap[address, bool])
 
@@ -115,7 +111,8 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
 @internal
 def _calcAmount(pointA: uint256, pointB: uint256, tsA: uint256, tsB: uint256, t: uint256) -> uint256:
     assert tsB >= tsA, "reverted timestamps"
-    
+    assert tsA <= t and t <= tsB, "t not in interval"
+
     if tsB == tsA:
         return 0
 
@@ -126,45 +123,39 @@ def _calcAmount(pointA: uint256, pointB: uint256, tsA: uint256, tsB: uint256, t:
     else:
         delta = pointB - pointA
     
-    return t * delta / (tsB - tsA)
+    return (t - tsA) * delta / (tsB - tsA)
 
 
 @internal
-def _updateBoostIntegral(_reaper: address, _account: address, _amount: uint256, _lockTime: uint256):
+def _updateBoostIntegral():
     # update common intergal
-    if self.lastBoostTimestamp > 0:
-        self.boostIntegral = self.boostIntegral + self.totalBoosts * (block.timestamp - self.lastBoostTimestamp)
-    self.totalBoosts += _amount
-    self.lastBoostTimestamp = block.timestamp
+    # if self.lastBoostTimestamp > 0:
+    #     self.boostIntegral = self.boostIntegral + self.totalBoosts * (block.timestamp - self.lastBoostTimestamp)
+    # self.totalBoosts += _amount
+    # self.lastBoostTimestamp = block.timestamp
+    pass
 
+
+@internal
+def _updateAccountBoostIntegral(_account: address):
     if self.boosts[_account].finishTime == 0:
-        # 1. its initial lock
         self.boosts[_account].instantAmount = 0
-        self.boosts[_account].targetAmount = _amount
-        self.boosts[_account].warmupTime = block.timestamp + self.warmupTime
-        self.boosts[_account].finishTime = block.timestamp + _lockTime
         self.lastBoostTimestampFor[_account] = block.timestamp
+        return
 
-        pass # todo: maybe return
-    elif self.boosts[_account].warmupTime > block.timestamp:
+    if self.boosts[_account].warmupTime > block.timestamp:
         # 2. its during warmup
-        # need to calc user ascending integral and rebase amount, warmupTime, finishTime
 
         # 2.1 calc current user integral
         _instantAmount: uint256 = self._calcAmount(self.boosts[_account].instantAmount, self.boosts[_account].targetAmount, self.lastBoostTimestampFor[_account], self.boosts[_account].warmupTime, block.timestamp)
         self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (_instantAmount + self.boosts[_account].instantAmount) * (block.timestamp - self.lastBoostTimestampFor[_account]) / 2
-        self.lastBoostTimestampFor[_account] = block.timestamp
-
-        # 2.2 rebase amount, warmupTime, finishTime
-        self.boosts[_account].targetAmount += _amount
         self.boosts[_account].instantAmount = _instantAmount
-        self.boosts[_account].warmupTime = block.timestamp + self.warmupTime
-        self.boosts[_account].finishTime = max(self.boosts[_account].warmupTime + _lockTime, self.boosts[_account].finishTime + _lockTime) # TOOD: or make from warmupTime only?
-
-        pass # todo: maybe return
-    elif self.boosts[_account].finishTime > block.timestamp:
+        self.lastBoostTimestampFor[_account] = block.timestamp
+        
+        return
+    
+    if self.boosts[_account].finishTime > block.timestamp:
         # 3. its during reduction
-        # need to calc user ascending integral, user descending integral and rebase amount, warmupTime, finishTime
         
         # 3.1 need to calc user ascending integral (if not calculated yet)
         if self.lastBoostTimestampFor[_account] < self.boosts[_account].warmupTime:
@@ -174,42 +165,28 @@ def _updateBoostIntegral(_reaper: address, _account: address, _amount: uint256, 
         # 3.2 need to calc user descending integral
         _instantAmount: uint256 = self._calcAmount(self.boosts[_account].instantAmount, self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER, self.lastBoostTimestampFor[_account], self.boosts[_account].warmupTime, block.timestamp)
         self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (_instantAmount + self.boosts[_account].instantAmount) * (block.timestamp - self.boosts[_account].warmupTime) / 2
-        self.lastBoostTimestampFor[_account] = block.timestamp
-
-        # 3.3 rebase amount, warmupTime, finishTime
-        self.boosts[_account].targetAmount += _amount
         self.boosts[_account].instantAmount = _instantAmount
-        self.boosts[_account].warmupTime = block.timestamp + self.warmupTime
-        self.boosts[_account].finishTime = max(self.boosts[_account].warmupTime + _lockTime, self.boosts[_account].finishTime + _lockTime)
-
-        pass # todo: maybe return
-    else:
-        # 4. its after reduction
-        # need to calc user ascending integral, user descending integral, user const integral and rebase amount, warmupTime, finishTime
-        
-        # 4.1 need to calc user ascending integral (if not calculated yet)
-        if self.lastBoostTimestampFor[_account] < self.boosts[_account].warmupTime:
-            self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + self.boosts[_account].targetAmount) * (self.boosts[_account].warmupTime - self.lastBoostTimestampFor[_account]) / 2
-            self.lastBoostTimestampFor[_account] = self.boosts[_account].warmupTime
-
-        # 4.2 need to calc user descending integral (if not calculated yet)
-        if self.lastBoostTimestampFor[_account] < self.boosts[_account].finishTime:
-            self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].targetAmount + self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER) * (self.boosts[_account].finishTime - self.lastBoostTimestampFor[_account]) / 2
-            self.lastBoostTimestampFor[_account] = self.boosts[_account].finishTime
-            self.boosts[_account].instantAmount = self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER
-
-        # 4.3 need to calc user const integral
-        self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + self.boosts[_account].instantAmount * (block.timestamp - self.lastBoostTimestampFor[_account]) / 2
         self.lastBoostTimestampFor[_account] = block.timestamp
+        
+        return
 
-        # 4.4 rebase amount, warmupTime, finishTime
-        self.boosts[_account].targetAmount += _amount
-        self.boosts[_account].warmupTime = block.timestamp + self.warmupTime
-        self.boosts[_account].finishTime = max(self.boosts[_account].warmupTime + _lockTime, self.boosts[_account].finishTime + _lockTime)
+    # 4. its after reduction
+    
+    # 4.1 need to calc user ascending integral (if not calculated yet)
+    if self.lastBoostTimestampFor[_account] < self.boosts[_account].warmupTime:
+        self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + self.boosts[_account].targetAmount) * (self.boosts[_account].warmupTime - self.lastBoostTimestampFor[_account]) / 2
+        self.boosts[_account].instantAmount = self.boosts[_account].targetAmount
+        self.lastBoostTimestampFor[_account] = self.boosts[_account].warmupTime
 
-        pass
+    # 4.2 need to calc user descending integral (if not calculated yet)
+    if self.lastBoostTimestampFor[_account] < self.boosts[_account].finishTime:
+        self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER) * (self.boosts[_account].finishTime - self.lastBoostTimestampFor[_account]) / 2
+        self.boosts[_account].instantAmount = self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER
+        self.lastBoostTimestampFor[_account] = self.boosts[_account].finishTime
 
-    pass
+    # 4.3 need to calc user const integral
+    self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + self.boosts[_account].instantAmount * (block.timestamp - self.lastBoostTimestampFor[_account])
+    self.lastBoostTimestampFor[_account] = block.timestamp
 
 
 @external
@@ -225,27 +202,28 @@ def boost(_reaper: address, _coin: address, _amount: uint256, _lockTime: uint256
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
     assert _amount > 0, "amount must be greater 0"
     assert _coin == self.farmToken or _coin == self.boostingToken, "invalid coin"
-    # TODO: check _lockTime (assert self.boosts[_account].finishTime > self.boosts[_account].warmupTime, )
+    assert _lockTime > self.warmupTime, "locktime is too short"
 
     _gasStart: uint256 = msg.gas
 
     if _account != msg.sender:
         assert self.boostAllowance[_reaper][_coin][_account][msg.sender], "boosting approve required"
 
+    self._updateBoostIntegral()
+
     self.balances[_reaper][_coin][_account] += _amount
-    _tokenRate: uint256 = self.farmTokenRate
+    self.coinBalances[_coin] +=_amount
     
+    _tokenRate: uint256 = self.farmTokenRate
     if _coin == self.boostingToken:
         _tokenRate = self.boostingTokenRate
 
-    # self.reaperBalances[_reaper][_coin] += _amount
+    self._updateAccountBoostIntegral(_account)
 
-    # self.boostIntegralFor[_reaper][_account] = self.boostIntegralFor[_reaper][_account] + _oldAmount * (block.timestamp - self.lastBoostTimestampFor[_reaper][_account])
-
-    # self.lastBoostTimestampFor[_reaper][_account] = block.timestamp
-
-    self._updateBoostIntegral(_reaper, _account, _amount * _tokenRate, _lockTime) # TODO make integrals
-
+    self.boosts[_account].targetAmount += _amount * _tokenRate
+    self.boosts[_account].warmupTime = block.timestamp + self.warmupTime
+    self.boosts[_account].finishTime = max(self.boosts[_account].warmupTime + _lockTime, self.boosts[_account].finishTime + _lockTime)
+    
     ERC20(_coin).transferFrom(_account, self, _amount)
 
     log Boost(_reaper, _coin, _account, _amount)
@@ -253,69 +231,86 @@ def boost(_reaper: address, _coin: address, _amount: uint256, _lockTime: uint256
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 6)
 
 
-# # @external
-# # @nonreentrant('lock')
-# # def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender):
-# #     """
-# #     @notice Unvote for reaper `_reaper` and withdraw tokens `_coin` with amount `_amount` for `_account`
-# #     @dev Only possible with unlocked amount
-# #     @param _reaper Reaper to unvote for
-# #     @param _coin Coin which is used to unvote
-# #     @param _amount Amount which is used to unvote
-# #     @param _account Account who is unvoting
-# #     """
-# #     assert _amount > 0, "amount should be > 0"
+@external
+@nonreentrant('lock')
+def unboost(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
+    """
+    @notice Unboost for reaper `_reaper` and withdraw tokens `_coin` with amount `_amount` for `_account`
+    @dev Only possible with unlocked amount
+    @param _reaper Reaper to unboost for
+    @param _coin Coin which is used to unboost
+    @param _amount Amount which is used to unboost
+    @param _account Account who is unboosting
+    """
+    assert _amount > 0, "amount should be > 0"
 
-# #     if _account != msg.sender:
-# #         assert self.voteAllowance[_reaper][_coin][_account][msg.sender], "voting approve required"
+    _gasStart: uint256 = msg.gas
 
-# #     _unvoteAmount: uint256 = 0
-# #     if self.strategyByCoin[_coin] == ZERO_ADDRESS:
-# #         assert self.balances[_reaper][_coin][_account] >=  _amount, "insufficiend funds"
-# #         _unvoteAmount = _amount
-# #     else:
-# #         _availableAmount: uint256 = VotingStrategy(self.strategyByCoin[_coin]).availableToUnvote(_account, _amount)
-# #         assert self.balances[_reaper][_coin][_account] >= _availableAmount, "insufficiend funds"
-# #         assert _availableAmount > 0, "tokens are locked"
-# #         _unvoteAmount = VotingStrategy(self.strategyByCoin[_coin]).unvote(_account, _amount)
+    if _account != msg.sender:
+        assert self.boostAllowance[_reaper][_coin][_account][msg.sender], "boosting approve required"
 
-# #     self.balances[_reaper][_coin][_account] -= _unvoteAmount
-# #     self.reaperBalances[_reaper][_coin] -= _unvoteAmount
+    assert self.balances[_reaper][_coin][_account] >= _amount, "insufficiend funds"
+    assert self.boosts[_account].finishTime < block.timestamp, "tokens are locked"
+
+    self._updateBoostIntegral()
+    self._updateAccountBoostIntegral(_account)
+
+    self.balances[_reaper][_coin][_account] -= _amount
+    self.coinBalances[_coin] -= _amount
     
-# #     ERC20(_coin).transfer(_account, _unvoteAmount)
+    # TODO: unboost all or partially reduction
+    self.boosts[_account].targetAmount = 0
+    self.boosts[_account].instantAmount = 0
+    self.boosts[_account].warmupTime = 0
+    self.boosts[_account].finishTime = 0
 
-# #     log Unvote(_reaper, _coin, _account, _unvoteAmount)
+    ERC20(_coin).transfer(_account, _amount)
+    
+    log Unboost(_reaper, _coin, _account, _amount)
 
-
-# # @view
-# # @external
-# # def availableToUnvote(_reaper: address, _coin: address, _account: address) -> uint256:
-# #     """
-# #     @notice Check for available withdrawal amount from reaper `_reaper` for tokens `_coin` for account `_account`
-# #     @param _reaper Reaper to unvote for
-# #     @param _coin Coin which is used to unvote
-# #     @param _account Account who is unvoting
-# #     @return Unlocked amount to withdraw
-# #     """
-# #     if self.strategyByCoin[_coin] == ZERO_ADDRESS:
-# #         return self.balances[_reaper][_coin][_account]
-# #     else:
-# #         return VotingStrategy(self.strategyByCoin[_coin]).availableToUnvote(_account, self.balances[_reaper][_coin][_account])
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
 
 
-# @view
-# @external
-# def boostIntegral(_account: address) -> uint256:
-#     """
-#     @notice Returns current boost integral for account `_account`
-#     @param _account Account to get its boost integral for
-#     @return Boost integral
-#     """
-#     # assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
-#     return self.reaperIntegratedVotes[_reaper] + self.lastVotes[_reaper] * (block.timestamp - self.lastSnapshotTimestamp)
+@view
+@external
+def availableToUnboost(_reaper: address, _coin: address, _account: address) -> uint256:
+    """
+    @notice Check for available withdrawal amount from reaper `_reaper` for tokens `_coin` for account `_account`
+    @param _reaper Reaper to unboost for
+    @param _coin Coin which is used to unboost
+    @param _account Account who is unboosting
+    @return Unlocked amount to withdraw
+    """
+    if self.boosts[_account].finishTime >= block.timestamp:
+        return 0
+    
+    return self.balances[_reaper][_coin][_account]
 
 
+@external
+def accountBoostIntegral(_account: address) -> uint256:
+    """
+    @notice Returns current boost integral for account `_account`
+    @param _account Account to get its boost integral for
+    @return Account boost integral
+    """
+    self._updateAccountBoostIntegral(_account)
+    
+    return self.boostIntegralFor[_account]
 
+
+@external
+def commonBoostIntegral() -> uint256:
+    """
+    @notice Returns common boost integral
+    @return Common boost integral
+    """
+    self._updateBoostIntegral()
+
+    return self.boostIntegral
+
+
+# TODO: need this?
 # # @view
 # # @external
 # # def accountVotePower(_reaper: address, _coin: address, _account: address) -> uint256:
@@ -332,18 +327,18 @@ def boost(_reaper: address, _coin: address, _amount: uint256, _lockTime: uint256
 # #     return VotingStrategy(self.strategyByCoin[_coin]).coinToVotes(self.balances[_reaper][_coin][_account])
 
 
-# # @external
-# # def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: bool):
-# #     """
-# #     @notice Allows to perform votes and unvotes for reaper `_reaper` in tokens `_coin` for `_voter` instead of msg.sender by setting `_canVote` param
-# #     @param _reaper Reaper to approve voting for
-# #     @param _coin Coin which is used to approve voting
-# #     @param _voter Account who can do voting or unvoting instead of msg.sender
-# #     @param _canVote Possibility of voting or unvoting
-# #     """
-# #     self.voteAllowance[_reaper][_coin][msg.sender][_voter] = _canVote
+@external
+def boostApprove(_reaper: address, _coin: address, _booster: address, _canBoost: bool):
+    """
+    @notice Allows to perform boosts and unboosts for reaper `_reaper` in tokens `_coin` for `_booster` instead of msg.sender by setting `_canBoost` param
+    @param _reaper Reaper to approve boosting for
+    @param _coin Coin which is used to approve boosting
+    @param _booster Account who can do boosting or unboosting instead of msg.sender
+    @param _canBoost Possibility of boosting or unboosting
+    """
+    self.boostAllowance[_reaper][_coin][msg.sender][_booster] = _canBoost
 
-# #     log VoteApproval(_reaper, _coin, msg.sender, _voter, _canVote)
+    log BoostApproval(_reaper, _coin, msg.sender, _booster, _canBoost)
 
 
 @external
