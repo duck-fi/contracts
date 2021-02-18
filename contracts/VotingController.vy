@@ -5,19 +5,17 @@ import interfaces.Ownable as Ownable
 import interfaces.Controller as Controller
 import interfaces.VotingController as VotingController
 import interfaces.GasToken as GasToken
-import interfaces.GasReducible as GasReducible
+import interfaces.AddressesCheckList as AddressesCheckList
 
 
 implements: Ownable
 implements: VotingController
-implements: GasReducible
 
 
 struct VoteReaperSnapshot:
     reaper: address
     votes: uint256
     share: uint256
-
 
 event Vote:
     reaper: address
@@ -60,6 +58,7 @@ owner: public(address)
 futureOwner: public(address)
 
 controller: public(address)
+gasTokenCheckList: public(address)
 farmToken: public(address)
 votingToken: public(address)
 balances: public(HashMap[address, HashMap[address, HashMap[address, uint256]]]) # reaper -> coin -> account -> amount
@@ -71,21 +70,20 @@ lastSnapshotTimestamp: public(uint256)
 lastSnapshotIndex: public(uint256)
 snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER]) # [snapshot index, record index]
 voteAllowance: public(HashMap[address, HashMap[address, HashMap[address, HashMap[address, bool]]]]) # reaper -> coin -> owner -> voter -> canVote
-gasTokens: public(HashMap[address, bool])
 
 
 @external
-def __init__(_controller: address, _farmToken: address, _votingToken: address):
+def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: address):
     """
     @notice Contract constructor
     """
     assert _controller != ZERO_ADDRESS, "controller is not set"
+    assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     assert _farmToken != ZERO_ADDRESS, "farmToken is not set"
-    assert _votingToken != ZERO_ADDRESS, "votingToken is not set"
 
     self.controller = _controller
+    self.gasTokenCheckList = _gasTokenCheckList
     self.farmToken = _farmToken
-    self.votingToken = _votingToken
     self.owner = msg.sender
 
 
@@ -94,8 +92,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert self.gasTokens[_gasToken], "unsupported gas token" 
-
+    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token" 
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
@@ -169,62 +166,44 @@ def snapshot(_gasToken: address = ZERO_ADDRESS):
 
 @external
 @nonreentrant('lock')
-def vote(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
+def vote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address = ZERO_ADDRESS):
     """
     @notice Vote for reaper `_reaper` using tokens `_coin` with amount `_amount` for user `_account`
     @param _reaper Reaper to vote for
     @param _coin Coin which is used to vote
     @param _amount Amount which is used to vote
-    @param _account Account who is voting
     """
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
-    assert _amount > 0, "amount must be greater 0"
     assert _coin == self.farmToken or _coin == self.votingToken, "invalid coin"
 
     _gasStart: uint256 = msg.gas
-
-    if _account != msg.sender:
-        assert self.voteAllowance[_reaper][_coin][_account][msg.sender], "voting approve required"
-
-    self.balances[_reaper][_coin][_account] += _amount
-    self.balancesUnlockTimestamp[_reaper][_coin][_account] = block.timestamp + VOTING_PERIOD
+    self.balances[_reaper][_coin][msg.sender] += _amount
+    self.balancesUnlockTimestamp[_reaper][_coin][msg.sender] = block.timestamp + VOTING_PERIOD
     self.reaperBalances[_reaper][_coin] += _amount
-    
-    ERC20(_coin).transferFrom(_account, self, _amount)
+    ERC20(_coin).transferFrom(msg.sender, self, _amount)
 
-    log Vote(_reaper, _coin, _account, _amount)
-
+    log Vote(_reaper, _coin, msg.sender, _amount)
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
 
 
 @external
 @nonreentrant('lock')
-def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
+def unvote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address = ZERO_ADDRESS):
     """
     @notice Unvote for reaper `_reaper` and withdraw tokens `_coin` with amount `_amount` for `_account`
     @dev Only possible with unlocked amount
     @param _reaper Reaper to unvote for
     @param _coin Coin which is used to unvote
     @param _amount Amount which is used to unvote
-    @param _account Account who is unvoting
     """
-    assert _amount > 0, "amount should be > 0"
-
     _gasStart: uint256 = msg.gas
-
-    if _account != msg.sender:
-        assert self.voteAllowance[_reaper][_coin][_account][msg.sender], "voting approve required"
-
-    assert self.balances[_reaper][_coin][_account] >= _amount, "insufficiend funds"
-    assert self.balancesUnlockTimestamp[_reaper][_coin][_account] < block.timestamp, "tokens are locked"
-
-    self.balances[_reaper][_coin][_account] -= _amount
+    assert self.balances[_reaper][_coin][msg.sender] >= _amount, "insufficiend funds"
+    assert self.balancesUnlockTimestamp[_reaper][_coin][msg.sender] < block.timestamp, "tokens are locked"
+    self.balances[_reaper][_coin][msg.sender] -= _amount
     self.reaperBalances[_reaper][_coin] -= _amount
-    
-    ERC20(_coin).transfer(_account, _amount)
+    ERC20(_coin).transfer(msg.sender, _amount)
 
-    log Unvote(_reaper, _coin, _account, _amount)
-
+    log Unvote(_reaper, _coin, msg.sender, _amount)
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
 
 
@@ -322,28 +301,6 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
 
 
 @external
-def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: bool):
-    """
-    @notice Allows to perform votes and unvotes for reaper `_reaper` in tokens `_coin` for `_voter` instead of msg.sender by setting `_canVote` param
-    @param _reaper Reaper to approve voting for
-    @param _coin Coin which is used to approve voting
-    @param _voter Account who can do voting or unvoting instead of msg.sender
-    @param _canVote Possibility of voting or unvoting
-    """
-    self.voteAllowance[_reaper][_coin][msg.sender][_voter] = _canVote
-
-    log VoteApproval(_reaper, _coin, msg.sender, _voter, _canVote)
-
-
-@external
-def setGasToken(_gasToken: address, _value: bool):
-    assert msg.sender == self.owner, "owner only"
-    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
-    
-    self.gasTokens[_gasToken] = _value
-
-
-@external
 def transferOwnership(_futureOwner: address):
     """
     @notice Sets new future owner address
@@ -351,7 +308,6 @@ def transferOwnership(_futureOwner: address):
     @param _futureOwner New future owner address
     """
     assert msg.sender == self.owner, "owner only"
-
     self.futureOwner = _futureOwner
     log CommitOwnership(_futureOwner)
 
@@ -367,3 +323,10 @@ def applyOwnership():
     assert _owner != ZERO_ADDRESS, "owner not set"
     self.owner = _owner
     log ApplyOwnership(_owner)
+
+
+@external
+def setVotingToken(_votingToken: address):
+    assert msg.sender == self.owner, "owner only"
+    assert _votingToken != ZERO_ADDRESS, "votingToken not set"
+    self.votingToken = _votingToken

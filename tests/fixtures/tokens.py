@@ -28,6 +28,20 @@ def usdn_token(StakableERC20, deployer):
 
 
 @pytest.fixture(scope="module")
-def voting_token(ERC20Basic, deployer):
-    voting_token = ERC20Basic.deploy(VOTING_TOKEN_NAME, VOTING_TOKEN_SYMBOL, VOTING_TOKEN_DECIMALS, VOTING_TOKEN_INITIAL_SUPPLY, {'from': deployer})
+def voting_token(StrictTransfableToken, voting_controller, voting_white_list, deployer):
+    voting_token = StrictTransfableToken.deploy(
+        VOTING_TOKEN_NAME, VOTING_TOKEN_SYMBOL, voting_white_list, voting_controller, {'from': deployer})
+    voting_controller.setVotingToken(voting_token, {'from': deployer})
     yield voting_token
+
+
+@pytest.fixture(scope="module")
+def strict_transfable_token(StrictTransfableToken, white_list, deployer):
+    strict_transfable_token = StrictTransfableToken.deploy(
+        "Strict Transfable Token", "STT", white_list, deployer, {'from': deployer})
+    yield strict_transfable_token
+
+
+@ pytest.fixture(scope="module")
+def chi_token(deployer, pm):
+    yield (pm('forest-friends/chi@1.0.1').ChiToken).deploy({'from': deployer})

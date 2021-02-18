@@ -73,12 +73,12 @@ def snapshot(_gasToken: address):
 
 
 @external
-def vote(_reaper: address, _coin: address, _amount: uint256, _account: address, _gasToken: address):
+def vote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address):
     pass
 
 
 @external
-def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address, _gasToken: address):
+def unvote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address):
     pass
 
 
@@ -104,8 +104,3 @@ def reaperVotePower(_reaper: address) -> uint256:
 @external
 def accountVotePower(_reaper: address, _account: address) -> uint256:
     return 0
-
-
-@external
-def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: bool):
-    pass

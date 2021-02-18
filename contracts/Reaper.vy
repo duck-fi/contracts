@@ -8,12 +8,12 @@ import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.tokens.Farmable as Farmable
 import interfaces.VotingController as VotingController
 import interfaces.GasToken as GasToken
-import interfaces.GasReducible as GasReducible
+# import interfaces.GasReducible as GasReducible
 
 
 implements: Reaper
 implements: Ownable
-implements: GasReducible
+# implements: GasReducible
 
 
 event CommitOwnership:

@@ -10,6 +10,8 @@ def ownable_tester(deployer, thomas):
             contract.transferOwnership(thomas, {'from': thomas})
         with brownie.reverts("owner only"):
             contract.applyOwnership({'from': thomas})
+        with brownie.reverts("owner not set"):
+            contract.applyOwnership({'from': deployer})
 
         contract.transferOwnership(thomas, {'from': deployer})
         assert contract.futureOwner() == thomas

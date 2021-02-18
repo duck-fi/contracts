@@ -24,6 +24,11 @@ def test_fail_to_update_minter_not_by_owner(farm_token, ownable_exception_tester
     ownable_exception_tester(farm_token.setMinter, morpheus, {'from': thomas})
 
 
+def test_fail_to_update_minter_zero_owner(farm_token, exception_tester, deployer, ZERO_ADDRESS):
+    exception_tester("zero address", farm_token.setMinter,
+                     ZERO_ADDRESS, {'from': deployer})
+
+
 def test_fail_to_startEmission_not_by_owner(farm_token, thomas, ownable_exception_tester):
     ownable_exception_tester(farm_token.startEmission, {'from': thomas})
 
@@ -121,7 +126,7 @@ def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_AD
 
         # fail to mint more than allowed
         exception_tester("exceeds allowable mint amount",
-                         farm_token.mint, trinity, to_raw_farm_token(100), {'from': deployer})
+                         farm_token.mint, trinity, to_raw_farm_token(1_000), {'from': deployer})
 
 
 def test_emission_overflow(farm_token, deployer, trinity, exception_tester):
