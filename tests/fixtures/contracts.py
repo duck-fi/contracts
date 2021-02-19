@@ -23,5 +23,10 @@ def controller_stub(VotingController, ControllerStub, deployer, three_reapers_st
 
 
 @pytest.fixture(scope="module")
-def voting_controller(VotingController, controller_stub, farm_token, voting_token, deployer, accounts):
+def voting_controller(VotingController, controller_stub, farm_token, voting_token, deployer):
     yield VotingController.deploy(controller_stub, farm_token, voting_token, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def boosting_controller(BoostingController, farm_token, boosting_token, deployer):
+    yield BoostingController.deploy(farm_token, boosting_token, {'from': deployer})
