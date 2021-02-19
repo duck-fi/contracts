@@ -2,29 +2,32 @@ import pytest
 
 
 @pytest.fixture(scope="module")
-def three_reapers_stub(accounts):
-    contracts = [
-        accounts[10],
-        accounts[11],
-        accounts[12],
-    ]
-
-    yield contracts
+def reaper_1_mock(accounts):
+    yield accounts[10]
 
 
 @pytest.fixture(scope="module")
-def controller_stub(ControllerStub, deployer, three_reapers_stub):
-    contract = ControllerStub.deploy({'from': deployer})
-    contract.addReaper(three_reapers_stub[0])
-    contract.addReaper(three_reapers_stub[1])
-    contract.addReaper(three_reapers_stub[2])
+def reaper_2_mock(accounts):
+    yield accounts[11]
 
+
+@pytest.fixture(scope="module")
+def reaper_3_mock(accounts):
+    yield accounts[12]
+
+
+@pytest.fixture(scope="module")
+def controller_mock(ControllerMock, deployer, reaper_1_mock, reaper_2_mock, reaper_3_mock):
+    contract = ControllerMock.deploy({'from': deployer})
+    contract.addReaper(reaper_1_mock)
+    contract.addReaper(reaper_2_mock)
+    contract.addReaper(reaper_3_mock)
     yield contract
 
 
 @pytest.fixture(scope="module")
-def voting_controller(VotingController, controller_stub, farm_token, deployer, gas_token_check_list):
-    yield VotingController.deploy(controller_stub, gas_token_check_list, farm_token, {'from': deployer})
+def voting_controller_mocked(VotingController, controller_mock, farm_token, deployer, gas_token_check_list):
+    yield VotingController.deploy(controller_mock, gas_token_check_list, farm_token, {'from': deployer})
 
 
 @pytest.fixture(scope="module")

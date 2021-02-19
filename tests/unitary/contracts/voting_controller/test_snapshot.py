@@ -1,5 +1,3 @@
-# #!/usr/bin/python3
-
 # import brownie
 # import pytest
 # from brownie.test import given, strategy

@@ -28,11 +28,11 @@ def usdn_token(StakableERC20, deployer):
 
 
 @pytest.fixture(scope="module")
-def voting_token(StrictTransfableToken, voting_controller, voting_white_list, deployer):
-    voting_token = StrictTransfableToken.deploy(
-        VOTING_TOKEN_NAME, VOTING_TOKEN_SYMBOL, voting_white_list, voting_controller, {'from': deployer})
-    voting_controller.setVotingToken(voting_token, {'from': deployer})
-    yield voting_token
+def voting_token_mocked(StrictTransfableToken, voting_controller_mocked, voting_white_list, deployer):
+    contract = StrictTransfableToken.deploy(
+        VOTING_TOKEN_NAME, VOTING_TOKEN_SYMBOL, voting_white_list, voting_controller_mocked, {'from': deployer})
+    voting_controller_mocked.setVotingToken(contract, {'from': deployer})
+    yield contract
 
 
 @pytest.fixture(scope="module")
