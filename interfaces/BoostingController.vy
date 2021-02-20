@@ -21,7 +21,7 @@ def boostIntegral() -> uint256:
 
 @view
 @external
-def lockingPeriod() -> uint256:
+def minLockingPeriod() -> uint256:
     return 0
 
 
