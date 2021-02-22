@@ -61,24 +61,18 @@ def lastSnapshotIndex() -> uint256:
     return 0
 
 
-@view
-@external
-def voteAllowance(_reaper: address, _coin: address, _owner: address, _voter: address) -> bool:
-    return False
-
-
 @external
 def snapshot(_gasToken: address):
     pass
 
 
 @external
-def vote(_reaper: address, _coin: address, _amount: uint256, _account: address, _gasToken: address):
+def vote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address):
     pass
 
 
 @external
-def unvote(_reaper: address, _coin: address, _amount: uint256, _account: address, _gasToken: address):
+def unvote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address):
     pass
 
 
@@ -106,6 +100,7 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
     return 0
 
 
+@view
 @external
-def voteApprove(_reaper: address, _coin: address, _voter: address, _canVote: bool):
-    pass
+def totalVotePower() -> uint256:
+    return 0

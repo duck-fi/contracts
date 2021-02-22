@@ -7,7 +7,7 @@ project_structure:
   tests: tests
 
 reports:
-  exclude_paths: 
+  exclude_paths:
     - interfaces/*.*
     - contracts/testing/*.*
 
@@ -31,3 +31,5 @@ dependencies:
   - curvefi/curve-contract@1.0
   - curvefi/curve-dao-contracts@1.1.0
   - Uniswap/uniswap-v2-core@1.0.1
+  - OpenZeppelin/openzeppelin-contracts@3.0.0
+  - forest-friends/chi@1.0.1

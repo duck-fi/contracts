@@ -8,6 +8,7 @@ pytest_plugins = [
     "fixtures.erc20_burnable",
     "fixtures.erc20",
     "fixtures.exception",
+    "fixtures.time",
 ]
 
 

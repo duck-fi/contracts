@@ -16,12 +16,15 @@ FARM_TOKEN_DECIMALS = 18
 FARM_TOKEN_INITIAL_SUPPLY_DEC = 100_000
 INITIAL_EMISSION_DEC = 1_000_000
 INITIAL_EMISSION_RAW = to_raw_farm_token(INITIAL_EMISSION_DEC)
-SECONDS_IN_YEAR = 86_400 * 365
-EMISSION_REDUCTION_SECONDS = SECONDS_IN_YEAR
 
 
 def test_fail_to_update_minter_not_by_owner(farm_token, ownable_exception_tester, thomas, morpheus):
     ownable_exception_tester(farm_token.setMinter, morpheus, {'from': thomas})
+
+
+def test_fail_to_update_minter_zero_owner(farm_token, exception_tester, deployer, ZERO_ADDRESS):
+    exception_tester("zero address", farm_token.setMinter,
+                     ZERO_ADDRESS, {'from': deployer})
 
 
 def test_fail_to_startEmission_not_by_owner(farm_token, thomas, ownable_exception_tester):
@@ -53,26 +56,27 @@ def test_fail_to_mint_beforeStartEmission(farm_token, deployer, trinity, amount)
         farm_token.mint(trinity, amount, {'from': deployer})
 
 
-def assert_emission(farm_token, expected_yearEmission):
+def assert_emission(farm_token, expected_yearEmission, emission_reduction_time):
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
     assert farm_token.yearEmission(
     ).return_value == expected_yearEmission, "invalid yearEmission"
     emissionIntegralTx = farm_token.emissionIntegral()
     dt = emissionIntegralTx.timestamp - lastEmissionUpdateTimestamp
-    assert 0 >= emissionIntegralTx.return_value - (dt *
-                                                   expected_yearEmission / SECONDS_IN_YEAR) <= emissionIntegralTx.return_value / (10 ** farm_token.decimals()), "invalid emissionIntegral"
+    assert 0 >= emissionIntegralTx.return_value - \
+        (dt * expected_yearEmission / emission_reduction_time) <= emissionIntegralTx.return_value / \
+        (10 ** farm_token.decimals()), "invalid emissionIntegral"
 
 
-def test_yearEmission_beforeStartEmission(farm_token):
-    assert_emission(farm_token, 0)
+def test_yearEmission_beforeStartEmission(farm_token, year):
+    assert_emission(farm_token, 0, year)
 
 
-def test_yearEmission_inNextYear_beforeStartEmission(farm_token, chain):
-    chain.mine(100, None, EMISSION_REDUCTION_SECONDS + 100)
-    test_yearEmission_beforeStartEmission(farm_token)
+def test_yearEmission_inNextYear_beforeStartEmission(farm_token, chain, year):
+    chain.mine(100, None, year + 100)
+    test_yearEmission_beforeStartEmission(farm_token, year)
 
 
-def test_success_startEmission(farm_token, deployer, chain):
+def test_success_startEmission(farm_token, deployer, chain, year):
     t1 = chain.time()
     farm_token.startEmission({'from': deployer})
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
@@ -81,16 +85,16 @@ def test_success_startEmission(farm_token, deployer, chain):
 
     assert lastEmissionUpdateTimestamp >= t1 and lastEmissionUpdateTimestamp <= t2
     assert startEmissionTimestamp >= t1 and startEmissionTimestamp <= t2
-    assert_emission(farm_token, INITIAL_EMISSION_RAW)
+    assert_emission(farm_token, INITIAL_EMISSION_RAW, year)
 
 
-def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_ADDRESS, exception_tester):
+def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_ADDRESS, exception_tester, year):
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
 
     for quarter in range(1, 12):  # 3 years
         old_emission_integral = farm_token.emissionIntegral().return_value
 
-        time_move = quarter * SECONDS_IN_YEAR / 4
+        time_move = quarter * year / 4
         chain.mine(100, lastEmissionUpdateTimestamp + time_move)
 
         year_emission = farm_token.yearEmission().return_value
@@ -121,7 +125,7 @@ def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_AD
 
         # fail to mint more than allowed
         exception_tester("exceeds allowable mint amount",
-                         farm_token.mint, trinity, to_raw_farm_token(100), {'from': deployer})
+                         farm_token.mint, trinity, to_raw_farm_token(1_000), {'from': deployer})
 
 
 def test_emission_overflow(farm_token, deployer, trinity, exception_tester):
