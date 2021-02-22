@@ -62,8 +62,6 @@ balances: public(HashMap[address, HashMap[address, uint256]]) # coin -> account 
 coinBalances: public(HashMap[address, uint256]) # coin -> balance
 gasTokens: public(HashMap[address, bool])
 
-flag1: public(uint256)
-
 
 @external
 def __init__(_farmToken: address, _boostingToken: address):
@@ -119,8 +117,6 @@ def _updateAccountBoostIntegral(_account: address):
         self.boosts[_account].instantAmount = 0
         self.lastBoostTimestampFor[_account] = block.timestamp
 
-        self.flag1 = 1 # TODO: remove
-
         return
 
     if self.boosts[_account].warmupTime > block.timestamp:
@@ -131,8 +127,7 @@ def _updateAccountBoostIntegral(_account: address):
         self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (_instantAmount + self.boosts[_account].instantAmount) * (block.timestamp - self.lastBoostTimestampFor[_account]) / 2
         self.boosts[_account].instantAmount = _instantAmount
         self.lastBoostTimestampFor[_account] = block.timestamp
-        
-        # self.flag1 = 2 # TODO: remove
+
         return
     
     if self.boosts[_account].finishTime > block.timestamp:
@@ -146,12 +141,10 @@ def _updateAccountBoostIntegral(_account: address):
 
         # 3.2 need to calc user descending integral
         _instantAmount: uint256 = self._calcAmount(self.boosts[_account].instantAmount, self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER, self.lastBoostTimestampFor[_account], self.boosts[_account].finishTime, block.timestamp)
-        # self.flag1 = (self.boosts[_account].instantAmount + _instantAmount)/ 2 # * (block.timestamp - self.lastBoostTimestampFor[_account]) / 2
         self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + _instantAmount) * (block.timestamp - self.lastBoostTimestampFor[_account]) / 2
         self.boosts[_account].instantAmount = _instantAmount
         self.lastBoostTimestampFor[_account] = block.timestamp
-        
-        # self.flag1 = 3 # TODO: remove
+
         return
 
     # 4. its after reduction
@@ -170,7 +163,6 @@ def _updateAccountBoostIntegral(_account: address):
     # 4.3 need to calc user const integral
     self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + self.boosts[_account].instantAmount * (block.timestamp - self.lastBoostTimestampFor[_account])
     self.lastBoostTimestampFor[_account] = block.timestamp
-    self.flag1 = 4 # TODO: remove
 
 
 @external
@@ -190,6 +182,7 @@ def boost(_coin: address, _amount: uint256, _lockTime: uint256, _gasToken: addre
     _gasStart: uint256 = msg.gas
 
     self._updateBoostIntegral()
+    self._updateAccountBoostIntegral(msg.sender)
 
     self.balances[_coin][msg.sender] += _amount
     self.coinBalances[_coin] +=_amount
@@ -198,7 +191,6 @@ def boost(_coin: address, _amount: uint256, _lockTime: uint256, _gasToken: addre
     if _coin == self.boostingToken:
         _tokenRate = self.boostingTokenRate
 
-    self._updateAccountBoostIntegral(msg.sender)
 
     self.boosts[msg.sender].targetAmount += _amount * _tokenRate
     self.boosts[msg.sender].warmupTime = block.timestamp + self.warmupTime
