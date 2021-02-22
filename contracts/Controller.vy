@@ -7,13 +7,11 @@ import interfaces.Ownable as Ownable
 import interfaces.tokens.ERC20Mintable as ERC20Mintable
 import interfaces.Reaper as Reaper
 import interfaces.GasToken as GasToken
-# import interfaces.GasReducible as GasReducible
 
 
 implements: Minter
 implements: Ownable
 implements: Controller
-# implements: GasReducible
 
 
 event CommitOwnership:
