@@ -200,7 +200,7 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _gasToken: addres
     assert ERC20(_coin).transfer(msg.sender, _amount)
 
     log Unvote(_reaper, _coin, msg.sender, _amount)
-    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 5)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 4)
 
 
 @view
@@ -321,4 +321,5 @@ def applyOwnership():
 def setVotingToken(_votingToken: address):
     assert msg.sender == self.owner, "owner only"
     assert _votingToken != ZERO_ADDRESS, "zero address"
+    assert self.votingToken == ZERO_ADDRESS, "can't change"
     self.votingToken = _votingToken
