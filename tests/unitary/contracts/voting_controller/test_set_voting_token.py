@@ -8,7 +8,7 @@ def test_set_zero_address(voting_controller_mocked, exception_tester, ZERO_ADDRE
                      ZERO_ADDRESS, {'from': deployer})
 
 
-def test_success_set_voting_token(voting_controller_mocked, deployer, voting_token_mocked, thomas):
+def test_set_once(exception_tester, voting_controller_mocked, deployer, voting_token_mocked, thomas):
     assert voting_controller_mocked.votingToken() == voting_token_mocked
-    voting_controller_mocked.setVotingToken(thomas, {'from': deployer})
-    assert voting_controller_mocked.votingToken() == thomas
+    exception_tester("set only once", voting_controller_mocked.setVotingToken,
+                     thomas, {'from': deployer})

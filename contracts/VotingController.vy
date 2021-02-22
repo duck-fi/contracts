@@ -321,5 +321,5 @@ def applyOwnership():
 def setVotingToken(_votingToken: address):
     assert msg.sender == self.owner, "owner only"
     assert _votingToken != ZERO_ADDRESS, "zero address"
-    assert self.votingToken == ZERO_ADDRESS, "can't change"
+    assert self.votingToken == ZERO_ADDRESS, "set only once"
     self.votingToken = _votingToken
