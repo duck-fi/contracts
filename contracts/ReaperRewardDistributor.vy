@@ -6,12 +6,10 @@ import interfaces.Ownable as Ownable
 import interfaces.ReaperRewardDistributor as ReaperRewardDistributor
 import interfaces.Reaper as Reaper
 import interfaces.GasToken as GasToken
-# import interfaces.GasReducible as GasReducible
 
 
 implements: Ownable
 implements: ReaperRewardDistributor
-# implements: GasReducible
 
 
 event CommitOwnership:
