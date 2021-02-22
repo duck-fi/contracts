@@ -61,12 +61,6 @@ def lastSnapshotIndex() -> uint256:
     return 0
 
 
-@view
-@external
-def voteAllowance(_reaper: address, _coin: address, _owner: address, _voter: address) -> bool:
-    return False
-
-
 @external
 def snapshot(_gasToken: address):
     pass
@@ -103,4 +97,10 @@ def reaperVotePower(_reaper: address) -> uint256:
 @view
 @external
 def accountVotePower(_reaper: address, _account: address) -> uint256:
+    return 0
+
+
+@view
+@external
+def totalVotePower() -> uint256:
     return 0

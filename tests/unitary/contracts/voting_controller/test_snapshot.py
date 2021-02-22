@@ -1,454 +1,681 @@
-# import brownie
-# import pytest
-# from brownie.test import given, strategy
+INIT_TIME = 1609372800
 
 
-# INIT_TIME = 1609372800
-# DAY = 86400
-# WEEK = DAY * 7
+def test_snapshot(exception_tester, voting_controller_mocked, farm_token, deployer, morpheus, trinity, thomas, reaper_1_mock, reaper_2_mock, reaper_3_mock, chain, week, day):
+    farm_token.transfer(morpheus, 1000, {'from': deployer})
+    farm_token.transfer(trinity, 1000, {'from': deployer})
+    farm_token.transfer(thomas, 1000, {'from': deployer})
+    initial_balance = farm_token.balanceOf(deployer)
 
+    farm_token.approve(voting_controller_mocked, 2000, {'from': deployer})
+    farm_token.approve(voting_controller_mocked, 2000, {'from': morpheus})
+    farm_token.approve(voting_controller_mocked, 2000, {'from': trinity})
+    farm_token.approve(voting_controller_mocked, 2000, {'from': thomas})
 
-# def test_snapshot_1(voting_controller, farm_token, three_reapers_stub, neo, morpheus, trinity, thomas):    
-#     farm_token.transfer(morpheus, 1000, {'from': neo})
-#     farm_token.transfer(trinity, 1000, {'from': neo})
-#     farm_token.transfer(thomas, 1000, {'from': neo})
-#     initial_balance = farm_token.balanceOf(neo)
+    voting_controller_mocked.vote(
+        reaper_1_mock, farm_token, 10, {'from': deployer})
+    voting_controller_mocked.vote(
+        reaper_2_mock, farm_token, 20, {'from': deployer})
+    voting_controller_mocked.vote(
+        reaper_3_mock, farm_token, 30, {'from': deployer})
+    voting_controller_mocked.vote(
+        reaper_3_mock, farm_token, 40, {'from': deployer})
+    assert farm_token.balanceOf(deployer) == initial_balance - 100
+    assert farm_token.balanceOf(voting_controller_mocked) == 100
 
-#     farm_token.approve(voting_controller, 2000, {'from': neo})
-#     farm_token.approve(voting_controller, 2000, {'from': morpheus})
-#     farm_token.approve(voting_controller, 2000, {'from': trinity})
-#     farm_token.approve(voting_controller, 2000, {'from': thomas})
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 10
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 20
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 70
+    assert voting_controller_mocked.balances(
+        reaper_1_mock, farm_token, deployer) == 10
+    assert voting_controller_mocked.balances(
+        reaper_2_mock, farm_token, deployer) == 20
+    assert voting_controller_mocked.balances(
+        reaper_3_mock, farm_token, deployer) == 70
 
-#     voting_controller.vote(three_reapers_stub[0], farm_token, 10, {'from': neo})
-#     voting_controller.vote(three_reapers_stub[1], farm_token, 20, {'from': neo})
-#     voting_controller.vote(three_reapers_stub[2], farm_token, 30, {'from': neo})
-#     voting_controller.vote(three_reapers_stub[2], farm_token, 40, {'from': neo})
-#     assert farm_token.balanceOf(neo) == initial_balance - 100
-#     assert farm_token.balanceOf(voting_controller) == 100
+    voting_controller_mocked.vote(
+        reaper_1_mock, farm_token, 10, {'from': morpheus})
+    voting_controller_mocked.vote(
+        reaper_2_mock, farm_token, 20, {'from': morpheus})
+    voting_controller_mocked.vote(
+        reaper_3_mock, farm_token, 30, {'from': morpheus})
+    voting_controller_mocked.vote(
+        reaper_3_mock, farm_token, 40, {'from': morpheus})
+    assert farm_token.balanceOf(morpheus) == 900
+    assert farm_token.balanceOf(voting_controller_mocked) == 200
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 10
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 20
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 70
-#     assert voting_controller.balances(three_reapers_stub[0], farm_token, neo) == 10
-#     assert voting_controller.balances(three_reapers_stub[1], farm_token, neo) == 20
-#     assert voting_controller.balances(three_reapers_stub[2], farm_token, neo) == 70
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 20
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 40
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 140
+    assert voting_controller_mocked.balances(
+        reaper_1_mock, farm_token, morpheus) == 10
+    assert voting_controller_mocked.balances(
+        reaper_2_mock, farm_token, morpheus) == 20
+    assert voting_controller_mocked.balances(
+        reaper_3_mock, farm_token, morpheus) == 70
 
-#     voting_controller.vote(three_reapers_stub[0], farm_token, 10, {'from': morpheus})
-#     voting_controller.vote(three_reapers_stub[1], farm_token, 20, {'from': morpheus})
-#     voting_controller.vote(three_reapers_stub[2], farm_token, 30, {'from': morpheus})
-#     voting_controller.vote(three_reapers_stub[2], farm_token, 40, {'from': morpheus})
-#     assert farm_token.balanceOf(morpheus) == 900
-#     assert farm_token.balanceOf(voting_controller) == 200
+    # initial snapshot provides equal shares between reapers
+    voting_controller_mocked.snapshot()
+    init_snapshot_timestamp = voting_controller_mocked.lastSnapshotTimestamp()
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 20
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 40
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 140
-#     assert voting_controller.balances(three_reapers_stub[0], farm_token, morpheus) == 10
-#     assert voting_controller.balances(three_reapers_stub[1], farm_token, morpheus) == 20
-#     assert voting_controller.balances(three_reapers_stub[2], farm_token, morpheus) == 70
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 20
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 40
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 140
+    assert voting_controller_mocked.reaperIntegratedVotes(reaper_1_mock) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(reaper_2_mock) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(reaper_3_mock) == 0
 
-#     # initial snapshot provides equal shares between reapers
-#     voting_controller.snapshot()
-#     init_snapshot_timestamp = voting_controller.lastSnapshotTimestamp()
-   
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 20
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 40
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 140
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 0
+    assert voting_controller_mocked.lastVotes(
+        reaper_1_mock) == 333333333333333333
+    assert voting_controller_mocked.lastVotes(
+        reaper_2_mock) == 333333333333333333
+    assert voting_controller_mocked.lastVotes(
+        reaper_3_mock) == 333333333333333333
+    assert voting_controller_mocked.lastSnapshotIndex() == 0
+    init_week_number = (
+        voting_controller_mocked.lastSnapshotTimestamp() - INIT_TIME) / week
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    for i in range(1, 4):
+        assert voting_controller_mocked.snapshots(
+            voting_controller_mocked.lastSnapshotIndex(), i)[1] == 1
+        assert voting_controller_mocked.snapshots(
+            voting_controller_mocked.lastSnapshotIndex(), i)[2] == 333333333333333333
 
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 333333333333333333
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 333333333333333333
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 333333333333333333
-#     assert voting_controller.lastSnapshotIndex() == 0
-#     init_week_number = (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[1] == 1
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[2] == 333333333333333333
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
 
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    # now current time chain.time() is ahead of voting_controller_mocked.lastSnapshotTimestamp() because of aligning
+    # so wait for week - (chain.time() - voting_controller_mocked.lastSnapshotTimestamp()) + 1
+    chain.mine(2, None, week - (chain.time() -
+                                voting_controller_mocked.lastSnapshotTimestamp()) + 1)
 
-#     # now current time brownie.chain.time() is ahead of voting_controller.lastSnapshotTimestamp() because of aligning
-#     # so wait for WEEK - (brownie.chain.time() - voting_controller.lastSnapshotTimestamp()) + 1
-#     brownie.chain.mine(2, None, WEEK - (brownie.chain.time() - voting_controller.lastSnapshotTimestamp()) + 1)
+    # second snapshot provides different shares between reapers
+    voting_controller_mocked.snapshot()
+    second_snapshot_timestamp = voting_controller_mocked.lastSnapshotTimestamp()
 
-#     # second snapshot provides different shares between reapers
-#     voting_controller.snapshot()
-#     second_snapshot_timestamp = voting_controller.lastSnapshotTimestamp()
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 20
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 40
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 140
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp)
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp)
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp)
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 1 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 2 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 7 * 10 ** 17
+    assert voting_controller_mocked.lastSnapshotIndex() == 1
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 1
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 20
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 40
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 140
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 1 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 2 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 7 * 10 ** 17
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 20
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 40
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 140
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp)
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp)
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp)
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 1 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 2 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 7 * 10 ** 17
-#     assert voting_controller.lastSnapshotIndex() == 1
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 1
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 20
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 40
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 140
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 1 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 2 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 7 * 10 ** 17
+    # votes are changing
+    voting_controller_mocked.vote(
+        reaper_1_mock, farm_token, 80, {'from': trinity})
+    voting_controller_mocked.vote(
+        reaper_2_mock, farm_token, 60, {'from': morpheus})
+    voting_controller_mocked.vote(
+        reaper_3_mock, farm_token, 60, {'from': deployer})
+    assert farm_token.balanceOf(deployer) == initial_balance - 100 - 60
+    assert farm_token.balanceOf(morpheus) == 1000 - 100 - 60
+    assert farm_token.balanceOf(trinity) == 1000 - 80
+    assert farm_token.balanceOf(voting_controller_mocked) == 400
 
-#     # votes are changing
-#     voting_controller.vote(three_reapers_stub[0], farm_token, 80, {'from': trinity})
-#     voting_controller.vote(three_reapers_stub[1], farm_token, 60, {'from': morpheus})
-#     voting_controller.vote(three_reapers_stub[2], farm_token, 60, {'from': neo})
-#     assert farm_token.balanceOf(neo) == initial_balance - 100 - 60
-#     assert farm_token.balanceOf(morpheus) == 1000 - 100 - 60
-#     assert farm_token.balanceOf(trinity) == 1000 - 80
-#     assert farm_token.balanceOf(voting_controller) == 400
+    # third snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week + 1)
+    voting_controller_mocked.snapshot()
+    third_snapshot_timestamp = voting_controller_mocked.lastSnapshotTimestamp()
 
-#     # third snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 100
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 100
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 200
+    assert voting_controller_mocked.reaperIntegratedVotes(reaper_1_mock) == 333333333333333333 * (
+        second_snapshot_timestamp - init_snapshot_timestamp) + 1 * 10 ** 17 * (third_snapshot_timestamp - second_snapshot_timestamp)
+    assert voting_controller_mocked.reaperIntegratedVotes(reaper_2_mock) == 333333333333333333 * (
+        second_snapshot_timestamp - init_snapshot_timestamp) + 2 * 10 ** 17 * (third_snapshot_timestamp - second_snapshot_timestamp)
+    assert voting_controller_mocked.reaperIntegratedVotes(reaper_3_mock) == 333333333333333333 * (
+        second_snapshot_timestamp - init_snapshot_timestamp) + 7 * 10 ** 17 * (third_snapshot_timestamp - second_snapshot_timestamp)
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 2.5 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 2.5 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 5 * 10 ** 17
+    assert voting_controller_mocked.lastSnapshotIndex() == 2
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 2
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 100
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 100
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 200
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 2.5 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 2.5 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 5 * 10 ** 17
 
-#     brownie.chain.mine(2, None, WEEK+1)
+    # votes are changing again
+    voting_controller_mocked.vote(
+        reaper_1_mock, farm_token, 200, {'from': trinity})
+    voting_controller_mocked.vote(
+        reaper_2_mock, farm_token, 100, {'from': morpheus})
+    voting_controller_mocked.unvote(
+        reaper_3_mock, farm_token, 40, {'from': deployer})
+    voting_controller_mocked.vote(
+        reaper_3_mock, farm_token, 140, {'from': deployer})
 
-#     voting_controller.snapshot()
-#     third_snapshot_timestamp = voting_controller.lastSnapshotTimestamp()
+    # 4th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week + 1)
+    voting_controller_mocked.snapshot()
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 100
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 100
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 200
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp) + 1 * 10 ** 17 * (third_snapshot_timestamp - second_snapshot_timestamp)
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp) + 2 * 10 ** 17 * (third_snapshot_timestamp - second_snapshot_timestamp)
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 333333333333333333 * (second_snapshot_timestamp - init_snapshot_timestamp) + 7 * 10 ** 17 * (third_snapshot_timestamp - second_snapshot_timestamp)
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 2.5 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 2.5 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 5 * 10 ** 17
-#     assert voting_controller.lastSnapshotIndex() == 2
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 2
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 100
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 100
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 200
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 2.5 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 2.5 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 5 * 10 ** 17
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 300
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 200
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 300
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 413279999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 473759999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 927359999999999999798400
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 3.75 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 2.5 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 3.75 * 10 ** 17
+    assert voting_controller_mocked.lastSnapshotIndex() == 3
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 3
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 300
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 200
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 300
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 3.75 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 2.5 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 3.75 * 10 ** 17
 
-#     # votes are changing again
-#     voting_controller.vote(three_reapers_stub[0], farm_token, 200, {'from': trinity})
-#     voting_controller.vote(three_reapers_stub[1], farm_token, 100, {'from': morpheus})
-#     voting_controller.unvote(three_reapers_stub[2], farm_token, 40, {'from': neo})
-#     voting_controller.vote(three_reapers_stub[2], farm_token, 140, {'from': neo})
+    # votes are changing again
+    voting_controller_mocked.vote(
+        reaper_2_mock, farm_token, 1200, {'from': deployer})
 
-#     # 4th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    # 5th snapshot
+    assert chain.time() - voting_controller_mocked.lastSnapshotTimestamp() < 50
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week+1)
+    voting_controller_mocked.snapshot()
 
-#     brownie.chain.mine(2, None, WEEK+1)
-#     voting_controller.snapshot()
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 300
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 1400
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 300
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 640079999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 624959999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 1154159999999999999798400
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 1.5 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 7 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 1.5 * 10 ** 17
+    assert voting_controller_mocked.lastSnapshotIndex() == 4
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 4
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 300
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 1400
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 300
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 1.5 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 7 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 1.5 * 10 ** 17
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 300
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 200
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 300
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 413279999999999999798400 # here and later integrals were calculated via https://www.wolframalpha.com/
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 473759999999999999798400 # here and later integrals were calculated via https://www.wolframalpha.com/
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 927359999999999999798400 # here and later integrals were calculated via https://www.wolframalpha.com/
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 3.75 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 2.5 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 3.75 * 10 ** 17
-#     assert voting_controller.lastSnapshotIndex() == 3
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 3
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 300
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 200
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 300
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 3.75 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 2.5 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 3.75 * 10 ** 17
+    # votes are changing again
+    assert chain.time() - voting_controller_mocked.lastSnapshotTimestamp() < 50
+    chain.mine(2, None, day + 1)
 
-#     # votes are changing again
-#     voting_controller.vote(three_reapers_stub[1], farm_token, 1200, {'from': neo})
+    voting_controller_mocked.vote(
+        reaper_1_mock, farm_token, 300, {'from': trinity})
 
-#     # 5th snapshot
-#     assert brownie.chain.time() - voting_controller.lastSnapshotTimestamp() < 10
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    assert voting_controller_mocked.balances(
+        reaper_3_mock, farm_token, deployer) == 230
+    assert voting_controller_mocked.balances(
+        reaper_3_mock, farm_token, morpheus) == 70
 
-#     brownie.chain.mine(2, None, WEEK+1)
-#     voting_controller.snapshot()
+    assert voting_controller_mocked.availableToUnvote(
+        reaper_3_mock, farm_token, deployer, {'from': deployer}) == 230
+    assert voting_controller_mocked.availableToUnvote(
+        reaper_3_mock, farm_token, morpheus, {'from': deployer}) == 70
+    voting_controller_mocked.unvote(
+        reaper_3_mock, farm_token, 230, {'from': deployer})
+    voting_controller_mocked.unvote(
+        reaper_3_mock, farm_token, 70, {'from': morpheus})
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 300
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 1400
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 300
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 640079999999999999798400
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 624959999999999999798400
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 1154159999999999999798400
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 1.5 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 7 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 1.5 * 10 ** 17
-#     assert voting_controller.lastSnapshotIndex() == 4
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 4
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 300
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 1400
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 300
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 1.5 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 7 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 1.5 * 10 ** 17
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.balances(
+        reaper_3_mock, farm_token, deployer) == 0
+    assert voting_controller_mocked.balances(
+        reaper_3_mock, farm_token, morpheus) == 0
 
-#     # votes are changing again
-#     assert brownie.chain.time() - voting_controller.lastSnapshotTimestamp() < 10
-#     brownie.chain.mine(2, None, DAY+1)
+    # 6th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week - day + 1)
+    voting_controller_mocked.snapshot()
 
-#     voting_controller.vote(three_reapers_stub[0], farm_token, 300, {'from': trinity})
-    
-#     assert voting_controller.balances(three_reapers_stub[2], farm_token, neo) == 230
-#     assert voting_controller.balances(three_reapers_stub[2], farm_token, morpheus) == 70
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 600
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 1400
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 730799999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 1048319999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 1244879999999999999798400
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 3 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 7 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 0
+    assert voting_controller_mocked.lastSnapshotIndex() == 5
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 5
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 600
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 1400
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 3 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 7 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 0
 
-#     assert voting_controller.availableToUnvote(three_reapers_stub[2], farm_token, neo, {'from': neo}) == 230
-#     assert voting_controller.availableToUnvote(three_reapers_stub[2], farm_token, morpheus, {'from': neo}) == 70
-#     voting_controller.unvote(three_reapers_stub[2], farm_token, 230, {'from': neo})
-#     voting_controller.unvote(three_reapers_stub[2], farm_token, 70, {'from': morpheus})
+    # votes are changing again
+    assert chain.time() - voting_controller_mocked.lastSnapshotTimestamp() < 50
+    chain.mine(2, None, day + 1)
+    voting_controller_mocked.vote(
+        reaper_1_mock, farm_token, 400, {'from': trinity})
+    voting_controller_mocked.vote(
+        reaper_2_mock, farm_token, 600, {'from': morpheus})
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.balances(three_reapers_stub[2], farm_token, neo) == 0
-#     assert voting_controller.balances(three_reapers_stub[2], farm_token, morpheus) == 0
+    # 7th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week - day + 1)
+    voting_controller_mocked.snapshot()
 
-#     # 6th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 1000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 2000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 912239999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 1471679999999999999798400
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 1244879999999999999798400
+    assert voting_controller_mocked.lastVotes(
+        reaper_1_mock) == 333333333333333333
+    assert voting_controller_mocked.lastVotes(
+        reaper_2_mock) == 666666666666666666
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 0
+    assert voting_controller_mocked.lastSnapshotIndex() == 6
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 6
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 1000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 2000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 333333333333333333
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 666666666666666666
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 0
 
-#     brownie.chain.mine(2, None, WEEK - DAY+1)
-#     voting_controller.snapshot()
+    # votes are not changing
+    # 8th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week + 2 * day + 1)
+    voting_controller_mocked.snapshot()
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 600
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 1400
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 730799999999999999798400
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 1048319999999999999798400
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 1244879999999999999798400
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 3 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 7 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 0
-#     assert voting_controller.lastSnapshotIndex() == 5
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 5
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 600
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 1400
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 3 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 7 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 0
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 1000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 2000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 1113839999999999999596800
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 1874879999999999999395200
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 1244879999999999999798400
+    assert voting_controller_mocked.lastVotes(
+        reaper_1_mock) == 333333333333333333
+    assert voting_controller_mocked.lastVotes(
+        reaper_2_mock) == 666666666666666666
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 0
+    assert voting_controller_mocked.lastSnapshotIndex() == 7
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 7
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 1000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 2000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 333333333333333333
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 666666666666666666
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 0
 
-#     # votes are changing again
-#     assert brownie.chain.time() - voting_controller.lastSnapshotTimestamp() < 20
-#     brownie.chain.mine(2, None, DAY+1)
-#     voting_controller.vote(three_reapers_stub[0], farm_token, 400, {'from': trinity})
-#     voting_controller.vote(three_reapers_stub[1], farm_token, 600, {'from': morpheus})
+    # votes are changing
+    voting_controller_mocked.vote(
+        reaper_1_mock, farm_token, 1000, {'from': thomas})
+    assert farm_token.balanceOf(thomas) == 0
+    assert farm_token.balanceOf(voting_controller_mocked) == 4000
 
-#     # 7th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    # 9th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week - 2 * day + 1)
+    voting_controller_mocked.snapshot()
 
-#     brownie.chain.mine(2, None, WEEK-DAY+1)
-#     voting_controller.snapshot()
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 2000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 2000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 1315439999999999999395200
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 2278079999999999998992000
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 1244879999999999999798400
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 5 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 5 * 10 ** 17
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 0
+    assert voting_controller_mocked.lastSnapshotIndex() == 8
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 8
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 2000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 2000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 5 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 5 * 10 ** 17
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 0
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 1000
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 2000
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 912239999999999999798400
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 1471679999999999999798400
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 1244879999999999999798400
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 333333333333333333
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 666666666666666666
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 0
-#     assert voting_controller.lastSnapshotIndex() == 6
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 6
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 1000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 2000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 333333333333333333
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 666666666666666666
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 0
+    # votes are changing
+    chain.mine(2, None, 2 * day + 1)
+    assert voting_controller_mocked.availableToUnvote(
+        reaper_1_mock, farm_token, thomas) == 1000
+    voting_controller_mocked.unvote(
+        reaper_1_mock, farm_token, 1000, {'from': thomas})
+    assert farm_token.balanceOf(thomas) == 1000
+    assert farm_token.balanceOf(voting_controller_mocked) == 3000
 
-#     # votes are not changing
-#     # 8th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    assert voting_controller_mocked.balances(
+        reaper_1_mock, farm_token, deployer) == 10
+    assert voting_controller_mocked.balances(
+        reaper_1_mock, farm_token, morpheus) == 10
+    assert voting_controller_mocked.balances(
+        reaper_1_mock, farm_token, trinity) == 980
 
-#     brownie.chain.mine(2, None, WEEK+2*DAY+1)
-#     voting_controller.snapshot()
+    exception_tester("", voting_controller_mocked.unvote,
+                     reaper_1_mock, farm_token, 20, {'from': deployer})
+    voting_controller_mocked.unvote(
+        reaper_1_mock, farm_token, 10, {'from': deployer})
+    voting_controller_mocked.unvote(
+        reaper_1_mock, farm_token, 10, {'from': morpheus})
+    voting_controller_mocked.unvote(
+        reaper_1_mock, farm_token, 980, {'from': trinity})
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 1000
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 2000
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 1113839999999999999596800
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 1874879999999999999395200
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 1244879999999999999798400
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 333333333333333333
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 666666666666666666
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 0
-#     assert voting_controller.lastSnapshotIndex() == 7
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 7
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 1000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 2000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 333333333333333333
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 666666666666666666
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 0
+    assert farm_token.balanceOf(morpheus) == 220
+    assert farm_token.balanceOf(trinity) == 1000
+    assert farm_token.balanceOf(voting_controller_mocked) == 2000
 
-#     # votes are changing
-#     voting_controller.vote(three_reapers_stub[0], farm_token, 1000, {'from': thomas})
-#     assert farm_token.balanceOf(thomas) == 0
-#     assert farm_token.balanceOf(voting_controller) == 4000
+    # 10th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week + 1)
+    voting_controller_mocked.snapshot()
 
-#     # 9th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 2000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 1617839999999999999395200
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 2580479999999999998992000
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 1244879999999999999798400
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 0
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 10 ** 18
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 0
+    assert voting_controller_mocked.lastSnapshotIndex() == 9
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 9
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 2000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 10 ** 18
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 0
 
-#     brownie.chain.mine(2, None, WEEK-2*DAY+1)
-#     voting_controller.snapshot()
+    # 11th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    # wait for extra time
+    chain.mine(2, None, week * 2 + 1)
+    voting_controller_mocked.snapshot()
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 2000
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 2000
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 1315439999999999999395200
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 2278079999999999998992000
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 1244879999999999999798400
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 5 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 5 * 10 ** 17
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 0
-#     assert voting_controller.lastSnapshotIndex() == 8
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 8
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 2000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 2000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 5 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 5 * 10 ** 17
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 0
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 2000
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_1_mock) == 1617839999999999999395200
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_2_mock) == 3790079999999999998992000
+    assert voting_controller_mocked.reaperIntegratedVotes(
+        reaper_3_mock) == 1244879999999999999798400
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 0
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 10 ** 18
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 0
+    assert voting_controller_mocked.lastSnapshotIndex() == 10
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) / week == init_week_number + 11
+    assert (voting_controller_mocked.lastSnapshotTimestamp() -
+            INIT_TIME) % week == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[0] == reaper_1_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[0] == reaper_2_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[0] == reaper_3_mock
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[1] == 2000
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[1] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 1)[2] == 0
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 2)[2] == 10 ** 18
+    assert voting_controller_mocked.snapshots(
+        voting_controller_mocked.lastSnapshotIndex(), 3)[2] == 0
 
-#     # votes are changing
-#     brownie.chain.mine(2, None, 2*DAY+1)
-#     assert voting_controller.availableToUnvote(three_reapers_stub[0], farm_token, thomas) == 1000
-#     voting_controller.unvote(three_reapers_stub[0], farm_token, 1000, {'from': thomas})
-#     assert farm_token.balanceOf(thomas) == 1000
-#     assert farm_token.balanceOf(voting_controller) == 3000
+    # unvote all remaining
+    assert voting_controller_mocked.balances(
+        reaper_2_mock, farm_token, deployer) == 1220
+    assert voting_controller_mocked.balances(
+        reaper_2_mock, farm_token, morpheus) == 780
 
-#     assert voting_controller.balances(three_reapers_stub[0], farm_token, neo) == 10
-#     assert voting_controller.balances(three_reapers_stub[0], farm_token, morpheus) == 10
-#     assert voting_controller.balances(three_reapers_stub[0], farm_token, trinity) == 980
-    
-#     with brownie.reverts():
-#         voting_controller.unvote(three_reapers_stub[0], farm_token, 20, {'from': neo})
-#     voting_controller.unvote(three_reapers_stub[0], farm_token, 10, {'from': neo})
-#     voting_controller.unvote(three_reapers_stub[0], farm_token, 10, {'from': morpheus})
-#     voting_controller.unvote(three_reapers_stub[0], farm_token, 980, {'from': trinity})
+    voting_controller_mocked.unvote(
+        reaper_2_mock, farm_token, 1220, {'from': deployer})
+    voting_controller_mocked.unvote(
+        reaper_2_mock, farm_token, 780, {'from': morpheus})
 
-#     assert farm_token.balanceOf(morpheus) == 220
-#     assert farm_token.balanceOf(trinity) == 1000
-#     assert farm_token.balanceOf(voting_controller) == 2000
+    assert farm_token.balanceOf(deployer) == initial_balance
+    assert farm_token.balanceOf(morpheus) == 1000
+    assert farm_token.balanceOf(voting_controller_mocked) == 0
 
-#     # 10th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
+    # 12th snapshot
+    exception_tester("already snapshotted", voting_controller_mocked.snapshot)
+    chain.mine(2, None, week + 1)
 
-#     brownie.chain.mine(2, None, WEEK+1)
-#     voting_controller.snapshot()
+    # total vote balance == 0, unreal in production usage
+    exception_tester("Division by zero", voting_controller_mocked.snapshot)
 
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 0
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 2000
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 1617839999999999999395200
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 2580479999999999998992000
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 1244879999999999999798400
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 0
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 10 ** 18
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 0
-#     assert voting_controller.lastSnapshotIndex() == 9
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 9
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 2000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 10 ** 18
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 0
-
-#     # 11th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
-    
-#     # wait for extra time
-#     brownie.chain.mine(2, None, WEEK*2+1)
-#     voting_controller.snapshot()
-
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 0
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 2000
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[0]) == 1617839999999999999395200
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[1]) == 3790079999999999998992000
-#     assert voting_controller.reaperIntegratedVotes(three_reapers_stub[2]) == 1244879999999999999798400
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 0
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 10 ** 18
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 0
-#     assert voting_controller.lastSnapshotIndex() == 10
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) / WEEK == init_week_number + 11
-#     assert (voting_controller.lastSnapshotTimestamp() - INIT_TIME) % WEEK == 0
-#     for i in range(1, 4):
-#         assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), i)[0] == three_reapers_stub[i - 1]
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[1] == 2000
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[1] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 1)[2] == 0
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 2)[2] == 10 ** 18
-#     assert voting_controller.snapshots(voting_controller.lastSnapshotIndex(), 3)[2] == 0
-
-#     # unvote all remaining
-#     assert voting_controller.balances(three_reapers_stub[1], farm_token, neo) == 1220
-#     assert voting_controller.balances(three_reapers_stub[1], farm_token, morpheus) == 780
-    
-#     voting_controller.unvote(three_reapers_stub[1], farm_token, 1220, {'from': neo})
-#     voting_controller.unvote(three_reapers_stub[1], farm_token, 780, {'from': morpheus})
-
-#     assert farm_token.balanceOf(neo) == initial_balance
-#     assert farm_token.balanceOf(morpheus) == 1000
-#     assert farm_token.balanceOf(voting_controller) == 0
-
-#     # 12th snapshot
-#     with brownie.reverts("already snapshotted"):
-#         voting_controller.snapshot()
-    
-#     brownie.chain.mine(2, None, WEEK+1)
-
-#     with brownie.reverts("Division by zero"): # total vote balance == 0, unreal in production usage
-#         voting_controller.snapshot()
-
-#     assert voting_controller.reaperBalances(three_reapers_stub[0], farm_token) == 0
-#     assert voting_controller.reaperBalances(three_reapers_stub[1], farm_token) == 0
-#     assert voting_controller.reaperBalances(three_reapers_stub[2], farm_token) == 0
-#     assert voting_controller.lastVotes(three_reapers_stub[0]) == 0
-#     assert voting_controller.lastVotes(three_reapers_stub[1]) == 10 ** 18
-#     assert voting_controller.lastVotes(three_reapers_stub[2]) == 0
+    assert voting_controller_mocked.reaperBalances(
+        reaper_1_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperBalances(
+        reaper_2_mock, farm_token) == 0
+    assert voting_controller_mocked.reaperBalances(
+        reaper_3_mock, farm_token) == 0
+    assert voting_controller_mocked.lastVotes(reaper_1_mock) == 0
+    assert voting_controller_mocked.lastVotes(reaper_2_mock) == 10 ** 18
+    assert voting_controller_mocked.lastVotes(reaper_3_mock) == 0
