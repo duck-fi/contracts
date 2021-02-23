@@ -31,8 +31,8 @@ def voting_controller_mocked(VotingController, controller_mock, farm_token, depl
 
 
 @pytest.fixture(scope="module")
-def boosting_controller(BoostingController, farm_token, boosting_token, deployer):
-    yield BoostingController.deploy(farm_token, boosting_token, {'from': deployer})
+def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_list, deployer):
+    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
@@ -49,6 +49,13 @@ def gas_token_check_list(AddressesCheckList, deployer, chi_token):
 
 @pytest.fixture(scope="module")
 def voting_white_list(AddressesCheckList, deployer):
+    check_list = AddressesCheckList.deploy({'from': deployer})
+    check_list.set(deployer, True, {'from': deployer})
+    yield check_list
+
+
+@pytest.fixture(scope="module")
+def boosting_white_list(AddressesCheckList, deployer):
     check_list = AddressesCheckList.deploy({'from': deployer})
     check_list.set(deployer, True, {'from': deployer})
     yield check_list

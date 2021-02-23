@@ -41,9 +41,11 @@ def voting_token_mocked(StrictTransfableToken, voting_controller_mocked, voting_
 
 
 @pytest.fixture(scope="module")
-def boosting_token(ERC20Basic, deployer):
-    boosting_token = ERC20Basic.deploy(BOOSTING_TOKEN_NAME, BOOSTING_TOKEN_SYMBOL, BOOSTING_TOKEN_DECIMALS, BOOSTING_TOKEN_INITIAL_SUPPLY, {'from': deployer})
-    yield boosting_token
+def boosting_token_mocked(StrictTransfableToken, boosting_controller_mocked, boosting_white_list, deployer):
+    contract = StrictTransfableToken.deploy(BOOSTING_TOKEN_NAME, BOOSTING_TOKEN_SYMBOL,
+                                            boosting_white_list, boosting_controller_mocked, {'from': deployer})
+    boosting_controller_mocked.setBoostingToken(contract, {'from': deployer})
+    yield contract
 
 
 @pytest.fixture(scope="module")

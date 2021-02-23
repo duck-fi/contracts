@@ -21,18 +21,6 @@ def boostIntegral() -> uint256:
 
 @view
 @external
-def minLockingPeriod() -> uint256:
-    return 0
-
-
-@view
-@external
-def warmupTime() -> uint256:
-    return 0
-
-
-@view
-@external
 def balances(_coin: address, _account: address) -> uint256:
     return 0
 
@@ -65,5 +53,5 @@ def accountBoostIntegral(_account: address) -> uint256:
 
 
 @external
-def commonBoostIntegral() -> uint256:
+def updateBoostIntegral() -> uint256:
     return 0

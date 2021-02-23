@@ -5,12 +5,11 @@ import interfaces.Ownable as Ownable
 import interfaces.Controller as Controller
 import interfaces.BoostingController as BoostingController
 import interfaces.GasToken as GasToken
-import interfaces.GasReducible as GasReducible
+import interfaces.AddressesCheckList as AddressesCheckList
 
 
 implements: Ownable
 implements: BoostingController
-implements: GasReducible
 
 
 struct BoostInfo:
@@ -37,43 +36,41 @@ event ApplyOwnership:
     admin: address
 
 
+FARM_TOKEN_RATE: constant(uint256) = 1
+BOOSTING_TOKEN_RATE: constant(uint256) = 2
 MULTIPLIER: constant(uint256) = 10 ** 18
 MIN_GAS_CONSTANT: constant(uint256) = 21_000
 DAY: constant(uint256) = 86_400
 WEEK: constant(uint256) = 7 * DAY
 BOOST_WEAKNESS: constant(uint256) = 5 * 10 ** 17 # multiplied on 10 ** 18
+WARMUP_TIME: constant(uint256) = 2 * WEEK
+MIN_LOCKING_PERIOD: constant(uint256) = 2 * WEEK
 
 
 owner: public(address)
 futureOwner: public(address)
 
 farmToken: public(address)
-farmTokenRate: public(uint256)
+gasTokenCheckList: public(address)
 boostingToken: public(address)
-boostingTokenRate: public(uint256)
 boostIntegral: public(uint256)
 lastBoostTimestamp: public(uint256)
 boosts: public(HashMap[address, BoostInfo]) # account -> boostInfo
 boostIntegralFor: public(HashMap[address, uint256]) # account -> integrated votes
 lastBoostTimestampFor: public(HashMap[address, uint256]) # account -> last boost timestamp
-minLockingPeriod: public(uint256)
-warmupTime: public(uint256)
 balances: public(HashMap[address, HashMap[address, uint256]]) # coin -> account -> amount
 coinBalances: public(HashMap[address, uint256]) # coin -> balance
-gasTokens: public(HashMap[address, bool])
 
 
 @external
-def __init__(_farmToken: address, _boostingToken: address):
+def __init__(_farmToken: address, _gasTokenCheckList: address):
     """
     @notice Contract constructor
     """
+    assert _farmToken != ZERO_ADDRESS, "farmToken is not set"
+    assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     self.farmToken = _farmToken
-    self.farmTokenRate = 1
-    self.boostingToken = _boostingToken
-    self.boostingTokenRate = 2
-    self.warmupTime = 2 * WEEK
-    self.minLockingPeriod = 2 * WEEK
+    self.gasTokenCheckList = _gasTokenCheckList
     self.owner = msg.sender
 
 
@@ -82,8 +79,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert self.gasTokens[_gasToken], "unsupported gas token" 
-
+    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token" 
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
@@ -103,66 +99,81 @@ def _calcAmount(pointA: uint256, pointB: uint256, tsA: uint256, tsB: uint256, t:
 
 
 @internal
-def _updateBoostIntegral():
-    if self.lastBoostTimestamp > 0:
-        totalBoost: uint256 = self.coinBalances[self.farmToken] * self.farmTokenRate + self.coinBalances[self.boostingToken] * self.boostingTokenRate
-        self.boostIntegral = self.boostIntegral + totalBoost * (block.timestamp - self.lastBoostTimestamp)
+def _updateBoostIntegral() -> uint256:
+    _lastBoostTimestamp: uint256 = self.lastBoostTimestamp
+    _boostIntegral: uint256 = self.boostIntegral
+
+    if _lastBoostTimestamp > 0:
+        _boostingToken: address = self.boostingToken
+        totalBoost: uint256 = FARM_TOKEN_RATE * self.coinBalances[self.farmToken]
+
+        if _boostingToken != ZERO_ADDRESS:
+            totalBoost += BOOSTING_TOKEN_RATE * self.coinBalances[_boostingToken]
+
+        _boostIntegral += totalBoost * (block.timestamp - _lastBoostTimestamp)
+        self.boostIntegral = _boostIntegral
     
     self.lastBoostTimestamp = block.timestamp
+    return _boostIntegral
 
 
 @internal
-def _updateAccountBoostIntegral(_account: address):
-    if self.boosts[_account].finishTime == 0:
+def _updateAccountBoostIntegral(_account: address) -> uint256:
+    _accountBoostIntegral: uint256 = self.boostIntegralFor[_account]
+    _boost: BoostInfo = self.boosts[_account]
+
+    if _boost.finishTime == 0:
         self.boosts[_account].instantAmount = 0
         self.lastBoostTimestampFor[_account] = block.timestamp
+        return _accountBoostIntegral
 
-        return
-
-    if self.boosts[_account].warmupTime > block.timestamp:
+    _lastBoostTimestamp: uint256 = self.lastBoostTimestampFor[_account]
+    if _boost.warmupTime > block.timestamp:
         # 2. its during warmup
-
         # 2.1 calc current user integral
-        _instantAmount: uint256 = self._calcAmount(self.boosts[_account].instantAmount, self.boosts[_account].targetAmount, self.lastBoostTimestampFor[_account], self.boosts[_account].warmupTime, block.timestamp)
-        self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (_instantAmount + self.boosts[_account].instantAmount) * (block.timestamp - self.lastBoostTimestampFor[_account]) / 2
+        _instantAmount: uint256 = self._calcAmount(_boost.instantAmount, _boost.targetAmount, _lastBoostTimestamp, _boost.warmupTime, block.timestamp)
+        _accountBoostIntegral += (_instantAmount + _boost.instantAmount) * (block.timestamp - _lastBoostTimestamp) / 2
         self.boosts[_account].instantAmount = _instantAmount
+        self.boostIntegralFor[_account] = _accountBoostIntegral
         self.lastBoostTimestampFor[_account] = block.timestamp
-
-        return
+        return _accountBoostIntegral
     
     if self.boosts[_account].finishTime > block.timestamp:
         # 3. its during reduction
-        
         # 3.1 need to calc user ascending integral (if not calculated yet)
-        if self.lastBoostTimestampFor[_account] < self.boosts[_account].warmupTime:
-            self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + self.boosts[_account].targetAmount) * (self.boosts[_account].warmupTime - self.lastBoostTimestampFor[_account]) / 2
-            self.boosts[_account].instantAmount = self.boosts[_account].targetAmount
-            self.lastBoostTimestampFor[_account] = self.boosts[_account].warmupTime
+        if _lastBoostTimestamp < _boost.warmupTime:
+            _accountBoostIntegral += (_boost.instantAmount + _boost.targetAmount) * (_boost.warmupTime - _lastBoostTimestamp) / 2
+            _boost.instantAmount = _boost.targetAmount
+            _lastBoostTimestamp = _boost.warmupTime
 
         # 3.2 need to calc user descending integral
-        _instantAmount: uint256 = self._calcAmount(self.boosts[_account].instantAmount, self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER, self.lastBoostTimestampFor[_account], self.boosts[_account].finishTime, block.timestamp)
-        self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + _instantAmount) * (block.timestamp - self.lastBoostTimestampFor[_account]) / 2
+        _instantAmount: uint256 = self._calcAmount(_boost.instantAmount, _boost.targetAmount * BOOST_WEAKNESS / MULTIPLIER, _lastBoostTimestamp, _boost.finishTime, block.timestamp)
+        _accountBoostIntegral += (_boost.instantAmount + _instantAmount) * (block.timestamp - _lastBoostTimestamp) / 2
         self.boosts[_account].instantAmount = _instantAmount
+        self.boostIntegralFor[_account] = _accountBoostIntegral
         self.lastBoostTimestampFor[_account] = block.timestamp
 
-        return
+        return _accountBoostIntegral
 
     # 4. its after reduction
     # 4.1 need to calc user ascending integral (if not calculated yet)
-    if self.lastBoostTimestampFor[_account] < self.boosts[_account].warmupTime:
-        self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + self.boosts[_account].targetAmount) * (self.boosts[_account].warmupTime - self.lastBoostTimestampFor[_account]) / 2
-        self.boosts[_account].instantAmount = self.boosts[_account].targetAmount
-        self.lastBoostTimestampFor[_account] = self.boosts[_account].warmupTime
+    if _lastBoostTimestamp < _boost.warmupTime:
+        _accountBoostIntegral += (_boost.instantAmount + _boost.targetAmount) * (_boost.warmupTime - _lastBoostTimestamp) / 2
+        _boost.instantAmount = _boost.targetAmount
+        _lastBoostTimestamp = _boost.warmupTime
 
     # 4.2 need to calc user descending integral (if not calculated yet)
-    if self.lastBoostTimestampFor[_account] < self.boosts[_account].finishTime:
-        self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + (self.boosts[_account].instantAmount + self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER) * (self.boosts[_account].finishTime - self.lastBoostTimestampFor[_account]) / 2
-        self.boosts[_account].instantAmount = self.boosts[_account].targetAmount * BOOST_WEAKNESS / MULTIPLIER
-        self.lastBoostTimestampFor[_account] = self.boosts[_account].finishTime
+    if _lastBoostTimestamp < _boost.finishTime:
+        _accountBoostIntegral += (_boost.instantAmount + _boost.targetAmount * BOOST_WEAKNESS / MULTIPLIER) * (_boost.finishTime - _lastBoostTimestamp) / 2
+        _boost.instantAmount = _boost.targetAmount * BOOST_WEAKNESS / MULTIPLIER
+        _lastBoostTimestamp = _boost.finishTime
 
     # 4.3 need to calc user const integral
-    self.boostIntegralFor[_account] = self.boostIntegralFor[_account] + self.boosts[_account].instantAmount * (block.timestamp - self.lastBoostTimestampFor[_account])
+    _accountBoostIntegral += _boost.instantAmount * (block.timestamp - _lastBoostTimestamp)
+    self.boostIntegralFor[_account] = _accountBoostIntegral
+    self.boosts[_account].instantAmount = _boost.instantAmount
     self.lastBoostTimestampFor[_account] = block.timestamp
+    return _accountBoostIntegral
 
 
 @external
@@ -175,31 +186,27 @@ def boost(_coin: address, _amount: uint256, _lockTime: uint256, _gasToken: addre
     @param _lockTime Time for locking boost tokens
     @param _gasToken Gas token for tx cost reduction
     """
-    assert _coin == self.farmToken or _coin == self.boostingToken, "invalid coin"
-    assert _amount > 0, "zero amount"
-    assert _lockTime >= self.minLockingPeriod, "locktime is too short"
-
     _gasStart: uint256 = msg.gas
+    _boostingToken: address = self.boostingToken
+    assert _lockTime >= MIN_LOCKING_PERIOD, "locktime is too short"
+    assert _coin == self.farmToken or (_coin == _boostingToken and _coin != ZERO_ADDRESS), "invalid coin"
 
     self._updateBoostIntegral()
     self._updateAccountBoostIntegral(msg.sender)
-
     self.balances[_coin][msg.sender] += _amount
     self.coinBalances[_coin] +=_amount
     
-    _tokenRate: uint256 = self.farmTokenRate
-    if _coin == self.boostingToken:
-        _tokenRate = self.boostingTokenRate
-
+    _boost: BoostInfo = self.boosts[msg.sender]
+    _tokenRate: uint256 = FARM_TOKEN_RATE
+    if _coin == _boostingToken:
+        _tokenRate = BOOSTING_TOKEN_RATE
 
     self.boosts[msg.sender].targetAmount += _amount * _tokenRate
-    self.boosts[msg.sender].warmupTime = block.timestamp + self.warmupTime
-    self.boosts[msg.sender].finishTime = max(self.boosts[msg.sender].warmupTime + _lockTime, self.boosts[msg.sender].finishTime + _lockTime)
+    self.boosts[msg.sender].warmupTime = block.timestamp + WARMUP_TIME
+    self.boosts[msg.sender].finishTime = max(block.timestamp + WARMUP_TIME + _lockTime, _boost.finishTime + _lockTime)
     
-    ERC20(_coin).transferFrom(msg.sender, self, _amount)
-
+    assert ERC20(_coin).transferFrom(msg.sender, self, _amount)
     log Boost(_coin, msg.sender, _amount)
-
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 4)
 
 
@@ -212,27 +219,21 @@ def unboost(_coin: address, _gasToken: address = ZERO_ADDRESS):
     @param _coin Coin which is used to unboost
     @param _gasToken Gas token for tx cost reduction
     """
+    assert self.boosts[msg.sender].finishTime < block.timestamp, "tokens are locked"
+    
     _gasStart: uint256 = msg.gas
     _amount: uint256 = self.balances[_coin][msg.sender]
-
-    assert self.boosts[msg.sender].finishTime < block.timestamp, "tokens are locked"
-    assert _amount > 0, "insufficiend funds"
-
     self._updateBoostIntegral()
     self._updateAccountBoostIntegral(msg.sender)
-
     self.coinBalances[_coin] -= _amount
     self.balances[_coin][msg.sender] = 0
-    
     self.boosts[msg.sender].targetAmount = 0
     self.boosts[msg.sender].instantAmount = 0
     self.boosts[msg.sender].warmupTime = 0
     self.boosts[msg.sender].finishTime = 0
 
-    ERC20(_coin).transfer(msg.sender, _amount)
-    
+    assert ERC20(_coin).transfer(msg.sender, _amount)
     log Unboost(_coin, msg.sender, _amount)
-
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
@@ -258,28 +259,16 @@ def accountBoostIntegral(_account: address) -> uint256:
     @param _account Account to get its boost integral for
     @return Account boost integral
     """
-    self._updateAccountBoostIntegral(_account)
-    
-    return self.boostIntegralFor[_account]
+    return self._updateAccountBoostIntegral(_account)
 
 
 @external
-def commonBoostIntegral() -> uint256:
+def updateBoostIntegral() -> uint256:
     """
     @notice Returns common boost integral
     @return Common boost integral
     """
-    self._updateBoostIntegral()
-
-    return self.boostIntegral
-
-
-@external
-def setGasToken(_gasToken: address, _value: bool):
-    assert msg.sender == self.owner, "owner only"
-    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
-    
-    self.gasTokens[_gasToken] = _value
+    return self._updateBoostIntegral()
 
 
 @external
@@ -290,7 +279,6 @@ def transferOwnership(_futureOwner: address):
     @param _futureOwner New future owner address
     """
     assert msg.sender == self.owner, "owner only"
-
     self.futureOwner = _futureOwner
     log CommitOwnership(_futureOwner)
 
@@ -306,3 +294,12 @@ def applyOwnership():
     assert _owner != ZERO_ADDRESS, "owner not set"
     self.owner = _owner
     log ApplyOwnership(_owner)
+
+
+@external
+def setBoostingToken(_boostingToken: address):
+    assert msg.sender == self.owner, "owner only"
+    assert _boostingToken != ZERO_ADDRESS, "zero address"
+    assert self.boostingToken == ZERO_ADDRESS, "set only once"
+    self.boostingToken = _boostingToken
+
