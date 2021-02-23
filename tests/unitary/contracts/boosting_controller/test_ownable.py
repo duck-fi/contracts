@@ -1,2 +1,2 @@
-def test_ownable(boosting_controller, ownable_tester):
-    ownable_tester(boosting_controller)
+def test_ownable(boosting_controller_mocked, ownable_tester):
+    ownable_tester(boosting_controller_mocked)
