@@ -14,6 +14,11 @@ VOTING_TOKEN_SYMBOL = "DVT"
 VOTING_TOKEN_DECIMALS = 18
 VOTING_TOKEN_INITIAL_SUPPLY = 1000000 * 10 ** VOTING_TOKEN_DECIMALS
 
+BOOSTING_TOKEN_NAME = "Dispersion Boosting Token"
+BOOSTING_TOKEN_SYMBOL = "DBT"
+BOOSTING_TOKEN_DECIMALS = 18
+BOOSTING_TOKEN_INITIAL_SUPPLY = 1000000 * 10 ** BOOSTING_TOKEN_DECIMALS
+
 
 @pytest.fixture(scope="module")
 def farm_token(FarmToken, deployer):
@@ -36,12 +41,18 @@ def voting_token_mocked(StrictTransfableToken, voting_controller_mocked, voting_
 
 
 @pytest.fixture(scope="module")
+def boosting_token(ERC20Basic, deployer):
+    boosting_token = ERC20Basic.deploy(BOOSTING_TOKEN_NAME, BOOSTING_TOKEN_SYMBOL, BOOSTING_TOKEN_DECIMALS, BOOSTING_TOKEN_INITIAL_SUPPLY, {'from': deployer})
+    yield boosting_token
+
+
+@pytest.fixture(scope="module")
 def strict_transfable_token(StrictTransfableToken, white_list, deployer):
     strict_transfable_token = StrictTransfableToken.deploy(
         "Strict Transfable Token", "STT", white_list, deployer, {'from': deployer})
     yield strict_transfable_token
 
 
-@ pytest.fixture(scope="module")
+@pytest.fixture(scope="module")
 def chi_token(deployer, pm):
     yield (pm('forest-friends/chi@1.0.1').ChiToken).deploy({'from': deployer})

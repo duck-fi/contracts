@@ -31,6 +31,11 @@ def voting_controller_mocked(VotingController, controller_mock, farm_token, depl
 
 
 @pytest.fixture(scope="module")
+def boosting_controller(BoostingController, farm_token, boosting_token, deployer):
+    yield BoostingController.deploy(farm_token, boosting_token, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
 def addresses_check_list(AddressesCheckList, deployer):
     yield AddressesCheckList.deploy({'from': deployer})
 
