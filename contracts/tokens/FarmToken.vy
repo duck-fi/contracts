@@ -38,7 +38,7 @@ event YearEmissionUpdate:
 
 YEAR: constant(uint256) = 86_400 * 365
 DECIMALS: constant(uint256) = 18
-INITIAL_SUPPLY: constant(uint256) = 100_000 * 10 ** DECIMALS
+INITIAL_SUPPLY: constant(uint256) = 405_000 * 10 ** DECIMALS
 INITIAL_YEAR_EMISSION: constant(uint256) = 1_000_000 * 10 ** DECIMALS
 EMISSION_REDUCTION_TIME: constant(uint256) = YEAR
 EMISSION_REDUCTION_DELIMITER: constant(uint256) = 2
