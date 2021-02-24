@@ -18,6 +18,10 @@ event CommitOwnership:
 event ApplyOwnership:
     owner: address
 
+event Claim:
+    account: address
+    amount: uint256
+
 
 DAY: constant(uint256) = 86_400
 YEAR: constant(uint256) = DAY * 365
@@ -92,6 +96,7 @@ def claim(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     amount: uint256 = delta_t * self.balances[_account] / LOCK_PERIOD - _totalMinted
     self.totalMinted[_account] = _totalMinted + amount
     assert ERC20(_farmToken).transfer(_account, amount)
+    log Claim(_account, amount)
 
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
