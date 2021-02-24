@@ -57,7 +57,13 @@ def test_claim(exception_tester, initial_emission_distributor, farm_token, ZERO_
     assert initial_emission_distributor.claimableTokens(morpheus) == 500_000
     assert initial_emission_distributor.claimableTokens(trinity) == 1_000_000
 
-    initial_emission_distributor.claim({'from': morpheus})
+    tx = initial_emission_distributor.claim({'from': morpheus})
+    assert tx.return_value is None
+    assert len(tx.events) == 2
+    assert tx.events["Transfer"].values(
+    ) == [initial_emission_distributor, morpheus, 500_000]
+    assert tx.events["Claim"].values(
+    ) == [morpheus, 500_000]
     assert farm_token.balanceOf(morpheus) == 500_000
     assert initial_emission_distributor.claimableTokens(morpheus) == 0
     assert initial_emission_distributor.claimableTokens(trinity) == 1_000_000
