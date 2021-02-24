@@ -9,6 +9,15 @@ USDN_TOKEN_NAME = "Neutrino USD"
 USDN_TOKEN_SYMBOL = "USDN"
 USDN_TOKEN_DECIMALS = 18
 
+WAVES_TOKEN_NAME = "Waves"
+WAVES_TOKEN_SYMBOL = "WAVES"
+WAVES_TOKEN_DECIMALS = 18
+
+LP_TOKEN_NAME = "LP Token"
+LP_TOKEN_SYMBOL = "LPT"
+LP_TOKEN_DECIMALS = 18
+LP_TOKEN_INITIAL_SUPPLY = 1000000 * 10 ** LP_TOKEN_DECIMALS
+
 VOTING_TOKEN_NAME = "Dispersion Voting Token"
 VOTING_TOKEN_SYMBOL = "DVT"
 VOTING_TOKEN_DECIMALS = 18
@@ -30,6 +39,16 @@ def farm_token(FarmToken, deployer):
 @pytest.fixture(scope="module")
 def usdn_token(StakableERC20, deployer):
     yield StakableERC20.deploy(USDN_TOKEN_NAME, USDN_TOKEN_SYMBOL, USDN_TOKEN_DECIMALS, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def waves_token(StakableERC20, deployer):
+    yield StakableERC20.deploy(USDN_TOKEN_NAME, USDN_TOKEN_SYMBOL, USDN_TOKEN_DECIMALS, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def lp_token(ERC20Basic, deployer):
+    yield ERC20Basic.deploy(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, LP_TOKEN_DECIMALS, LP_TOKEN_INITIAL_SUPPLY, {'from': deployer})
 
 
 @pytest.fixture(scope="module")

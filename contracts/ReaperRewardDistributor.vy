@@ -85,13 +85,14 @@ def _claim(_coin: address, _account: address, _recipient: address):
 
 
 @external
-def claim(_coin: address, _account: address, _gasToken: address = ZERO_ADDRESS):
+def claim(_coin: address, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
 
     if _account != msg.sender:
         assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
     
     self._claim(_coin, _account, _account)
+    # TODO: event + test
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
 
@@ -107,6 +108,9 @@ def claimableTokens(_coin: address, _account: address) -> uint256:
     Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
     _reapDiff: uint256 = Reaper(_reaper).reapIntegralFor(_account) - self.reapIntegralFor[_coin][_account]
     _totalReapDiff: uint256 = Reaper(_reaper).reapIntegral() - self.totalReapIntegralFor[_coin][_account]
+
+    if _totalReapDiff == 0:
+        return 0
 
     return _rewardDiff * _reapDiff / _totalReapDiff
 

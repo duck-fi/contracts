@@ -17,8 +17,8 @@ def reaper_3_mock(accounts):
 
 
 @pytest.fixture(scope="module")
-def reaper_mock(ReaperMock, deployer):
-    yield ReaperMock.deploy({'from': deployer})
+def reaper_mock(ReaperMock, lp_token, farm_token, deployer):
+    yield ReaperMock.deploy(lp_token, farm_token, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
