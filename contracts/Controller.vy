@@ -34,6 +34,7 @@ indexByReaper: public(HashMap[address, uint256])
 minted: public(HashMap[address, HashMap[address, uint256]])
 mintAllowance: public(HashMap[address, HashMap[address, HashMap[address, bool]]])
 
+admin: public(address)
 owner: public(address)
 futureOwner: public(address)
 
@@ -48,6 +49,7 @@ def __init__(_farmToken: address, _gasTokenCheckList: address):
     self.farmToken = _farmToken
     self.gasTokenCheckList = _gasTokenCheckList
     self.owner = msg.sender
+    self.admin = msg.sender
 
 
 @internal
@@ -66,7 +68,6 @@ def mintFor(_reaper: address, _account: address = msg.sender, _gasToken: address
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
 
     _gasStart: uint256 = msg.gas
-
     if _account != msg.sender:
         assert self.mintAllowance[_reaper][_account][msg.sender], "mint is not allowed"
 
@@ -122,12 +123,12 @@ def removeReaper(_reaper: address):
 
 
 @external
+@nonreentrant('lock')
 def claimAdminFee(_reaper: address, _gasToken: address = ZERO_ADDRESS):
-    assert msg.sender == self.owner, "owner only"
+    assert msg.sender == self.admin, "admin only"
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
 
     _gasStart: uint256 = msg.gas
-
     Reaper(_reaper).snapshot(_reaper, ZERO_ADDRESS)
     totalMinted: uint256 = Reaper(_reaper).reapIntegralFor(_reaper)
     toMint: uint256 = totalMinted - self.minted[_reaper][_reaper]
@@ -137,6 +138,13 @@ def claimAdminFee(_reaper: address, _gasToken: address = ZERO_ADDRESS):
         self.minted[_reaper][_reaper] = totalMinted
 
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
+
+
+@external
+def setAdmin(_admin: address):
+    assert msg.sender == self.owner, "owner only"
+    assert _admin != ZERO_ADDRESS, "zero address"
+    self.admin = _admin
 
 
 @external

@@ -71,6 +71,7 @@ def _claim(_coin: address, _account: address, _recipient: address):
     if _balance > _lastBalance:
         _rewardIntegral += _balance - _lastBalance
         self.rewardIntegral[_coin] = _rewardIntegral
+        self.lastBalance[_coin] = _balance
 
     _rewardDiff: uint256 = _rewardIntegral - self.rewardIntegralFor[_coin][_account]
     _reaper: address = self.reaper
@@ -99,11 +100,11 @@ def claim(_coin: address, _account: address = msg.sender, _gasToken: address = Z
 @external
 def claimableTokens(_coin: address, _account: address) -> uint256:
     _rewardDiff: uint256 = self.rewardIntegral[_coin] - self.rewardIntegralFor[_coin][_account]
-    _balance: uint256 = ERC20(_coin).balanceOf(self)
+    _balance: uint256 = ERC20(_coin).balanceOf(self) + self.rewardIntegral[_coin]
     _lastBalance: uint256 = self.lastBalance[_coin]
     if _balance > _lastBalance:
         _rewardDiff += _balance - _lastBalance
-
+        
     _reaper: address = self.reaper
     Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
     _reapDiff: uint256 = Reaper(_reaper).reapIntegralFor(_account) - self.reapIntegralFor[_coin][_account]
