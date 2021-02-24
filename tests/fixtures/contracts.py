@@ -41,6 +41,11 @@ def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_l
 
 
 @pytest.fixture(scope="module")
+def initial_emission_distributor(InitialEmissionDistributor, farm_token, deployer, gas_token_check_list):
+    yield InitialEmissionDistributor.deploy(farm_token, gas_token_check_list, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
 def addresses_check_list(AddressesCheckList, deployer):
     yield AddressesCheckList.deploy({'from': deployer})
 
