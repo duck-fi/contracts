@@ -7,6 +7,7 @@ import interfaces.Ownable as Ownable
 import interfaces.tokens.ERC20Mintable as ERC20Mintable
 import interfaces.Reaper as Reaper
 import interfaces.GasToken as GasToken
+import interfaces.AddressesCheckList as AddressesCheckList
 
 
 implements: Minter
@@ -26,21 +27,26 @@ MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
 farmToken: public(address)
+gasTokenCheckList: public(address)
 reapers: public(address[MAX_REAPERS_COUNT])
 lastReaperIndex: public(uint256)
 indexByReaper: public(HashMap[address, uint256])
 minted: public(HashMap[address, HashMap[address, uint256]])
 mintAllowance: public(HashMap[address, HashMap[address, HashMap[address, bool]]])
-gasTokens: public(HashMap[address, bool])
 
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_farmToken: address):
+def __init__(_farmToken: address, _gasTokenCheckList: address):
+    """
+    @notice Contract constructor
+    """
     assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
+    assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     self.farmToken = _farmToken
+    self.gasTokenCheckList = _gasTokenCheckList
     self.owner = msg.sender
 
 
@@ -49,8 +55,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert self.gasTokens[_gasToken], "unsupported gas token" 
-
+    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token"
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
@@ -86,14 +91,6 @@ def mintableTokens(_reaper: address, _account: address) -> uint256:
 @external
 def mintApprove(_reaper: address, _minter: address, _canMint: bool):
     self.mintAllowance[_reaper][msg.sender][_minter] = _canMint
-
-
-@external
-def setGasToken(_gasToken: address, _value: bool):
-    assert msg.sender == self.owner, "owner only"
-    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
-    
-    self.gasTokens[_gasToken] = _value
 
 
 @external

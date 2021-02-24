@@ -31,8 +31,8 @@ def controller_mock(ControllerMock, deployer, reaper_1_mock, reaper_2_mock, reap
 
 
 @pytest.fixture(scope="module")
-def controller(Controller, farm_token, deployer):
-    yield Controller.deploy(farm_token, {'from': deployer})
+def controller(Controller, gas_token_check_list, farm_token, deployer):
+    yield Controller.deploy(farm_token, gas_token_check_list, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
