@@ -5,6 +5,8 @@ from vyper.interfaces import ERC20
 
 lpToken: public(address)
 farmToken: public(address)
+reapIntegral: public(uint256)
+lastReapTimestamp: public(uint256)
 reapIntegralFor: public(HashMap[address, uint256])
 lastReapTimestampFor: public(HashMap[address, uint256])
 balances: public(HashMap[address, uint256])
@@ -21,11 +23,14 @@ def __init__(_lpToken: address, _farmToken: address):
 
 @internal
 def _snapshot(_account: address):
+    if self.lastReapTimestamp == 0:
+        self.lastReapTimestamp = block.timestamp
+
     if self.lastReapTimestampFor[_account] == 0:
         self.lastReapTimestampFor[_account] = block.timestamp
-        return
-    
+
     self.reapIntegralFor[_account] = self.reapIntegralFor[_account] + self.balances[_account] * (block.timestamp - self.lastReapTimestampFor[_account])
+    self.reapIntegral = self.reapIntegral + self.totalBalances * (block.timestamp - self.lastReapTimestamp)
 
 
 @external
