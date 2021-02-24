@@ -302,4 +302,3 @@ def setBoostingToken(_boostingToken: address):
     assert _boostingToken != ZERO_ADDRESS, "zero address"
     assert self.boostingToken == ZERO_ADDRESS, "set only once"
     self.boostingToken = _boostingToken
-

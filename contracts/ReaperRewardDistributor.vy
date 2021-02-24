@@ -6,6 +6,7 @@ import interfaces.Ownable as Ownable
 import interfaces.ReaperRewardDistributor as ReaperRewardDistributor
 import interfaces.Reaper as Reaper
 import interfaces.GasToken as GasToken
+import interfaces.AddressesCheckList as AddressesCheckList
 
 
 implements: Ownable
@@ -23,22 +24,27 @@ MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
 reaper: public(address)
+gasTokenCheckList: public(address)
 lastBalance: public(HashMap[address, uint256])
 rewardIntegral: public(HashMap[address, uint256])
 rewardIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 reapIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 totalReapIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 claimAllowance: public(HashMap[address, HashMap[address, HashMap[address, bool]]])
-gasTokens: public(HashMap[address, bool])
 
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_reaper: address):
+def __init__(_reaper: address, _gasTokenCheckList: address):
+    """
+    @notice Contract constructor
+    """
     assert _reaper != ZERO_ADDRESS, "reaper is not set"
+    assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     self.reaper = _reaper
+    self.gasTokenCheckList = _gasTokenCheckList
     self.owner = msg.sender
 
 
@@ -47,8 +53,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert self.gasTokens[_gasToken], "unsupported gas token" 
-
+    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token" 
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
@@ -85,8 +90,8 @@ def claim(_coin: address, _account: address, _gasToken: address = ZERO_ADDRESS):
 
     if _account != msg.sender:
         assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
+    
     self._claim(_coin, _account, _account)
-
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
 
@@ -104,14 +109,6 @@ def claimableTokens(_coin: address, _account: address) -> uint256:
     _totalReapDiff: uint256 = Reaper(_reaper).reapIntegral() - self.totalReapIntegralFor[_coin][_account]
 
     return _rewardDiff * _reapDiff / _totalReapDiff
-
-
-@external
-def setGasToken(_gasToken: address, _value: bool):
-    assert msg.sender == self.owner, "owner only"
-    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
-    
-    self.gasTokens[_gasToken] = _value
 
 
 @external

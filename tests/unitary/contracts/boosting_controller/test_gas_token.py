@@ -29,7 +29,7 @@ def test_boost_farm_token(boosting_controller_mocked, farm_token, chi_token, dep
     assert boosting_controller_mocked.boostIntegral() == 0
     assert 10 - chi_token.balanceOf(deployer) == 5
 
-    chain.mine(1, chain.time() + 2 * minLockTime)
+    chain.mine(1, chain.time() + 2 * minLockTime + 1)
 
     tx2 = boosting_controller_mocked.unboost(
         farm_token, chi_token, {'from': deployer})
