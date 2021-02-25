@@ -16,9 +16,12 @@ def test_distribution_static(reaper_reward_distributor_mocked, reaper_mock, ZERO
     lp_token.approve(reaper_mock, 5 * amount, {'from': thomas})
 
     # make deposits on reaper_mock for morpheus
-    brownie.chain.mine(1)
+    init_ts = brownie.chain.time()
+    brownie.chain.mine(1, init_ts)
     tx1 = reaper_mock.deposit(2 * amount, {'from': neo})
+    brownie.chain.mine(1, init_ts)
     tx2 = reaper_mock.deposit(1 * amount, {'from': morpheus})
+    brownie.chain.mine(1, init_ts)
     tx3 = reaper_mock.deposit(1 * amount, {'from': trinity})
 
     initial_deposit_ts_neo = tx1.timestamp

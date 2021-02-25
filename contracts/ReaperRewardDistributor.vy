@@ -142,8 +142,8 @@ def claimAdminFee(_coin: address, _gasToken: address = ZERO_ADDRESS):
     assert msg.sender == self.owner, "owner only"
 
     _gasStart: uint256 = msg.gas
-    self._claim(_coin, self.reaper, msg.sender)
-    # TODO: log
+    _amount: uint256 = self._claim(_coin, self.reaper, msg.sender)
+    log Claim(_coin, msg.sender, _amount)
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
