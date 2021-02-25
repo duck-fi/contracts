@@ -13,6 +13,11 @@ implements: Ownable
 implements: ReaperRewardDistributor
 
 
+event Claim:
+    coin: address
+    account: address
+    amount: uint256
+
 event CommitOwnership:
     owner: address
 
@@ -64,25 +69,33 @@ def claimApprove(_coin: address, _claimer: address, _canClaim: bool):
 
 
 @internal
-def _claim(_coin: address, _account: address, _recipient: address):
+def _claim(_coin: address, _account: address, _recipient: address) -> uint256:
     _balance: uint256 = ERC20(_coin).balanceOf(self)
     _lastBalance: uint256 = self.lastBalance[_coin]
     _rewardIntegral: uint256 = self.rewardIntegral[_coin]
     if _balance > _lastBalance:
         _rewardIntegral += _balance - _lastBalance
         self.rewardIntegral[_coin] = _rewardIntegral
-        self.lastBalance[_coin] = _balance
-
+    
     _rewardDiff: uint256 = _rewardIntegral - self.rewardIntegralFor[_coin][_account]
     _reaper: address = self.reaper
     Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
     _reapIntegralFor: uint256 = Reaper(_reaper).reapIntegralFor(_account)
     _reapIntegral: uint256 = Reaper(_reaper).reapIntegral()
-    ERC20(_coin).transfer(_recipient, _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / (_reapIntegral - self.totalReapIntegralFor[_coin][_account]))
 
+    _totalReaperDiff: uint256 = _reapIntegral - self.totalReapIntegralFor[_coin][_account]
+    if _totalReaperDiff == 0:
+        return 0
+
+    _reap: uint256 = _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / _totalReaperDiff
+    assert ERC20(_coin).transfer(_recipient, _reap)
+
+    self.lastBalance[_coin] = _balance - _reap
     self.reapIntegralFor[_coin][_account] = _reapIntegralFor
     self.totalReapIntegralFor[_coin][_account] = _reapIntegral
     self.rewardIntegralFor[_coin][_account] = _rewardIntegral
+
+    return _reap
 
 
 @external
@@ -92,28 +105,30 @@ def claim(_coin: address, _account: address = msg.sender, _gasToken: address = Z
     if _account != msg.sender:
         assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
     
-    self._claim(_coin, _account, _account)
-    # TODO: event + test
+    _amount: uint256 = self._claim(_coin, _account, _account)
+    log Claim(_coin, _account, _amount)
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
 
+@view
 @external
 def claimableTokens(_coin: address, _account: address) -> uint256:
-    _rewardDiff: uint256 = self.rewardIntegral[_coin] - self.rewardIntegralFor[_coin][_account]
-    _balance: uint256 = ERC20(_coin).balanceOf(self) + self.rewardIntegral[_coin]
+    _balance: uint256 = ERC20(_coin).balanceOf(self)
     _lastBalance: uint256 = self.lastBalance[_coin]
+    _rewardIntegral: uint256 = self.rewardIntegral[_coin]
     if _balance > _lastBalance:
-        _rewardDiff += _balance - _lastBalance
-        
+        _rewardIntegral += _balance - _lastBalance
+    
+    _rewardDiff: uint256 = _rewardIntegral - self.rewardIntegralFor[_coin][_account]
     _reaper: address = self.reaper
-    Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
-    _reapDiff: uint256 = Reaper(_reaper).reapIntegralFor(_account) - self.reapIntegralFor[_coin][_account]
-    _totalReapDiff: uint256 = Reaper(_reaper).reapIntegral() - self.totalReapIntegralFor[_coin][_account]
+    _reapIntegralFor: uint256 = Reaper(_reaper).reapIntegralFor(_account)
+    _reapIntegral: uint256 = Reaper(_reaper).reapIntegral()
 
-    if _totalReapDiff == 0:
+    _totalReaperDiff: uint256 = _reapIntegral - self.totalReapIntegralFor[_coin][_account]
+    if _totalReaperDiff == 0:
         return 0
 
-    return _rewardDiff * _reapDiff / _totalReapDiff
+    return _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / _totalReaperDiff
 
 
 @external
@@ -127,9 +142,8 @@ def claimAdminFee(_coin: address, _gasToken: address = ZERO_ADDRESS):
     assert msg.sender == self.owner, "owner only"
 
     _gasStart: uint256 = msg.gas
-
     self._claim(_coin, self.reaper, msg.sender)
-
+    # TODO: log
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
