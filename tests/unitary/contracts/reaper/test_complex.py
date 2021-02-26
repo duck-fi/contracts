@@ -63,19 +63,9 @@ def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, thom
     assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
     assert reaper.lastSnapshotTimestamp() == tx3.timestamp
     assert reaper.lastSnapshotTimestampFor(deployer) == tx3.timestamp
-    assert reaper.lastUnitCostIntegralFor(
-        deployer) == reaper.emissionIntegral() * reaper.voteIntegral() / amount
-    # assert reaper.voteIntegral() == (
-    #     tx2.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
+    assert abs(reaper.lastUnitCostIntegralFor(
+        deployer) * amount / VOTE_DIVIDER / 2 / day - reaper.reapIntegral()) < 1
+    assert reaper.voteIntegral() == (
+        tx3.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
     assert reaper.boostIntegralFor(deployer) == 0
     assert reaper.totalBoostIntegralFor(deployer) == 0
-    # lp_token.transfer(thomas, 2 * amount, {'from': deployer})
-    # lp_token.approve(reaper, MAX_UINT256, {'from': thomas})
-    # reaper.deposit(2 * amount, {'from': thomas})
-    # assert lp_token.balanceOf(reaper) == 3 * amount
-    # assert lp_token.balanceOf(thomas) == 0
-
-    # chain.mine(1, chain.time() + day)
-    # reaper.withdraw(2 * amount, {'from': deployer})
-    # assert lp_token.balanceOf(reaper) == 0
-    # assert lp_token.balanceOf(deployer) == initial_balance
