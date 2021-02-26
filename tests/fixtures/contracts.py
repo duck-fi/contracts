@@ -32,7 +32,10 @@ def controller(Controller, farm_token, deployer, gas_token_check_list):
 
 @pytest.fixture(scope="module")
 def reaper(Reaper, lp_token, farm_token, controller, voting_controller, boosting_controller, deployer, gas_token_check_list):
-    yield Reaper.deploy(lp_token, farm_token, controller, voting_controller, boosting_controller, gas_token_check_list, 0, {'from': deployer})
+    contract = Reaper.deploy(lp_token, farm_token, controller, voting_controller,
+                             boosting_controller, gas_token_check_list, 0, {'from': deployer})
+    controller.addReaper(contract)
+    yield contract
 
 
 @pytest.fixture(scope="module")
