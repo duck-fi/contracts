@@ -17,6 +17,11 @@ def reaper_3_mock(accounts):
 
 
 @pytest.fixture(scope="module")
+def reaper_mock(ReaperMock, lp_token, farm_token, deployer):
+    yield ReaperMock.deploy(lp_token, farm_token, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
 def controller_mock(ControllerMock, deployer, reaper_1_mock, reaper_2_mock, reaper_3_mock):
     contract = ControllerMock.deploy({'from': deployer})
     contract.addReaper(reaper_1_mock)
@@ -26,7 +31,7 @@ def controller_mock(ControllerMock, deployer, reaper_1_mock, reaper_2_mock, reap
 
 
 @pytest.fixture(scope="module")
-def controller(Controller, farm_token, deployer, gas_token_check_list):
+def controller(Controller, gas_token_check_list, farm_token, deployer):
     yield Controller.deploy(farm_token, gas_token_check_list, {'from': deployer})
 
 
@@ -38,6 +43,11 @@ def voting_controller_mocked(VotingController, controller_mock, farm_token, depl
 @pytest.fixture(scope="module")
 def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_list, deployer):
     yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def reaper_reward_distributor_mocked(ReaperRewardDistributor, reaper_mock, gas_token_check_list, deployer):
+    yield ReaperRewardDistributor.deploy(reaper_mock, gas_token_check_list, {'from': deployer})
 
 
 @pytest.fixture(scope="module")

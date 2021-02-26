@@ -115,6 +115,7 @@ def _snapshot(_account: address):
 
 
 @external
+@nonreentrant('lock')
 def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False, _gasToken: address = ZERO_ADDRESS):
     assert _amount > 0, "amount must be greater 0"
 
@@ -147,6 +148,7 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
 
 
 @external
+@nonreentrant('lock')
 def invest(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
 
@@ -160,6 +162,7 @@ def invest(_gasToken: address = ZERO_ADDRESS):
 
 
 @external
+@nonreentrant('lock')
 def reap(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
 
@@ -169,6 +172,7 @@ def reap(_gasToken: address = ZERO_ADDRESS):
 
 
 @external
+@nonreentrant('lock')
 def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):    
     _gasStart: uint256 = msg.gas
 
