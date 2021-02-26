@@ -46,9 +46,9 @@ def invest(_amount: uint256):
 
 
 @external
-def reap() -> uint256:
+def reap():
     assert msg.sender == self.reaper, "reaper only"
-    return Staker(self.staker).claim(self.rewardContract)
+    Staker(self.staker).claim(self.rewardContract)
 
 
 @external

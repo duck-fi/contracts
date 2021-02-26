@@ -19,6 +19,11 @@ BOOSTING_TOKEN_SYMBOL = "DBT"
 BOOSTING_TOKEN_DECIMALS = 18
 BOOSTING_TOKEN_INITIAL_SUPPLY = 1000000 * 10 ** BOOSTING_TOKEN_DECIMALS
 
+LP_TOKEN_NAME = "LP Token"
+LP_TOKEN_SYMBOL = "LPT"
+LP_TOKEN_DECIMALS = 18
+LP_TOKEN_INITIAL_SUPPLY = 1000000 * 10 ** LP_TOKEN_DECIMALS
+
 
 @pytest.fixture(scope="module")
 def farm_token(FarmToken, deployer):
@@ -58,3 +63,8 @@ def strict_transfable_token(StrictTransfableToken, white_list, deployer):
 @pytest.fixture(scope="module")
 def chi_token(deployer, pm):
     yield (pm('forest-friends/chi@1.0.1').ChiToken).deploy({'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def lp_token(ERC20Basic, deployer):
+    yield ERC20Basic.deploy(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, LP_TOKEN_DECIMALS, LP_TOKEN_INITIAL_SUPPLY, {'from': deployer})

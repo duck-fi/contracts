@@ -31,8 +31,28 @@ def controller(Controller, farm_token, deployer, gas_token_check_list):
 
 
 @pytest.fixture(scope="module")
+def reaper(Reaper, lp_token, farm_token, controller, voting_controller, boosting_controller, deployer, gas_token_check_list):
+    yield Reaper.deploy(lp_token, farm_token, controller, voting_controller, boosting_controller, gas_token_check_list, 0, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def reaper_strategy_mock(ReaperStrategyMock, reaper, lp_token, deployer):
+    yield ReaperStrategyMock.deploy(lp_token, reaper, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def voting_controller(VotingController, controller, farm_token, deployer, gas_token_check_list):
+    yield VotingController.deploy(controller, gas_token_check_list, farm_token, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
 def voting_controller_mocked(VotingController, controller_mock, farm_token, deployer, gas_token_check_list):
     yield VotingController.deploy(controller_mock, gas_token_check_list, farm_token, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def boosting_controller(BoostingController, farm_token, gas_token_check_list, deployer):
+    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
