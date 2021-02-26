@@ -56,8 +56,7 @@ def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, thom
     assert reaper.balancesIntegral() == amount * (tx3.timestamp - tx2.timestamp)
     assert reaper.balancesIntegralFor(
         deployer) == amount * (tx3.timestamp - tx2.timestamp)
-
-    assert abs(reaper.emissionIntegral() - YEAR_EMISSION / 365) < 10 ** 10
+    assert abs(reaper.emissionIntegral() - YEAR_EMISSION / 365) < 10 ** 11
     assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer)
     assert reaper.emissionIntegral() / 2 - reaper.reapIntegralFor(deployer) < 1
     assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
@@ -67,5 +66,25 @@ def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, thom
         deployer) * amount / VOTE_DIVIDER / 2 / day - reaper.reapIntegral()) < 1
     assert reaper.voteIntegral() == (
         tx3.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
+    assert reaper.boostIntegralFor(deployer) == 0
+    assert reaper.totalBoostIntegralFor(deployer) == 0
+
+    chain.mine(1, tx3.timestamp + day)
+    tx4 = reaper.snapshot({'from': deployer})
+    assert reaper.balances(deployer) == amount
+    assert reaper.totalBalances() == amount
+    assert reaper.balancesIntegral() == amount * (tx4.timestamp - tx2.timestamp)
+    assert reaper.balancesIntegralFor(
+        deployer) == amount * (tx4.timestamp - tx2.timestamp)
+    assert abs(reaper.emissionIntegral() - YEAR_EMISSION * 2 / 365) < 10 ** 11
+    assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer)
+    assert reaper.emissionIntegral() / 2 - reaper.reapIntegralFor(deployer) < 1
+    assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
+    assert reaper.lastSnapshotTimestamp() == tx4.timestamp
+    assert reaper.lastSnapshotTimestampFor(deployer) == tx4.timestamp
+    # assert abs(reaper.lastUnitCostIntegralFor(
+    #     deployer) * amount / VOTE_DIVIDER / 2 / (2 * day) - reaper.reapIntegral()) < 1
+    assert reaper.voteIntegral() == (
+        tx4.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
     assert reaper.boostIntegralFor(deployer) == 0
     assert reaper.totalBoostIntegralFor(deployer) == 0
