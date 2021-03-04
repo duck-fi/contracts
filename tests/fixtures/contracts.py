@@ -86,3 +86,25 @@ def white_list(AddressesCheckList, deployer):
     check_list = AddressesCheckList.deploy({'from': deployer})
     check_list.set(deployer, True, {'from': deployer})
     yield check_list
+
+
+@pytest.fixture(scope="module")
+def curve_minter_mock(CurveMinterMock, crv_token_mock, deployer):
+    yield CurveMinterMock.deploy(crv_token_mock, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def curve_gauge_mock(CurveGaugeMock, curve_minter_mock, crv_token_mock, lp_token, deployer):
+    yield CurveGaugeMock.deploy(curve_minter_mock, lp_token, crv_token_mock, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def curve_ve_mock(CurveVEMock, crv_token_mock, deployer):
+    yield CurveVEMock.deploy(crv_token_mock, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def curve_staker_mocked(CurveStaker, curve_ve_mock, curve_gauge_mock, crv_token_mock, lp_token, deployer):
+    contract = CurveStaker.deploy(curve_gauge_mock, lp_token, crv_token_mock, curve_ve_mock, {'from': deployer})
+    lp_token.approve(curve_gauge_mock, 2 ** 256 - 1, {'from': contract}) # TODO: max int
+    yield contract
