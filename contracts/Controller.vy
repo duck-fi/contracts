@@ -33,6 +33,7 @@ lastReaperIndex: public(uint256)
 indexByReaper: public(HashMap[address, uint256])
 minted: public(HashMap[address, HashMap[address, uint256]])
 mintAllowance: public(HashMap[address, HashMap[address, HashMap[address, bool]]])
+startMintFor: public(bool)
 
 admin: public(address)
 owner: public(address)
@@ -48,6 +49,7 @@ def __init__(_farmToken: address, _gasTokenCheckList: address):
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     self.farmToken = _farmToken
     self.gasTokenCheckList = _gasTokenCheckList
+    self.startMintFor = False
     self.owner = msg.sender
     self.admin = msg.sender
 
@@ -66,6 +68,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
 @nonreentrant('lock')
 def mintFor(_reaper: address, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
+    assert self.startMintFor, "minting is not started yet"
 
     _gasStart: uint256 = msg.gas
     if _account != msg.sender:
@@ -145,6 +148,12 @@ def setAdmin(_admin: address):
     assert msg.sender == self.owner, "owner only"
     assert _admin != ZERO_ADDRESS, "zero address"
     self.admin = _admin
+
+
+@external
+def startMinting():
+    assert msg.sender == self.owner, "owner only"
+    self.startMintFor = True
 
 
 @external
