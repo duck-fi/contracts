@@ -1,11 +1,11 @@
 from brownie.test import given, strategy
 
 
-def test_insufficient_funds(reaper, thomas, exception_tester):
+def test_insufficient_funds_deposit(reaper, thomas, exception_tester):
     exception_tester('Integer underflow', reaper.deposit, 1, {'from': thomas})
 
 
-def test_insufficient_funds(reaper, thomas, exception_tester):
+def test_insufficient_funds_withdraw(reaper, thomas, exception_tester):
     exception_tester('', reaper.withdraw, 1, {'from': thomas})
 
 

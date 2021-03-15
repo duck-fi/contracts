@@ -95,7 +95,6 @@ def depositApprove(_spender: address, _amount: uint256):
     self.depositAllowance[msg.sender][_spender] = _amount
 
 
-max_emission: public(uint256)
 @internal
 def _snapshot(_account: address):
     _totalBalances: uint256 = self.totalBalances
@@ -103,6 +102,7 @@ def _snapshot(_account: address):
         if self.lastSnapshotTimestamp == 0:
             _boostingController: address = self.boostingController
             self.lastSnapshotTimestamp = block.timestamp
+            self.emissionIntegral = Farmable(self.farmToken).emissionIntegral()
             self.voteIntegral = VotingController(self.votingController).voteIntegral(self)
             self.lastSnapshotTimestampFor[_account] = block.timestamp
             self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
@@ -133,7 +133,6 @@ def _snapshot(_account: address):
         return
 
     _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / dt
-    self.max_emission = _max_emission
     _balancesIntegral: uint256 = self.balancesIntegral + _totalBalances * (block.timestamp - self.lastSnapshotTimestamp)
     # check boosting
     boost_emission: uint256 = 0
