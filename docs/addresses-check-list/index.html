@@ -1,0 +1,145 @@
+<!doctype html><html lang=en dir=ltr><head><meta name=generator content="Hugo 0.82.0"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="AddressesCheckList.vy #   vyper: 0.2.10
+ Events #  CommitOwnership
+ admin : address, notIndexed   ApplyOwnership
+ admin : address, notIndexed   Methods #  transferOwnership #   type: nonpayable function gas: 37651
+ Sets new future owner address
+Callable by owner only
+Arguments:
+ _futureOwner: - New future owner address  applyOwnership #   type: nonpayable function gas: 38507
+ Applies new future owner address as current owner"><meta name=theme-color content="#FFFFFF"><meta property="og:title" content><meta property="og:description" content="AddressesCheckList.vy #   vyper: 0.2.10
+ Events #  CommitOwnership
+ admin : address, notIndexed   ApplyOwnership
+ admin : address, notIndexed   Methods #  transferOwnership #   type: nonpayable function gas: 37651
+ Sets new future owner address
+Callable by owner only
+Arguments:
+ _futureOwner: - New future owner address  applyOwnership #   type: nonpayable function gas: 38507
+ Applies new future owner address as current owner"><meta property="og:type" content="article"><meta property="og:url" content="https://dispersion-fi.github.io/contracts/docs/addresses-check-list/"><meta property="article:section" content="docs"><title>Addresses Check List |</title><link rel=manifest href=/contracts/manifest.json><link rel=icon href=/contracts/favicon.png type=image/x-icon><link rel=stylesheet href=/contracts/book.min.2bc2364a4a4b31f0ec1debecf0a8f90a840821f143dfe1ac6a0f7cbcbdcf64ac.css integrity="sha256-K8I2SkpLMfDsHevs8Kj5CoQIIfFD3+Gsag98vL3PZKw="><script defer src=/contracts/en.search.min.b27dbea10a91e2a85e9db74d65b73ce5b5b600b7b64e169106be128985e2f248.js integrity="sha256-sn2+oQqR4qhenbdNZbc85bW2ALe2ThaRBr4SiYXi8kg="></script><script defer src=/contracts/sw.min.1413aa9dea2d79dfeef3d50ecd9ed2503c011945a81fe9965b018cac51b6bc5d.js integrity="sha256-FBOqneoted/u89UOzZ7SUDwBGUWoH+mWWwGMrFG2vF0="></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a href=/contracts><img src=/contracts/img/logo.svg alt=Logo><span></span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/addresses-check-list/ class=active>Addresses Check List</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/boosting-controller/>Boosting Controller</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/controller/>Controller</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/initial-emission-distributor/>Initial Emission Distributor</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/reaper-reward-distributor/>Reaper Reward Distributor</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/reaper/>Reaper</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/voting-controller/>Voting Controller</a></li><li><span>Stakers</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/stakers/curve-staker/>Curve Staker</a></li></ul></li><li><span>Strategies</span><ul><li><span>Reaper</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/strategies/reaper/proxy-reaper-strategy/>Proxy Reaper Strategy</a></li></ul></li></ul></li><li><span>Testing</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/controller-mock/>Controller Mock</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/erc20basic/>Erc20basic</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/reaper-mock/>Reaper Mock</a></li></ul></li><li><span>Tokens</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/tokens/farm-token/>Farm Token</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/tokens/stakable-erc20/>Stakable Erc20</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/tokens/strict-transfable-token/>Strict Transfable Token</a></li></ul></li></ul><ul><li><a href=/contracts/docs/>Contracts</a></li></ul></nav><script>(function(){var a=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(b){localStorage.setItem("menu.scrollTop",a.scrollTop)}),a.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/contracts/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>Addresses Check List</strong>
+<label for=toc-control><img src=/contracts/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#events>Events</a></li><li><a href=#methods>Methods</a><ul><li><a href=#transferownership>transferOwnership</a></li><li><a href=#applyownership>applyOwnership</a></li><li><a href=#__init__><strong>init</strong></a></li></ul></li><li><a href=#abi>ABI</a></li><li><a href=#byte-code>Byte code</a></li></ul></nav></aside></header><article class=markdown><h1 id=addresseschecklistvy>AddressesCheckList.vy
+<a class=anchor href=#addresseschecklistvy>#</a></h1><blockquote><p>vyper: <code>0.2.10</code></p></blockquote><h2 id=events>Events
+<a class=anchor href=#events>#</a></h2><blockquote class="book-hint info"><p><strong>CommitOwnership</strong></p><ul><li><code>admin</code> : address, <em>notIndexed</em></li></ul></blockquote><blockquote class="book-hint info"><p><strong>ApplyOwnership</strong></p><ul><li><code>admin</code> : address, <em>notIndexed</em></li></ul></blockquote><h2 id=methods>Methods
+<a class=anchor href=#methods>#</a></h2><h3 id=transferownership>transferOwnership
+<a class=anchor href=#transferownership>#</a></h3><blockquote><p>type: <code>nonpayable function</code>
+gas: <code>37651</code></p></blockquote><p>Sets new future owner address</p><p><em>Callable by owner only</em></p><p>Arguments:</p><ul><li><code>_futureOwner</code>: - <em>New future owner address</em></li></ul><h3 id=applyownership>applyOwnership
+<a class=anchor href=#applyownership>#</a></h3><blockquote><p>type: <code>nonpayable function</code>
+gas: <code>38507</code></p></blockquote><p>Applies new future owner address as current owner</p><p><em>Callable by owner only</em></p><h3 id=__init__><strong>init</strong>
+<a class=anchor href=#__init__>#</a></h3><blockquote><p>type: <code>nonpayable constructor</code></p></blockquote><p>Contract constructor</p><h2 id=abi>ABI
+<a class=anchor href=#abi>#</a></h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json>[
+  {
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;CommitOwnership&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;admin&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>,
+        <span style=color:#f92672>&#34;indexed&#34;</span>: <span style=color:#66d9ef>false</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;anonymous&#34;</span>: <span style=color:#66d9ef>false</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;event&#34;</span>
+  },
+  {
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;ApplyOwnership&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;admin&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>,
+        <span style=color:#f92672>&#34;indexed&#34;</span>: <span style=color:#66d9ef>false</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;anonymous&#34;</span>: <span style=color:#66d9ef>false</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;event&#34;</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;constructor&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: []
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;set&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;_key&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
+      },
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;_value&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;bool&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>36603</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;transferOwnership&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;_futureOwner&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>37651</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;applyOwnership&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>38507</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;owner&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1178</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;futureOwner&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1208</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;get&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;arg0&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;bool&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1453</span>
+  }
+]
+</code></pre></div><h2 id=byte-code>Byte code
+<a class=anchor href=#byte-code>#</a></h2><pre><code class=language-bin data-lang=bin>0x3360005561030b56600436101561000d576102fd565b600035601c52600051341561002157600080fd5b6335e3b25a8114156101055760043560a01c1561003d57600080fd5b60243560011c1561004d57600080fd5b6000543314151561009d576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b6000600435141515156100ef576308c379a061014052602061016052600c610180527f7a65726f206164647265737300000000000000000000000000000000000000006101a05261018050606461015cfd5b602435600260043560e05260c052604060c02055005b63f2fde38b8114156101a75760043560a01c1561012157600080fd5b60005433141515610171576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b600435600155600435610140527f2f56810a6bf40af059b96d3aea4db54081f378029a518390491093a7b67032e96020610140a1005b63011902078114156102955760005433141515610203576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b600154610140526000610140511415151561025d576308c379a061016052602061018052600d6101a0527f6f776e6572206e6f7420736574000000000000000000000000000000000000006101c0526101a050606461017cfd5b6101405160005561014051610160527febee2d5739011062cb4f14113f3b36bf0ffe3da5c0568f64189d1012a11891056020610160a1005b638da5cb5b8114156102ad5760005460005260206000f35b63b9e9d1aa8114156102c55760015460005260206000f35b63c2bc2efc8114156102fb5760043560a01c156102e157600080fd5b600260043560e05260c052604060c0205460005260206000f35b505b60006000fd5b61000861030b0361000860003961000861030b036000f3
+</code></pre></article><footer class=book-footer><div class="flex flex-wrap justify-between"></div></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#events>Events</a></li><li><a href=#methods>Methods</a><ul><li><a href=#transferownership>transferOwnership</a></li><li><a href=#applyownership>applyOwnership</a></li><li><a href=#__init__><strong>init</strong></a></li></ul></li><li><a href=#abi>ABI</a></li><li><a href=#byte-code>Byte code</a></li></ul></nav></div></aside></main></body></html>
