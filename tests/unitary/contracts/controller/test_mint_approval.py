@@ -1,4 +1,5 @@
 def test_mint_not_allowed(controller, reaper_1_mock, deployer, morpheus, exception_tester):
+    controller.startMinting({'from': deployer})
     exception_tester("reaper is not supported", controller.mintFor,
                      reaper_1_mock, deployer, {'from': deployer})
     controller.addReaper(reaper_1_mock, {'from': deployer})
