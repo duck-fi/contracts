@@ -7,7 +7,9 @@ import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.tokens.Farmable as Farmable
 import interfaces.VotingController as VotingController
+import interfaces.BoostingController as BoostingController
 import interfaces.GasToken as GasToken
+import interfaces.AddressesCheckList as AddressesCheckList
 
 
 implements: Reaper
@@ -22,48 +24,59 @@ event ApplyOwnership:
 
 
 VOTE_DIVIDER: constant(uint256) = 10 ** 18
-ADMIN_FEE_MULTIPLYER: constant(uint256) = 10 ** 3
+ADMIN_FEE_MULTIPLIER: constant(uint256) = 10 ** 3
 MIN_GAS_CONSTANT: constant(uint256) = 21_000
+TOKENLESS_PRODUCTION: constant(uint256) = 50
 
 
 lpToken: public(address)
 farmToken: public(address)
 controller: public(address)
 reaperStrategy: public(address)
+gasTokenCheckList: public(address)
 votingController: public(address)
+boostingController: public(address)
+
 balances: public(HashMap[address, uint256])
-depositAllowance: public(HashMap[address, HashMap[address, uint256]])
 totalBalances: public(uint256)
-isKilled: public(bool)
+depositAllowance: public(HashMap[address, HashMap[address, uint256]])
+balancesIntegral: public(uint256)
+balancesIntegralFor: public(HashMap[address, uint256])
 reapIntegral: public(uint256)
 reapIntegralFor: public(HashMap[address, uint256])
 unitCostIntegral: public(uint256)
-lastReapTimestampFor: public(HashMap[address, uint256])
 lastUnitCostIntegralFor: public(HashMap[address, uint256])
+lastSnapshotTimestamp: public(uint256)
+lastSnapshotTimestampFor: public(HashMap[address, uint256])
 emissionIntegral: public(uint256)
 voteIntegral: public(uint256)
+boostIntegralFor: public(HashMap[address, uint256])
+totalBoostIntegralFor: public(HashMap[address, uint256])
 adminFee: public(uint256)
-gasTokens: public(HashMap[address, bool])
+isKilled: public(bool)
 
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address, _adminFee: uint256):
+def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address, _boostingController: address, _gasTokenCheckList: address, _adminFee: uint256):
     assert _lpToken != ZERO_ADDRESS, "_lpToken is not set"
     assert _controller != ZERO_ADDRESS, "_controller is not set"
     assert _votingController != ZERO_ADDRESS, "_votingController is not set"
+    assert _boostingController != ZERO_ADDRESS, "_boostingController is not set"
+    assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
-    assert _adminFee <= ADMIN_FEE_MULTIPLYER, "_adminFee > 100%"
+    assert _adminFee <= ADMIN_FEE_MULTIPLIER, "_adminFee > 100%"
     self.lpToken = _lpToken
     self.controller = _controller
     self.votingController = _votingController
+    self.boostingController = _boostingController
+    self.gasTokenCheckList = _gasTokenCheckList
     self.farmToken = _farmToken
     self.adminFee = _adminFee
     self.owner = msg.sender
-
-    ERC20(_farmToken).approve(_controller, MAX_UINT256)
+    assert ERC20(_farmToken).approve(_controller, MAX_UINT256)
 
 
 @internal
@@ -71,8 +84,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert self.gasTokens[_gasToken], "unsupported gas token" 
-
+    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token"
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
@@ -83,42 +95,96 @@ def depositApprove(_spender: address, _amount: uint256):
     self.depositAllowance[msg.sender][_spender] = _amount
 
 
+debugg:public(uint256)
+debuggg:public(uint256)
 @internal
 def _snapshot(_account: address):
-    _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
-    _voteIntegral: uint256 = VotingController(self.votingController).reaperIntegratedVotes(self)
+    self.debugg = 2
+    _totalBalances: uint256 = self.totalBalances
+    if _totalBalances == 0:
+        self.debugg = 3
+        if self.lastSnapshotTimestamp == 0:
+            self.debugg = 4
+            _boostingController: address = self.boostingController
+            self.lastSnapshotTimestamp = block.timestamp
+            self.emissionIntegral = Farmable(self.farmToken).emissionIntegral()
+            self.voteIntegral = VotingController(self.votingController).voteIntegral(self)
+            self.lastSnapshotTimestampFor[_account] = block.timestamp
+            self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
+            self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+            return # HERE IS AN ERROR
 
-
-    _reapIntegralDiff: uint256 = 0
-    _unitCostIntegralDiff: uint256 = 0
     _unitCostIntegral: uint256 = self.unitCostIntegral
+    _oldBalancesIntegral: uint256 = self.balancesIntegral
+    self.debugg = 5
+    _balancesIntegral: uint256 = _oldBalancesIntegral + _totalBalances * (block.timestamp - self.lastSnapshotTimestamp)
+    self.debugg = 6
     if self.isKilled == False:
-        _reapIntegralDiff = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral)
-        _unitCostIntegral += _reapIntegralDiff / self.totalBalances
-        self.emissionIntegral = _emissionIntegral
-        self.voteIntegral = _voteIntegral
-        self.reapIntegral += _reapIntegralDiff
-        self.unitCostIntegral = _unitCostIntegral
+        self.debugg = 7
+        _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
+        _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
+        self.debugg = 8
+        if (block.timestamp - self.lastSnapshotTimestamp) > 0:
+            if _balancesIntegral > _oldBalancesIntegral and _emissionIntegral > 0 and _voteIntegral > 0:                
+                self.debugg = 9
+                self.debuggg = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+                _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+                self.unitCostIntegral = _unitCostIntegral
+                self.balancesIntegral = _balancesIntegral
+                self.emissionIntegral = _emissionIntegral
+                self.voteIntegral = _voteIntegral
+                self.lastSnapshotTimestamp = block.timestamp
 
-    _emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / (block.timestamp - self.lastReapTimestampFor[_account])
-    _adminFee: uint256 = self.adminFee
+    self.debugg = 10
+    _lastSnapshotTimestampFor: uint256 = self.lastSnapshotTimestampFor[_account]
+    if _lastSnapshotTimestampFor == 0:
+        self.debugg = 11
+        _boostingController: address = self.boostingController
+        self.lastSnapshotTimestampFor[_account] = block.timestamp
+        self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
+        self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+        self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
+        return
 
-    if _adminFee != 0:
-        self.reapIntegralFor[_account] += _emission * (ADMIN_FEE_MULTIPLYER - _adminFee) / ADMIN_FEE_MULTIPLYER
-        self.reapIntegralFor[self] += _emission * _adminFee / ADMIN_FEE_MULTIPLYER
-    else:
-        self.reapIntegralFor[_account] += _emission
+    dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
+    if dt == 0:
+        self.debugg = 12
+        return
 
-    self.reapIntegralFor[_account] += self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER / (block.timestamp - self.lastReapTimestampFor[_account])
-    self.lastReapTimestampFor[_account] = block.timestamp
+    self.debugg = 13
+    _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
+    # check boosting
+    boost_emission: uint256 = 0
+    _boostingController: address = self.boostingController
+    _boostIntegral: uint256 = BoostingController(_boostingController).accountBoostIntegral(_account)
+    accountBoost: uint256 = _boostIntegral - self.boostIntegralFor[_account]
+    if accountBoost > 0:
+        _totalBoostIntegral: uint256 = BoostingController(_boostingController).updateBoostIntegral()
+        totalBoost: uint256 = _totalBoostIntegral - self.totalBoostIntegralFor[_account]
+        
+        if totalBoost > 0: 
+            boost_emission = (_balancesIntegral - self.balancesIntegralFor[_account]) * accountBoost / totalBoost
+            self.totalBoostIntegralFor[_account] = _totalBoostIntegral
+
+        self.boostIntegralFor[_account] = _boostIntegral
+
+    _account_emission: uint256 = min(_max_emission, _max_emission * TOKENLESS_PRODUCTION / 100 + boost_emission)
+    if _account_emission != _max_emission:
+        _adminFee: uint256 = self.adminFee
+        if _adminFee != 0:
+            self.reapIntegralFor[self] += (_max_emission - _account_emission) * _adminFee / ADMIN_FEE_MULTIPLIER
+
+    self.debugg = 14
+    self.reapIntegral += _account_emission
+    self.reapIntegralFor[_account] += _account_emission
+    self.lastSnapshotTimestampFor[_account] = block.timestamp
     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
+    self.balancesIntegralFor[_account] = _balancesIntegral # TODO: consider: do we need this?
 
 
 @external
 @nonreentrant('lock')
 def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False, _gasToken: address = ZERO_ADDRESS):
-    assert _amount > 0, "amount must be greater 0"
-
     _gasStart: uint256 = msg.gas
     
     if _account != msg.sender:
@@ -127,8 +193,7 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
             self.depositAllowance[_account][msg.sender] = _allowance - _amount
 
     self._snapshot(_account)
-
-    ERC20(self.lpToken).transferFrom(msg.sender, self, _amount)
+    assert ERC20(self.lpToken).transferFrom(msg.sender, self, _amount)
     self.totalBalances += _amount
 
     _reaperStrategy: address = self.reaperStrategy
@@ -151,13 +216,14 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
 @nonreentrant('lock')
 def invest(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
-
     _amount: uint256 = ERC20(self.lpToken).balanceOf(self)
     if _amount == 0:
         return
 
-    ReaperStrategy(self.reaperStrategy).invest(_amount)
-
+    _reaperStrategy: address = self.reaperStrategy
+    if _reaperStrategy != ZERO_ADDRESS:
+        ReaperStrategy(_reaperStrategy).invest(_amount)
+    
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
 
 
@@ -165,9 +231,9 @@ def invest(_gasToken: address = ZERO_ADDRESS):
 @nonreentrant('lock')
 def reap(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
-
-    ReaperStrategy(self.reaperStrategy).reap()
-
+    _reaperStrategy: address = self.reaperStrategy
+    if _reaperStrategy != ZERO_ADDRESS:
+        ReaperStrategy(_reaperStrategy).reap()
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
 
 
@@ -209,24 +275,14 @@ def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):
 @external
 def snapshot(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):    
     _gasStart: uint256 = msg.gas
-
     self._snapshot(_account)
-
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
-
-
-@external
-def setGasToken(_gasToken: address, _value: bool):
-    assert msg.sender == self.owner, "owner only"
-    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
-    
-    self.gasTokens[_gasToken] = _value
 
 
 @external
 def setReaperStrategy(_reaperStrategy: address):
     assert msg.sender == self.owner, "owner only"
-    ERC20(self.lpToken).approve(_reaperStrategy, MAX_UINT256)
+    assert ERC20(self.lpToken).approve(_reaperStrategy, MAX_UINT256)
     self.depositAllowance[self][_reaperStrategy] = MAX_UINT256
     self.reaperStrategy = _reaperStrategy
 
@@ -240,7 +296,7 @@ def kill():
 @external
 def setAdminFee(_percent: uint256):
     assert msg.sender == self.owner, "owner only"
-    assert _percent <= ADMIN_FEE_MULTIPLYER, "_adminFee > 100%"
+    assert _percent <= ADMIN_FEE_MULTIPLIER, "adminFee > 100%"
     self.adminFee = _percent
 
 
