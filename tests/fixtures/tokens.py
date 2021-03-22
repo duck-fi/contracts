@@ -18,6 +18,11 @@ LP_TOKEN_SYMBOL = "LPT"
 LP_TOKEN_DECIMALS = 18
 LP_TOKEN_INITIAL_SUPPLY = 1000000 * 10 ** LP_TOKEN_DECIMALS
 
+CRV_TOKEN_NAME = "CRV Token"
+CRV_TOKEN_SYMBOL = "CRV"
+CRV_TOKEN_DECIMALS = 18
+CRV_TOKEN_INITIAL_SUPPLY = 1000000 * 10 ** LP_TOKEN_DECIMALS
+
 VOTING_TOKEN_NAME = "Dispersion Voting Token"
 VOTING_TOKEN_SYMBOL = "DVT"
 VOTING_TOKEN_DECIMALS = 18
@@ -49,6 +54,11 @@ def waves_token(StakableERC20, deployer):
 @pytest.fixture(scope="module")
 def lp_token(ERC20Basic, deployer):
     yield ERC20Basic.deploy(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, LP_TOKEN_DECIMALS, LP_TOKEN_INITIAL_SUPPLY, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
+def crv_token_mock(ERC20Basic, deployer):
+    yield ERC20Basic.deploy(CRV_TOKEN_NAME, CRV_TOKEN_SYMBOL, CRV_TOKEN_DECIMALS, CRV_TOKEN_INITIAL_SUPPLY, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
