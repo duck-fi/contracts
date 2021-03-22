@@ -1,12 +1,5 @@
 name: docs
 
-on:
-  push:
-    branches:
-      - master
-      - develop
-      - feature/docs
-
 jobs:
   deploy:
     runs-on: ubuntu-18.04
