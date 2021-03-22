@@ -17,7 +17,10 @@ jobs:
           hugo-version: "latest"
           extended: true
 
-      - name: Build
+      - name: Build docs
+        run: pip3 install vyper && npm i -g vydoc && vydoc
+
+      - name: Build html
         run: cd docs && hugo --minify
 
       - name: Deploy
