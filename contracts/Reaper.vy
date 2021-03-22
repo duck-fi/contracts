@@ -112,7 +112,7 @@ def _snapshot(_account: address):
             self.lastSnapshotTimestampFor[_account] = block.timestamp
             self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
             self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
-        return # HERE IS AN ERROR
+            return # HERE IS AN ERROR
 
     _unitCostIntegral: uint256 = self.unitCostIntegral
     _oldBalancesIntegral: uint256 = self.balancesIntegral
@@ -125,14 +125,15 @@ def _snapshot(_account: address):
         _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
         self.debugg = 8
         if (block.timestamp - self.lastSnapshotTimestamp) > 0:
-            self.debugg = 9
-            self.debuggg = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
-            _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
-            self.emissionIntegral = _emissionIntegral
-            self.voteIntegral = _voteIntegral
-            self.unitCostIntegral = _unitCostIntegral
-            self.balancesIntegral = _balancesIntegral
-            self.lastSnapshotTimestamp = block.timestamp
+            if _balancesIntegral > _oldBalancesIntegral and _emissionIntegral > 0 and _voteIntegral > 0:                
+                self.debugg = 9
+                self.debuggg = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+                _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+                self.unitCostIntegral = _unitCostIntegral
+                self.balancesIntegral = _balancesIntegral
+                self.emissionIntegral = _emissionIntegral
+                self.voteIntegral = _voteIntegral
+                self.lastSnapshotTimestamp = block.timestamp
 
     self.debugg = 10
     _lastSnapshotTimestampFor: uint256 = self.lastSnapshotTimestampFor[_account]
@@ -174,8 +175,8 @@ def _snapshot(_account: address):
             self.reapIntegralFor[self] += (_max_emission - _account_emission) * _adminFee / ADMIN_FEE_MULTIPLIER
 
     self.debugg = 14
-    self.reapIntegralFor[_account] += _account_emission
     self.reapIntegral += _account_emission
+    self.reapIntegralFor[_account] += _account_emission
     self.lastSnapshotTimestampFor[_account] = block.timestamp
     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
     self.balancesIntegralFor[_account] = _balancesIntegral # TODO: consider: do we need this?

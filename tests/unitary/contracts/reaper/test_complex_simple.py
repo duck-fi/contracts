@@ -1,12 +1,8 @@
-import math
-from brownie.test import given, strategy
-
-
 VOTE_DIVIDER = 10 ** 18
 YEAR_EMISSION = 1_000_000 * 10 ** 18
 
 
-def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, day):
+def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, day):
     amount = 10**18
     lp_token.transfer(morpheus, 10 * amount, {'from': deployer})
     lp_token.transfer(trinity, 10 * amount, {'from': deployer})
@@ -19,7 +15,7 @@ def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, morp
     tx = farm_token.startEmission({'from': deployer})
     initial_emission_timestamp = tx.timestamp
     chain.mine(1, init_ts)
-    tx = voting_controller.snapshot({'from': deployer})
+    tx = voting_controller.startVoting({'from': deployer})
     initial_voting_timestamp = tx.timestamp
     assert reaper.balances(deployer) == 0
     assert reaper.totalBalances() == 0
@@ -561,7 +557,7 @@ def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, morp
     chain.mine(1, tx14.timestamp)
     tx15 = reaper.withdraw(amount, {'from': trinity})
 
-    # wait for day and snapshot both
+    # wait for 2 days and snapshot all
     # check emission has not been changed
     chain.mine(1, tx15.timestamp + 2 * day)
     tx16 = reaper.snapshot({'from': deployer})
@@ -572,39 +568,39 @@ def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, morp
     assert reaper.balances(trinity) == 0
     assert reaper.totalBalances() == 0
     assert reaper.balancesIntegral() == last_balances_integral
-    assert reaper.balancesIntegralFor(deployer) == last_balances_integral_deployer
+    assert reaper.balancesIntegralFor(deployer) == reaper.balancesIntegral()
     assert reaper.balancesIntegralFor(morpheus) == reaper.balancesIntegral()
     assert reaper.balancesIntegralFor(trinity) == reaper.balancesIntegral()
-    assert reaper.emissionIntegral() == last_emission_intergal
-    assert reaper.lastUnitCostIntegralFor(deployer) == last_unit_cost_integral_deployer
+    assert reaper.emissionIntegral() == YEAR_EMISSION * (tx16.timestamp - initial_emission_timestamp) // year
+    assert reaper.lastUnitCostIntegralFor(deployer) == last_unit_cost_integral
     assert reaper.lastUnitCostIntegralFor(morpheus) == last_unit_cost_integral
     assert reaper.lastUnitCostIntegralFor(trinity) == last_unit_cost_integral
     assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer) + reaper.reapIntegralFor(morpheus) + reaper.reapIntegralFor(trinity)
-    assert abs(reaper.reapIntegral() - reaper.emissionIntegral() // 2) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
     assert reaper.reapIntegralFor(deployer) == last_reap_integral_deployer
+    assert reaper.reapIntegralFor(morpheus) == last_reap_integral_morpheus
+    assert reaper.reapIntegralFor(trinity) == last_reap_integral_trinity
     assert abs(reaper.reapIntegralFor(morpheus) - ((reaper.lastUnitCostIntegralFor(morpheus) - last_unit_cost_integral_morpheus) * amount // 2 // VOTE_DIVIDER + last_reap_integral_morpheus)) <= 10
     assert abs(reaper.reapIntegralFor(trinity) - ((reaper.lastUnitCostIntegralFor(trinity) - last_unit_cost_integral_trinity) * amount // 2 // VOTE_DIVIDER + last_reap_integral_trinity)) <= 10
-    assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2 // 45 * 10) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
-    assert abs(reaper.reapIntegralFor(trinity) - reaper.emissionIntegral() // 2 // 45 * (15*5/6 + 10/2)) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
-    assert abs(reaper.reapIntegralFor(morpheus) - reaper.emissionIntegral() // 2 // 45 * (10 + 15/6 + 10/2)) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
+    assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2 // 47 * 10) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
+    assert abs(reaper.reapIntegralFor(trinity) - reaper.emissionIntegral() // 2 // 47 * (15*5/6 + 10/2)) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
+    assert abs(reaper.reapIntegralFor(morpheus) - reaper.emissionIntegral() // 2 // 47 * (10 + 15/6 + 10/2)) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
     assert abs(reaper.reapIntegralFor(morpheus) - reaper.reapIntegralFor(trinity)) <= 10 ** 8 # equal emission now
-    assert reaper.lastSnapshotTimestamp() == tx14.timestamp
-    assert reaper.lastSnapshotTimestampFor(deployer) == tx13.timestamp
-    assert reaper.lastSnapshotTimestampFor(morpheus) == tx14.timestamp
-    assert reaper.lastSnapshotTimestampFor(trinity) == tx14.timestamp
-    assert reaper.voteIntegral() == (tx14.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
+    assert reaper.lastSnapshotTimestamp() == tx16.timestamp
+    assert reaper.lastSnapshotTimestampFor(deployer) == tx16.timestamp
+    assert reaper.lastSnapshotTimestampFor(morpheus) == tx16.timestamp
+    assert reaper.lastSnapshotTimestampFor(trinity) == tx16.timestamp
+    assert reaper.voteIntegral() == (tx16.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
     assert reaper.boostIntegralFor(deployer) == 0
     assert reaper.totalBoostIntegralFor(deployer) == 0
 
-
+    # wait for 30 days and deposit for deployer
     chain.mine(1, tx16.timestamp + 30 * day)
     tx17 = reaper.deposit(amount, {'from': deployer})
+    assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
     last_unit_cost_integral_deployer = reaper.lastUnitCostIntegralFor(deployer)
-    print("debugg is " , reaper.debugg())
-    print("debugggg is " , reaper.debuggg())
-    assert last_unit_cost_integral_deployer == reaper.unitCostIntegral()
     assert reaper.reapIntegralFor(deployer) == last_reap_integral_deployer
     
+    # wait for 1 day and snapshot for deployer
     chain.mine(1, tx17.timestamp + day)
     tx18 = reaper.snapshot({'from': deployer})
     assert reaper.emissionIntegral() == YEAR_EMISSION * (tx18.timestamp - initial_emission_timestamp) // year
@@ -613,3 +609,4 @@ def test_deposit(farm_token, lp_token, reaper, voting_controller, deployer, morp
     print((tx18.timestamp - initial_emission_timestamp)/86400)
     assert ((reaper.reapIntegralFor(deployer) - last_reap_integral_deployer) - (reaper.emissionIntegral() // 2 // 78)) <= 10 ** 8
     assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2 // 78 * 11) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
+    assert False
