@@ -1,4 +1,13 @@
 # @version ^0.2.0
+"""
+@title Dispersion Farm Token
+@author Dispersion Finance Team
+@license MIT
+@notice ERC20 token with linear mining supply, rate changes every year
+@dev Based on the ERC-20 token standard as defined at
+     https://eips.ethereum.org/EIPS/eip-20.
+     Emission is halved every year.
+"""
 
 from vyper.interfaces import ERC20
 import interfaces.tokens.ERC20Detailed as ERC20Detailed
@@ -63,6 +72,12 @@ _emissionIntegral: uint256
 
 @external
 def __init__(_name: String[32], _symbol: String[8]):
+    """
+    @notice Contract constructor
+    @dev Premine emission is returnted to deployer
+    @param _name Token full name
+    @param _symbol Token symbol
+    """
     self.name = _name
     self.symbol = _symbol
     self.balanceOf[msg.sender] = INITIAL_SUPPLY
@@ -74,11 +89,22 @@ def __init__(_name: String[32], _symbol: String[8]):
 @view
 @external
 def decimals() -> uint256:
+    """
+    @notice Returns token decimals value
+    @dev For ERC20 compatibility
+    @return Token decimals
+    """
     return DECIMALS
 
 
 @external
 def setName(_name: String[32], _symbol: String[8]):
+    """
+    @notice Changes token name and symbol
+    @dev Callable by owner only
+    @param _name Token full name
+    @param _symbol Token symbol
+    """
     assert msg.sender == self.owner, "owner only"
     self.name = _name
     self.symbol = _symbol
@@ -86,6 +112,11 @@ def setName(_name: String[32], _symbol: String[8]):
 
 @external
 def setMinter(_minter: address):
+    """
+    @notice Sets minter contract address
+    @dev Callable by owner only
+    @param _minter Minter contract which allowed to mint for new tokens
+    """
     assert msg.sender == self.owner, "owner only"
     assert _minter != ZERO_ADDRESS, "zero address"
     self.minter = _minter
@@ -93,6 +124,10 @@ def setMinter(_minter: address):
 
 @internal
 def _updateYearEmission() -> uint256:
+    """
+    @notice Updates emission per year value
+    @dev Internal function
+    """
     _lastEmissionUpdateTimestamp: uint256 = self.lastEmissionUpdateTimestamp
     if _lastEmissionUpdateTimestamp == 0:
         return 0
@@ -112,12 +147,22 @@ def _updateYearEmission() -> uint256:
 
 @internal
 def _currentEmissionIntegral() -> uint256:
+    """
+    @notice Updates current emission integral (max total supply at block.timestamp)
+    @dev Internal function
+    """
     currentYearMaxEmission: uint256 = self._updateYearEmission() 
     return self._emissionIntegral + currentYearMaxEmission * (block.timestamp - self.lastEmissionUpdateTimestamp) / YEAR
 
 
 @external
 def mint(_account: address, _amount: uint256):
+    """
+    @notice Mints new tokens for account `_account` with amount `_amount`
+    @dev Callable by minter only
+    @param _account Account to mint tokens for
+    @param _amount Amount to mint
+    """
     assert msg.sender == self.minter, "minter only"
     assert _account != ZERO_ADDRESS, "zero address"
 
@@ -130,6 +175,10 @@ def mint(_account: address, _amount: uint256):
 
 @external
 def startEmission():
+    """
+    @notice Starts token emission
+    @dev Callable by owner only
+    """
     assert msg.sender == self.owner, "owner only"
     assert self.lastEmissionUpdateTimestamp == 0, "emission already started"
     self._yearEmission = INITIAL_YEAR_EMISSION
@@ -140,16 +189,29 @@ def startEmission():
 
 @external
 def yearEmission() -> uint256:
+    """
+    @notice Updates emission per year value
+    """
     return self._updateYearEmission()
 
 
 @external
 def emissionIntegral() -> uint256:
+    """
+    @notice Updates current emission integral (max total supply at block.timestamp)
+    """
     return self._currentEmissionIntegral()
 
 
 @external
 def transfer(_recipient : address, _amount : uint256) -> bool:
+    """
+    @notice Transfers `_amount` of tokens from `msg.sender` to `_recipient` address
+    @dev ERC20 function
+    @param _recipient Account to send tokens to
+    @param _amount Amount to send
+    @return Boolean success value
+    """
     assert _recipient != ZERO_ADDRESS, "recipient is zero address"
     self.balanceOf[msg.sender] -= _amount
     self.balanceOf[_recipient] += _amount
@@ -159,6 +221,14 @@ def transfer(_recipient : address, _amount : uint256) -> bool:
 
 @external
 def transferFrom(_sender : address, _recipient : address, _amount : uint256) -> bool:
+    """
+    @notice Transfers `_amount` of tokens from `_sender` to `_recipient` address
+    @dev ERC20 function. Allowance from `_sender` to `msg.sender` is needed
+    @param _sender Account to send tokens from
+    @param _recipient Account to send tokens to
+    @param _amount Amount to send
+    @return Boolean success value
+    """
     assert _sender != ZERO_ADDRESS, "sender is zero address"
     assert _recipient != ZERO_ADDRESS, "recipient is zero address"
     
@@ -175,6 +245,13 @@ def transferFrom(_sender : address, _recipient : address, _amount : uint256) -> 
 
 @external
 def approve(_spender : address, _amount : uint256) -> bool:
+    """
+    @notice Approves allowance from `msg.sender` to `_spender` address for `_amount` of tokens
+    @dev ERC20 function
+    @param _spender Allowed account to send tokens from `msg.sender`
+    @param _amount Allowed amount to send tokens from `msg.sender`
+    @return Boolean success value
+    """
     assert _amount == 0 or self.allowance[msg.sender][_spender] == 0, "already approved"
     self.allowance[msg.sender][_spender] = _amount
     log Approval(msg.sender, _spender, _amount)
@@ -183,6 +260,10 @@ def approve(_spender : address, _amount : uint256) -> bool:
 
 @external
 def burn(_amount: uint256):
+    """
+    @notice Burns `_amount` of tokens from `msg.sender`
+    @param _amount Amount to burn
+    """
     self.totalSupply -= _amount
     self.balanceOf[msg.sender] -= _amount
     log Transfer(msg.sender, ZERO_ADDRESS, _amount)
@@ -190,6 +271,11 @@ def burn(_amount: uint256):
 
 @external
 def transferOwnership(_futureOwner: address):
+    """
+    @notice Transfers ownership by setting new owner `_futureOwner` candidate
+    @dev Callable by owner only
+    @param _futureOwner Future owner address
+    """
     assert msg.sender == self.owner, "owner only"
     self.futureOwner = _futureOwner
     log CommitOwnership(_futureOwner)
@@ -197,6 +283,10 @@ def transferOwnership(_futureOwner: address):
 
 @external
 def applyOwnership():
+    """
+    @notice Applies transfer ownership
+    @dev Callable by owner only. Function call actually changes owner
+    """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner
     assert _owner != ZERO_ADDRESS, "owner not set"
