@@ -4,6 +4,5 @@ title = ""
 theme = "book"
 
 [params]
-
     BookLogo = 'img/logo.svg'
     BookServiceWorker = true
