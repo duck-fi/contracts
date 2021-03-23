@@ -138,13 +138,16 @@ def _snapshot(_account: address):
         # update reaper integrals
         _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
         _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
+
         if _emissionIntegral > 0 and self.emissionIntegral == 0:
             _oldBalancesIntegral = 0
             _balancesIntegral = _totalBalances * (block.timestamp - Farmable(self.farmToken).startEmissionTimestamp())
         else:
             _balancesIntegral = _totalBalances * (block.timestamp - _lastSnapshotTimestamp) + _oldBalancesIntegral
-        _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
-        self.unitCostIntegral = _unitCostIntegral
+        
+        if _balancesIntegral > _oldBalancesIntegral:
+            _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+            self.unitCostIntegral = _unitCostIntegral
         self.balancesIntegral = _balancesIntegral
         self.emissionIntegral = _emissionIntegral
         self.voteIntegral = _voteIntegral
