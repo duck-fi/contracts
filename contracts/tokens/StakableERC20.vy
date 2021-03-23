@@ -102,7 +102,7 @@ def balanceOf(_account: address = msg.sender) -> uint256:
     """
     @notice Balance of ERC20 token for `_account`.
     @dev For ERC20 compatibility.
-    @param _account Address of account for balance query
+    @param _account Address of account for balance query (`msg.sender` by default)
     @return Balance of ERC20 token
     """
     return self._balanceOf(_account)
@@ -200,9 +200,6 @@ def approve(_spender: address, _amount: uint256) -> bool:
     """
     @notice Approves allowance from `msg.sender` to `_spender` address for `_amount` of tokens
     @dev ERC20 function. Emits a `Approval` event with `msg.sender`, `_spender`, `_amount`.
-        Approval may only be from zero -> nonzero or from nonzero -> zero in order
-        to mitigate the potential race condition described here:
-        https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
     @param _spender Allowed account to send tokens from `msg.sender`
     @param _amount Allowed amount to send tokens from `msg.sender`
     @return Boolean success value
