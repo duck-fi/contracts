@@ -99,59 +99,126 @@ debugg:public(uint256)
 debuggg:public(uint256)
 @internal
 def _snapshot(_account: address):
-    self.debugg = 2
-    _totalBalances: uint256 = self.totalBalances
-    if _totalBalances == 0:
-        self.debugg = 3
-        if self.lastSnapshotTimestamp == 0:
-            self.debugg = 4
-            _boostingController: address = self.boostingController
-            self.lastSnapshotTimestamp = block.timestamp
-            self.emissionIntegral = Farmable(self.farmToken).emissionIntegral()
-            self.voteIntegral = VotingController(self.votingController).voteIntegral(self)
-            self.lastSnapshotTimestampFor[_account] = block.timestamp
-            self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
-            self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
-            return # HERE IS AN ERROR
+    # emission is not started:
+        # true - return
+        # false - cont
 
-    _unitCostIntegral: uint256 = self.unitCostIntegral
-    _oldBalancesIntegral: uint256 = self.balancesIntegral
-    self.debugg = 5
-    _balancesIntegral: uint256 = _oldBalancesIntegral + _totalBalances * (block.timestamp - self.lastSnapshotTimestamp)
-    self.debugg = 6
-    if self.isKilled == False:
-        self.debugg = 7
-        _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
-        _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
-        self.debugg = 8
-        if (block.timestamp - self.lastSnapshotTimestamp) > 0:
-            if _balancesIntegral > _oldBalancesIntegral and _emissionIntegral > 0 and _voteIntegral > 0:                
-                self.debugg = 9
-                self.debuggg = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
-                _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
-                self.unitCostIntegral = _unitCostIntegral
-                self.balancesIntegral = _balancesIntegral
-                self.emissionIntegral = _emissionIntegral
-                self.voteIntegral = _voteIntegral
-                self.lastSnapshotTimestamp = block.timestamp
+    # reaper is not initialized:
+        # true - init reaper integrals and user integrals
+        # false - cont
+    
+    # reaper is killed:
+        # true - do not update reaper integrals
+        # false - update reaper integrals and cont
+    # update user integrals
 
-    self.debugg = 10
-    _lastSnapshotTimestampFor: uint256 = self.lastSnapshotTimestampFor[_account]
-    if _lastSnapshotTimestampFor == 0:
-        self.debugg = 11
+    self.lastSnapshotTimestampFor[_account] = block.timestamp
+    
+
+    # if _emissionIntegral == 0:
+        # return
+
+    _lastSnapshotTimestamp: uint256 = self.lastSnapshotTimestamp
+    if _lastSnapshotTimestamp == 0:
+        # init reaper integrals
+        self.lastSnapshotTimestamp = block.timestamp
+        self.emissionIntegral = Farmable(self.farmToken).emissionIntegral()
+        self.voteIntegral = VotingController(self.votingController).voteIntegral(self)
+        # init user integrals TODO: need this?
         _boostingController: address = self.boostingController
         self.lastSnapshotTimestampFor[_account] = block.timestamp
         self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
         self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+        return
+    
+    _unitCostIntegral: uint256 = self.unitCostIntegral
+    _oldBalancesIntegral: uint256 = self.balancesIntegral
+    _balancesIntegral: uint256 = _oldBalancesIntegral
+    _totalBalances: uint256 = self.totalBalances
+    if not self.isKilled and block.timestamp > _lastSnapshotTimestamp:
+        # update reaper integrals
+        _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
+        _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
+        if _emissionIntegral > 0 and self.emissionIntegral == 0:
+            _oldBalancesIntegral = 0
+            _balancesIntegral = _totalBalances * (block.timestamp - Farmable(self.farmToken).startEmissionTimestamp())
+        else:
+            _balancesIntegral = _totalBalances * (block.timestamp - _lastSnapshotTimestamp) + _oldBalancesIntegral
+        _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+        self.unitCostIntegral = _unitCostIntegral
+        self.balancesIntegral = _balancesIntegral
+        self.emissionIntegral = _emissionIntegral
+        self.voteIntegral = _voteIntegral
+        self.lastSnapshotTimestamp = block.timestamp
+    
+    _lastSnapshotTimestampFor: uint256 = self.lastSnapshotTimestampFor[_account]
+    if _lastSnapshotTimestampFor == 0:
+        # init user integrals
+        _boostingController: address = self.boostingController
         self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
+        self.lastSnapshotTimestampFor[_account] = block.timestamp
+        self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
+        self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
         return
 
-    dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
-    if dt == 0:
-        self.debugg = 12
-        return
+    # dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
+    # if dt == 0:
+    #     return
 
-    self.debugg = 13
+    # _totalBalances: uint256 = self.totalBalances
+    # if _totalBalances == 0:
+    #     self.debugg = 3
+    #     if self.lastSnapshotTimestamp == 0:
+    #         self.debugg = 4
+    #         _boostingController: address = self.boostingController
+    #         self.lastSnapshotTimestamp = block.timestamp
+    #         self.emissionIntegral = Farmable(self.farmToken).emissionIntegral()
+    #         self.voteIntegral = VotingController(self.votingController).voteIntegral(self)
+    #         self.lastSnapshotTimestampFor[_account] = block.timestamp
+    #         self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
+    #         self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+    #         return # HERE IS AN ERROR
+
+    # _unitCostIntegral: uint256 = self.unitCostIntegral
+    # _oldBalancesIntegral: uint256 = self.balancesIntegral
+    # self.debugg = 5
+    # _balancesIntegral: uint256 = _oldBalancesIntegral + _totalBalances * (block.timestamp - self.lastSnapshotTimestamp)
+    # self.debugg = 6
+    # if self.isKilled == False:
+    #     self.debugg = 7
+    #     _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
+    #     _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
+    #     self.debugg = 8
+    #     if (block.timestamp - self.lastSnapshotTimestamp) > 0:
+    #         if _balancesIntegral > _oldBalancesIntegral and _emissionIntegral > 0 and _voteIntegral > 0:
+    #             if self.emissionIntegral == 0 and _emissionIntegral > 0:
+    #                 _oldBalancesIntegral = 0
+    #                 _balancesIntegral = _totalBalances * (block.timestamp - Farmable(self.farmToken).startEmissionTimestamp())
+    #             self.debugg = 9
+    #             self.debuggg = (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+    #             _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
+    #             self.unitCostIntegral = _unitCostIntegral
+    #             self.balancesIntegral = _balancesIntegral
+    #             self.emissionIntegral = _emissionIntegral
+    #             self.voteIntegral = _voteIntegral
+    #             self.lastSnapshotTimestamp = block.timestamp
+
+    # self.debugg = 10
+    # _lastSnapshotTimestampFor: uint256 = self.lastSnapshotTimestampFor[_account]
+    # if _lastSnapshotTimestampFor == 0:
+    #     self.debugg = 11
+    #     _boostingController: address = self.boostingController
+    #     self.lastSnapshotTimestampFor[_account] = block.timestamp
+    #     self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
+    #     self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+    #     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
+    #     return
+
+    # dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
+    # if dt == 0:
+    #     self.debugg = 12
+    #     return
+
     _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
     # check boosting
     boost_emission: uint256 = 0
@@ -174,10 +241,8 @@ def _snapshot(_account: address):
         if _adminFee != 0:
             self.reapIntegralFor[self] += (_max_emission - _account_emission) * _adminFee / ADMIN_FEE_MULTIPLIER
 
-    self.debugg = 14
     self.reapIntegral += _account_emission
     self.reapIntegralFor[_account] += _account_emission
-    self.lastSnapshotTimestampFor[_account] = block.timestamp
     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
     self.balancesIntegralFor[_account] = _balancesIntegral # TODO: consider: do we need this?
 

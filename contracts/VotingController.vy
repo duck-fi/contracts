@@ -111,6 +111,13 @@ def _snapshot():
     _lastReaperIndex: uint256 = Controller(_controller).lastReaperIndex()
     _lastSnapshotTimestamp: uint256 = self.lastSnapshotTimestamp
 
+    _farmToken: address = self.farmToken
+    _votingToken: address = self.votingToken
+    _farmTokenBalance: uint256 = self.coinBalances[_farmToken]
+    _votingTokenBalance: uint256 = self.coinBalances[_votingToken]
+    if _farmTokenBalance + _votingTokenBalance == 0:
+        return
+
     _currentSnapshotTimestamp: uint256 = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / VOTING_PERIOD * VOTING_PERIOD
     _lastSnapshotIndex: uint256 = self.lastSnapshotIndex
     _dt: uint256 = _currentSnapshotTimestamp - _lastSnapshotTimestamp
@@ -118,16 +125,10 @@ def _snapshot():
     self.lastSnapshotIndex = _lastSnapshotIndex + 1
     self.nextSnapshotTimestamp = _currentSnapshotTimestamp + VOTING_PERIOD
 
-    _farmToken: address = self.farmToken
-    _votingToken: address = self.votingToken
-    _farmTokenBalance: uint256 = self.coinBalances[_farmToken]
-    _votingTokenBalance: uint256 = self.coinBalances[_votingToken]
     _totalVotePower: uint256 = 0
     _votingTokenRate: uint256 = 0
-
-    if _farmTokenBalance + _votingTokenBalance > 0:
-        _votingTokenRate = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
-        _totalVotePower = self.coinBalances[_votingToken] * _votingTokenRate / MULTIPLIER + self.coinBalances[_farmToken] * FARM_TOKEN_RATE
+    _votingTokenRate = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+    _totalVotePower = self.coinBalances[_votingToken] * _votingTokenRate / MULTIPLIER + self.coinBalances[_farmToken] * FARM_TOKEN_RATE
 
     if _totalVotePower == 0:
         return
@@ -148,7 +149,7 @@ def _snapshot():
 
 
 @external
-# @nonreentrant('lock') TODO: 
+# @nonreentrant('lock') TODO: uncommit
 def snapshot(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
     self._snapshot()
