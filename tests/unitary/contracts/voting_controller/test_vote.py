@@ -16,7 +16,7 @@ def test_unsupported_coin(voting_controller_mocked, reaper_1_mock, exception_tes
                      reaper_1_mock, usdn_token, 1, {'from': deployer})
 
 
-def test_unsupported_coin(voting_controller_mocked, reaper_1_mock, exception_tester, deployer, ZERO_ADDRESS):
+def test_unsupported_coin_zero_address(voting_controller_mocked, reaper_1_mock, exception_tester, deployer, ZERO_ADDRESS):
     exception_tester("invalid coin", voting_controller_mocked.vote,
                      reaper_1_mock, ZERO_ADDRESS, 1, {'from': deployer})
 
@@ -30,7 +30,7 @@ def test_unapproved(voting_controller_mocked, reaper_1_mock, exception_tester, f
 def test_vote_farm_token(exception_tester, voting_controller_mocked, farm_token, reaper_1_mock, deployer, amount, week, chain):
     initial_balance = farm_token.balanceOf(deployer)
     farm_token.approve(voting_controller_mocked, amount, {'from': deployer})
-    assert voting_controller_mocked.voteIntegral(reaper_1_mock) == 0
+    assert voting_controller_mocked.voteIntegral(reaper_1_mock).return_value == 0
     tx1 = voting_controller_mocked.vote(
         reaper_1_mock, farm_token, amount, {'from': deployer})
     assert tx1.return_value is None
