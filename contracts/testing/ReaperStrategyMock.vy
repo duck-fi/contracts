@@ -18,6 +18,7 @@ futureOwner: public(address)
 
 isReapCalled: public(bool)
 isInvestCalled: public(bool)
+isClaimCalled: public(bool)
 
 
 @external
@@ -51,6 +52,12 @@ def deposit(_amount: uint256):
 def withdraw(_amount: uint256, _account: address):
     assert msg.sender == self.reaper, "reaper only"
     # Staker(self.staker).unstake(_amount, _account)
+
+
+@external
+def claim(_amount: uint256, _account: address):
+    assert msg.sender == self.reaper, "reaper only"
+    self.isClaimCalled = True
 
 
 @view
