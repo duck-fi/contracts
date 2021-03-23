@@ -7,18 +7,6 @@ def reaper() -> address:
     return ZERO_ADDRESS
 
 
-@view
-@external
-def staker() -> address:
-    return ZERO_ADDRESS
-
-
-@view
-@external
-def rewardContract() -> address:
-    return ZERO_ADDRESS
-
-
 @external
 def invest(_amount: uint256):
     pass
@@ -48,4 +36,9 @@ def deposit(_amount: uint256):
 
 @external
 def withdraw(_amount: uint256, _account: address):
+    pass
+
+
+@external
+def claim(_amount: uint256, _account: address):
     pass

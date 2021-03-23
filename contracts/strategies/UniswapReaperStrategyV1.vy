@@ -19,61 +19,72 @@ event ApplyOwnership:
 
 
 reaper: public(address)
-staker: public(address)
-rewardContract: public(address)
+activated: public(bool)
 
+admin: public(address)
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_reaper: address, _staker: address, _rewardContract: address):
+def __init__(_reaper: address):
     assert _reaper != ZERO_ADDRESS, "_reaper is not set"
-    assert _staker != ZERO_ADDRESS, "_staker is not set"
-    assert _rewardContract != ZERO_ADDRESS, "_rewardContract is not set"
     self.reaper = _reaper
-    self.staker = _staker
-    self.rewardContract = _rewardContract
+    self.activated = False
+    self.admin = msg.sender
     self.owner = msg.sender
 
 
 @external
 def invest(_amount: uint256):
-    assert msg.sender == self.reaper, "reaper only"
-    _staker: address = self.staker
-    ERC20(Staker(_staker).stakeToken()).transferFrom(self.reaper, _staker, _amount)
-    Staker(_staker).stake(_amount)
+    assert self.admin == msg.sender
+    assert False, "not supported"
 
 
 @external
+<<<<<<< HEAD:contracts/strategies/UniswapReaperStrategyV1.vy
+def reap() -> uint256:
+    assert False, "not supported"
+    return 0
+=======
 def reap():
     assert msg.sender == self.reaper, "reaper only"
     Staker(self.staker).claim(self.rewardContract)
+>>>>>>> develop:contracts/strategies/reaper/ProxyReaperStrategy.vy
 
 
 @external
 def deposit(_amount: uint256):
     assert msg.sender == self.reaper, "reaper only"
-    _staker: address = self.staker
-    ERC20(Staker(_staker).stakeToken()).transferFrom(self.reaper, _staker, _amount)
-    Staker(_staker).stake(_amount)
 
 
 @external
 def withdraw(_amount: uint256, _account: address):
     assert msg.sender == self.reaper, "reaper only"
-    Staker(self.staker).unstake(_amount, _account)
+    assert self.activated, "not activated"
+
+
+@external
+def claim(_amount: uint256, _account: address):
+    assert msg.sender == self.reaper, "reaper only"
+    assert self.activated, "not activated"
 
 
 @view
 @external
 def availableToDeposit(_amount: uint256, _account: address) -> uint256:
+    assert msg.sender == self.reaper, "reaper only"
     return _amount
 
 
 @view
 @external
 def availableToWithdraw(_amount: uint256, _account: address) -> uint256:
+    assert msg.sender == self.reaper, "reaper only"
+
+    if not self.activated:
+        return 0
+
     return _amount
 
 
