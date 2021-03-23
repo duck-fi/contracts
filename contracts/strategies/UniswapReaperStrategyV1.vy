@@ -42,15 +42,9 @@ def invest(_amount: uint256):
 
 
 @external
-<<<<<<< HEAD:contracts/strategies/UniswapReaperStrategyV1.vy
 def reap() -> uint256:
     assert False, "not supported"
     return 0
-=======
-def reap():
-    assert msg.sender == self.reaper, "reaper only"
-    Staker(self.staker).claim(self.rewardContract)
->>>>>>> develop:contracts/strategies/reaper/ProxyReaperStrategy.vy
 
 
 @external
