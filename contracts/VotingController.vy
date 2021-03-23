@@ -133,6 +133,9 @@ def _snapshot():
     if _totalVotePower == 0:
         return
 
+    if _totalVotePower == 0:
+        return
+
     for i in range(1, MULTIPLIER):
         if i > _lastReaperIndex:
             break
@@ -149,7 +152,7 @@ def _snapshot():
 
 
 @external
-# @nonreentrant('lock') TODO: uncommit
+@nonreentrant('lock')
 def snapshot(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
     self._snapshot()

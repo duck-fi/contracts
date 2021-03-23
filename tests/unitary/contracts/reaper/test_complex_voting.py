@@ -118,7 +118,6 @@ def test_complex_voting(farm_token, lp_token, reaper, reaper_2, controller, voti
     last_reap_integral_deployer = reaper.reapIntegralFor(deployer)
     last_reap_integral_morpheus = reaper.reapIntegralFor(morpheus)
 
-
     # modify vote share 
     # wait till next voting period 
     # snapshot reaper (see reduction)

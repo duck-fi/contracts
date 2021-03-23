@@ -6,11 +6,17 @@ import interfaces.Ownable as Ownable
 import interfaces.ReaperRewardDistributor as ReaperRewardDistributor
 import interfaces.Reaper as Reaper
 import interfaces.GasToken as GasToken
+import interfaces.AddressesCheckList as AddressesCheckList
 
 
 implements: Ownable
 implements: ReaperRewardDistributor
 
+
+event Claim:
+    coin: address
+    account: address
+    amount: uint256
 
 event CommitOwnership:
     owner: address
@@ -23,22 +29,27 @@ MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
 reaper: public(address)
+gasTokenCheckList: public(address)
 lastBalance: public(HashMap[address, uint256])
 rewardIntegral: public(HashMap[address, uint256])
 rewardIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 reapIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 totalReapIntegralFor: public(HashMap[address, HashMap[address, uint256]])
 claimAllowance: public(HashMap[address, HashMap[address, HashMap[address, bool]]])
-gasTokens: public(HashMap[address, bool])
 
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_reaper: address):
+def __init__(_reaper: address, _gasTokenCheckList: address):
+    """
+    @notice Contract constructor
+    """
     assert _reaper != ZERO_ADDRESS, "reaper is not set"
+    assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     self.reaper = _reaper
+    self.gasTokenCheckList = _gasTokenCheckList
     self.owner = msg.sender
 
 
@@ -47,8 +58,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert self.gasTokens[_gasToken], "unsupported gas token" 
-
+    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token"
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
@@ -59,59 +69,66 @@ def claimApprove(_coin: address, _claimer: address, _canClaim: bool):
 
 
 @internal
-def _claim(_coin: address, _account: address, _recipient: address):
+def _claim(_coin: address, _account: address, _recipient: address) -> uint256:
     _balance: uint256 = ERC20(_coin).balanceOf(self)
     _lastBalance: uint256 = self.lastBalance[_coin]
     _rewardIntegral: uint256 = self.rewardIntegral[_coin]
     if _balance > _lastBalance:
         _rewardIntegral += _balance - _lastBalance
         self.rewardIntegral[_coin] = _rewardIntegral
-
+    
     _rewardDiff: uint256 = _rewardIntegral - self.rewardIntegralFor[_coin][_account]
     _reaper: address = self.reaper
     Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
     _reapIntegralFor: uint256 = Reaper(_reaper).reapIntegralFor(_account)
     _reapIntegral: uint256 = Reaper(_reaper).reapIntegral()
-    ERC20(_coin).transfer(_recipient, _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / (_reapIntegral - self.totalReapIntegralFor[_coin][_account]))
 
+    _totalReaperDiff: uint256 = _reapIntegral - self.totalReapIntegralFor[_coin][_account]
+    if _totalReaperDiff == 0:
+        return 0
+
+    _reap: uint256 = _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / _totalReaperDiff
+    assert ERC20(_coin).transfer(_recipient, _reap)
+
+    self.lastBalance[_coin] = _balance - _reap
     self.reapIntegralFor[_coin][_account] = _reapIntegralFor
     self.totalReapIntegralFor[_coin][_account] = _reapIntegral
     self.rewardIntegralFor[_coin][_account] = _rewardIntegral
 
+    return _reap
+
 
 @external
-def claim(_coin: address, _account: address, _gasToken: address = ZERO_ADDRESS):
+def claim(_coin: address, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
 
     if _account != msg.sender:
         assert self.claimAllowance[_coin][_account][msg.sender], "claim is not allowed"
-    self._claim(_coin, _account, _account)
-
+    
+    _amount: uint256 = self._claim(_coin, _account, _account)
+    log Claim(_coin, _account, _amount)
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
 
 
+@view
 @external
 def claimableTokens(_coin: address, _account: address) -> uint256:
-    _rewardDiff: uint256 = self.rewardIntegral[_coin] - self.rewardIntegralFor[_coin][_account]
     _balance: uint256 = ERC20(_coin).balanceOf(self)
     _lastBalance: uint256 = self.lastBalance[_coin]
+    _rewardIntegral: uint256 = self.rewardIntegral[_coin]
     if _balance > _lastBalance:
-        _rewardDiff += _balance - _lastBalance
-
-    _reaper: address = self.reaper
-    Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
-    _reapDiff: uint256 = Reaper(_reaper).reapIntegralFor(_account) - self.reapIntegralFor[_coin][_account]
-    _totalReapDiff: uint256 = Reaper(_reaper).reapIntegral() - self.totalReapIntegralFor[_coin][_account]
-
-    return _rewardDiff * _reapDiff / _totalReapDiff
-
-
-@external
-def setGasToken(_gasToken: address, _value: bool):
-    assert msg.sender == self.owner, "owner only"
-    assert _gasToken != ZERO_ADDRESS, "_gasToken is not set"
+        _rewardIntegral += _balance - _lastBalance
     
-    self.gasTokens[_gasToken] = _value
+    _rewardDiff: uint256 = _rewardIntegral - self.rewardIntegralFor[_coin][_account]
+    _reaper: address = self.reaper
+    _reapIntegralFor: uint256 = Reaper(_reaper).reapIntegralFor(_account)
+    _reapIntegral: uint256 = Reaper(_reaper).reapIntegral()
+
+    _totalReaperDiff: uint256 = _reapIntegral - self.totalReapIntegralFor[_coin][_account]
+    if _totalReaperDiff == 0:
+        return 0
+
+    return _rewardDiff * (_reapIntegralFor - self.reapIntegralFor[_coin][_account]) / _totalReaperDiff
 
 
 @external
@@ -125,9 +142,8 @@ def claimAdminFee(_coin: address, _gasToken: address = ZERO_ADDRESS):
     assert msg.sender == self.owner, "owner only"
 
     _gasStart: uint256 = msg.gas
-
-    self._claim(_coin, self.reaper, msg.sender)
-
+    _amount: uint256 = self._claim(_coin, self.reaper, msg.sender)
+    log Claim(_coin, msg.sender, _amount)
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 

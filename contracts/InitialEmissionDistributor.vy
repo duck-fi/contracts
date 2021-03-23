@@ -63,12 +63,11 @@ def setBalances(_accounts: address[100], _amounts: uint256[100], _gasToken: addr
     assert msg.sender == self.owner, "owner only"
 
     _gasStart: uint256 = msg.gas
-    _startClaimingTimestamp: uint256 = self.startClaimingTimestamp
     assert self.startClaimingTimestamp == 0, "claiming already started"
 
     for i in range(0, 100):
         if _accounts[i] == ZERO_ADDRESS:
-            break            
+            break
         self.balances[_accounts[i]] = _amounts[i]
 
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)

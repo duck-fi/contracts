@@ -1,0 +1,9 @@
+baseURL = "https://dispersion-fi.github.io/contracts"
+languageCode = "en-us"
+title = ""
+theme = "book"
+
+[params]
+
+    BookLogo = 'img/logo.svg'
+    BookServiceWorker = true

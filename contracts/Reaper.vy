@@ -114,7 +114,6 @@ def _snapshot(_account: address):
 
     self.lastSnapshotTimestampFor[_account] = block.timestamp
     
-
     # if _emissionIntegral == 0:
         # return
 
@@ -218,7 +217,7 @@ def _snapshot(_account: address):
     # if dt == 0:
     #     self.debugg = 12
     #     return
-
+    
     _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
     # check boosting
     boost_emission: uint256 = 0
@@ -278,6 +277,7 @@ def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: 
 
 
 @external
+@nonreentrant('lock')
 def invest(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
     _amount: uint256 = ERC20(self.lpToken).balanceOf(self)
@@ -292,6 +292,7 @@ def invest(_gasToken: address = ZERO_ADDRESS):
 
 
 @external
+@nonreentrant('lock')
 def reap(_gasToken: address = ZERO_ADDRESS):
     _gasStart: uint256 = msg.gas
     _reaperStrategy: address = self.reaperStrategy
