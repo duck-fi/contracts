@@ -11,3 +11,9 @@ def yearEmission() -> uint256:
 @external
 def emissionIntegral() -> uint256: 
     return 0
+
+
+@view
+@external
+def startEmissionTimestamp() -> uint256: 
+    return 0
