@@ -3,7 +3,12 @@
 @title Dispersion Farm Token
 @author Dispersion Finance Team
 @license MIT
-@notice ERC20 token with linear mining supply, rate changes every year.
+@notice Burnable and Mintable ERC20 token with linear mining supply, rate changes every year. 
+    `INITIAL_SUPPLY`(premine for pool initialization -> 5_000 and early birds -> 400_000) = `405_000`. 
+    Emission for the first year will be between `500_000` and `1_000_000`. 
+    For second year will be between `250_000` and `500_000`, etc (lazy auto-updating). 
+    Maximum emission is possible by boosting mechanisms and 
+    does not entail redistribution of profits in the `Reaper`.
 @dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
      Emission is halved every year.
 """
