@@ -3,10 +3,11 @@
 @title Stakable ERC20 Token
 @author Dispersion Finance Team
 @license MIT
-@notice ERC20 stakable token
-@dev Based on the ERC-20 token standard as defined at
-     https://eips.ethereum.org/EIPS/eip-20.
-     USDN, WAVES for example.
+@notice Mintable and Stakable ERC20 token.
+    `balanceOf(account) = balances[account] * p(n) / p(i)`, `p(n) = p(n-1) * (1 + reward / totalSupply)`.
+    Reward is not stake for funds deposited recently.
+@dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
+     [USDN](https://etherscan.io/address/0x674C6Ad92Fd080e4004b2312b45f796a192D27a0) for example.
 """
 
 from vyper.interfaces import ERC20

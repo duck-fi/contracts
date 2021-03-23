@@ -63,7 +63,7 @@ futureOwner: public(address)
 minter: public(address)
 
 
-name: public(String[32])                                        # @notice ERC20 token name
+name: public(String[32])
 symbol: public(String[8])
 balanceOf: public(HashMap[address, uint256])
 totalSupply: public(uint256)
