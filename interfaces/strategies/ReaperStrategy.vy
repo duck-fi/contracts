@@ -13,8 +13,8 @@ def invest(_amount: uint256):
 
 
 @external
-def reap() -> uint256:
-    return 0
+def reap():
+    pass
 
 
 @view
