@@ -236,9 +236,9 @@ def totalSupply() -> uint256:
 @external
 def transferOwnership(_newOwner: address):
     """
-    @notice Transfers ownership by setting new owner `_futureOwner`
+    @notice Transfers ownership by setting new owner `_newOwner`
     @dev Callable by owner only
-    @param _futureOwner Owner address
+    @param _newOwner Owner address
     """
     assert self.owner == msg.sender, "owner only"
     assert _newOwner != ZERO_ADDRESS, "zero address"

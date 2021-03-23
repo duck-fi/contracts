@@ -343,10 +343,6 @@ def applyOwnership():
 
 @external
 def setVotingToken(_votingToken: address):
-    """
-    @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
-    """
     assert msg.sender == self.owner, "owner only"
     assert _votingToken != ZERO_ADDRESS, "zero address"
     assert self.votingToken == ZERO_ADDRESS, "set only once"
