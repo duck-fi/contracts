@@ -4,6 +4,7 @@ from brownie.test import given, strategy
 @given(amount=strategy('uint256', min_value=1, max_value=1_000))
 def test_vote_gas_reducing_not_valid_token(controller, reaper_mock, farm_token, exception_tester, deployer, amount, week):
     controller.addReaper(reaper_mock, {'from': deployer})
+    controller.startMinting({'from': deployer})
     exception_tester("unsupported gas token", controller.mintFor, reaper_mock, deployer, farm_token, {'from': deployer})
 
 

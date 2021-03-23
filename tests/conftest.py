@@ -9,6 +9,7 @@ pytest_plugins = [
     "fixtures.erc20",
     "fixtures.exception",
     "fixtures.time",
+    "fixtures.types",
 ]
 
 

@@ -13,7 +13,7 @@ interface Minter:
 interface LiquidityGauge:
     def deposit(_value: uint256): nonpayable
     def withdraw(_value: uint256): nonpayable
-    def claimable_tokens(addr: address) -> uint256: view
+    def claimable_tokens(addr: address) -> uint256: nonpayable
     def minter() -> address: view
 
 
@@ -35,6 +35,7 @@ event ApplyOwnership:
 
 
 DAY: constant(uint256) = 86_400
+WEEK: constant(uint256) = 7 * DAY
 MONTH: constant(uint256) = 30 * DAY
 YEAR: constant(uint256) = 365 * DAY
 
@@ -64,7 +65,7 @@ def __init__(_stakeContract: address, _stakeToken: address, _rewardToken: addres
     self.rewardToken = _rewardToken
     self.stakeContract = _stakeContract
     self.votingEscrowContract = _votingEscrowContract
-    self.lockingPeriod = YEAR
+    self.lockingPeriod = YEAR 
 
     self.owner = msg.sender
 
@@ -79,7 +80,7 @@ def setLockingPeriod(_lockingPeriod: uint256):
 @external
 def setReaperStrategy(_reaperStrategy: address):
     assert msg.sender == self.owner, "owner only"
-    assert _reaperStrategy != ZERO_ADDRESS
+    assert _reaperStrategy != ZERO_ADDRESS, "zero address"
     self.reaperStrategy = _reaperStrategy
 
 
@@ -87,6 +88,7 @@ def setReaperStrategy(_reaperStrategy: address):
 @nonreentrant('lock')
 def stake(_amount: uint256):
     assert msg.sender == self.reaperStrategy , "reaperStrategy only"
+    assert ERC20(self.stakeToken).transferFrom(msg.sender, self, _amount)
     LiquidityGauge(self.stakeContract).deposit(_amount)
 
 
@@ -96,7 +98,7 @@ def unstake(_amount: uint256, _recipient: address = msg.sender):
     _reaperStrategy: address = self.reaperStrategy
     assert msg.sender == _reaperStrategy, "reaperStrategy only"
     LiquidityGauge(self.stakeContract).withdraw(_amount)
-    ERC20(self.stakeToken).transfer(_recipient, _amount)
+    assert ERC20(self.stakeToken).transfer(_recipient, _amount)
 
 
 @external
@@ -120,8 +122,8 @@ def _depositToEscrow(_crvValue: uint256):
         if self.lockUntilTimestamp > 0:
             # finish escrow to start a new one
             VotingEscrow(self.votingEscrowContract).withdraw()
-        # start new escrow
-        _lockUntilTimestamp: uint256 = block.timestamp + self.lockingPeriod
+        # start new escrow (round to weeks)
+        _lockUntilTimestamp: uint256 = (block.timestamp + self.lockingPeriod) * WEEK / WEEK
         self.lockUntilTimestamp = _lockUntilTimestamp
         VotingEscrow(self.votingEscrowContract).create_lock(_crvValue, _lockUntilTimestamp)
     else:
