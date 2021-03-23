@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Tokens on</title><link>https://dispersion-fi.github.io/contracts/docs/tokens/</link><description>Recent content in Tokens on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://dispersion-fi.github.io/contracts/docs/tokens/index.xml" rel="self" type="application/rss+xml"/><item><title/><link>https://dispersion-fi.github.io/contracts/docs/tokens/farm-token/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/tokens/farm-token/</guid><description>tokens/FarmToken.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
 Dispersion Farm Token
 Based on the ERC-20 token standard. Emission is halved every year.
-ERC20 token with linear mining supply, rate changes every year
+ERC20 token with linear mining supply, rate changes every year.
 Events # Transfer
 sender : address, indexed receiver : address, indexed value : uint256, notIndexed Approval
 owner : address, indexed spender : address, indexed value : uint256, notIndexed CommitOwnership</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/tokens/stakable-erc20/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/tokens/stakable-erc20/</guid><description>tokens/StakableERC20.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
