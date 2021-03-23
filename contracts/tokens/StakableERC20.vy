@@ -1,4 +1,13 @@
 # @version ^0.2.0
+"""
+@title Stakable ERC20 Token
+@author Dispersion Finance Team
+@license MIT
+@notice ERC20 stakable token
+@dev Based on the ERC-20 token standard as defined at
+     https://eips.ethereum.org/EIPS/eip-20.
+     USDN, WAVES for example.
+"""
 
 from vyper.interfaces import ERC20
 import interfaces.tokens.Stakable as Stakable

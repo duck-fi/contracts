@@ -1,4 +1,14 @@
 # @version ^0.2.0
+"""
+@title Strict Transferable Token
+@author Dispersion Finance Team
+@license MIT
+@notice ERC20 token 
+@dev Based on the ERC-20 token that cannot be freely transferred
+     https://eips.ethereum.org/EIPS/eip-20.
+     Transferable for white list only.
+"""
+
 
 from vyper.interfaces import ERC20
 import interfaces.tokens.ERC20Detailed as ERC20Detailed
