@@ -4,8 +4,7 @@
 @author Dispersion Finance Team
 @license MIT
 @notice ERC20 token with linear mining supply, rate changes every year
-@dev Based on the ERC-20 token standard as defined at
-     https://eips.ethereum.org/EIPS/eip-20.
+@dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
      Emission is halved every year.
 """
 
