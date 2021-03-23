@@ -3,7 +3,7 @@
 @title Dispersion Farm Token
 @author Dispersion Finance Team
 @license MIT
-@notice ERC20 token with linear mining supply, rate changes every year
+@notice ERC20 token with linear mining supply, rate changes every year.
 @dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
      Emission is halved every year.
 """
@@ -99,10 +99,10 @@ def decimals() -> uint256:
 @external
 def setName(_name: String[32], _symbol: String[8]):
     """
-    @notice Changes token name and symbol
+    @notice Changes token name and symbol to `_name` and `_symbol`
     @dev Callable by owner only
-    @param _name Token full name
-    @param _symbol Token symbol
+    @param _name New token name
+    @param _symbol New token symbol
     """
     assert msg.sender == self.owner, "owner only"
     self.name = _name
@@ -113,10 +113,11 @@ def setName(_name: String[32], _symbol: String[8]):
 def setMinter(_minter: address):
     """
     @notice Sets minter contract address
-    @dev Callable by owner only
+    @dev Only callable once by owner, when minter has not yet been set. ZERO_ADDRESS validation.
     @param _minter Minter contract which allowed to mint for new tokens
     """
     assert msg.sender == self.owner, "owner only"
+    assert self.minter == ZERO_ADDRESS, "can set the minter only once, at creation"
     assert _minter != ZERO_ADDRESS, "zero address"
     self.minter = _minter
 
@@ -125,7 +126,6 @@ def setMinter(_minter: address):
 def _updateYearEmission() -> uint256:
     """
     @notice Updates emission per year value
-    @dev Internal function
     """
     _lastEmissionUpdateTimestamp: uint256 = self.lastEmissionUpdateTimestamp
     if _lastEmissionUpdateTimestamp == 0:
@@ -148,7 +148,6 @@ def _updateYearEmission() -> uint256:
 def _currentEmissionIntegral() -> uint256:
     """
     @notice Updates current emission integral (max total supply at block.timestamp)
-    @dev Internal function
     """
     currentYearMaxEmission: uint256 = self._updateYearEmission() 
     return self._emissionIntegral + currentYearMaxEmission * (block.timestamp - self.lastEmissionUpdateTimestamp) / YEAR
@@ -158,7 +157,7 @@ def _currentEmissionIntegral() -> uint256:
 def mint(_account: address, _amount: uint256):
     """
     @notice Mints new tokens for account `_account` with amount `_amount`
-    @dev Callable by minter only
+    @dev Callable by minter only. Emits a Transfer event originating from 0x00
     @param _account Account to mint tokens for
     @param _amount Amount to mint
     """
