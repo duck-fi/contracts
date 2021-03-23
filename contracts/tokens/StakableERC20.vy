@@ -61,6 +61,12 @@ _liquidTotalSupply: uint256                                     # totalSupply - 
 
 @external
 def __init__(_name: String[32], _symbol: String[8], _decimals: uint256):
+    """
+    @notice Contract constructor.
+    @param _name Token full name
+    @param _symbol Token symbol
+    @param _decimals Token decimals
+    """
     self.name = _name
     self.symbol = _symbol
     self.decimals = _decimals
@@ -92,7 +98,13 @@ def _balanceOf(_account: address) -> uint256:
 
 @view
 @external
-def balanceOf(_account: address = msg.sender) -> uint256: 
+def balanceOf(_account: address = msg.sender) -> uint256:
+    """
+    @notice Balance of ERC20 token for `_account`.
+    @dev For ERC20 compatibility.
+    @param _account Address of account for balance query
+    @return Balance of ERC20 token
+    """
     return self._balanceOf(_account)
 
 
@@ -185,6 +197,16 @@ def _approve(_owner: address, _spender: address, _amount: uint256):
 
 @external
 def approve(_spender: address, _amount: uint256) -> bool:
+    """
+    @notice Approves allowance from `msg.sender` to `_spender` address for `_amount` of tokens
+    @dev ERC20 function. Emits a `Approval` event with `msg.sender`, `_spender`, `_amount`.
+        Approval may only be from zero -> nonzero or from nonzero -> zero in order
+        to mitigate the potential race condition described here:
+        https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+    @param _spender Allowed account to send tokens from `msg.sender`
+    @param _amount Allowed amount to send tokens from `msg.sender`
+    @return Boolean success value
+    """
     self._approve(msg.sender, _spender, _amount)
     return True
 
@@ -225,12 +247,30 @@ def _transfer(_sender: address, _recipient: address, _amount: uint256):
 
 @external
 def transfer(_recipient: address, _amount:uint256) -> bool:
+    """
+    @notice Transfers `_amount` of tokens from `msg.sender` to `_recipient` address
+    @dev ERC20 function. Emits a `Transfer` event with `msg.sender`, `_recipient`, `_amount`. 
+        `_recipient` can't be equal `ZERO_ADDRESS`
+    @param _recipient Account to send tokens to
+    @param _amount Amount to send
+    @return Boolean success value
+    """
     self._transfer(msg.sender, _recipient, _amount)
     return True
 
 
 @external
 def transferFrom(_sender: address, _recipient: address, _amount: uint256) -> bool:
+    """
+    @notice Transfers `_amount` of tokens from `_sender` to `_recipient` address
+    @dev ERC20 function. Allowance from `_sender` to `msg.sender` is needed. 
+        Emits a `Transfer` event with `_sender`, `_recipient`, `_amount`. 
+        `_sender` and `_recipient` can't be equal `ZERO_ADDRESS`
+    @param _sender Account to send tokens from
+    @param _recipient Account to send tokens to
+    @param _amount Amount to send
+    @return Boolean success value
+    """
     assert _sender != ZERO_ADDRESS, "sender is zero address"
     self._transfer(_sender, _recipient, _amount)
     self._approve(_sender, msg.sender, self.allowance[_sender][msg.sender] - _amount)
