@@ -4,7 +4,7 @@
 @author Dispersion Finance Team
 @license MIT
 @notice Burnable and Mintable ERC20 token with linear mining supply, rate changes every year. 
-    `INITIAL_SUPPLY`(premine for pool initialization -> 5_000 and early birds -> 400_000) = `405_000`. 
+    `INITIAL_SUPPLY`(premine for pool initialization -> `5_000` and early birds -> `400_000`) = `405_000`. 
     Emission for the first year will be between `500_000` and `1_000_000`. 
     For second year will be between `250_000` and `500_000`, etc (lazy auto-updating). 
     Maximum emission is possible by boosting mechanisms and 
