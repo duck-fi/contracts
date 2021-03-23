@@ -13,6 +13,7 @@
      Emission is halved every year.
 """
 
+
 from vyper.interfaces import ERC20
 import interfaces.tokens.ERC20Detailed as ERC20Detailed
 import interfaces.tokens.ERC20Burnable as ERC20Burnable
@@ -61,8 +62,8 @@ owner: public(address)
 futureOwner: public(address)
 minter: public(address)
 
-# ERC20
-name: public(String[32])
+
+name: public(String[32])                                        # ERC20 token name
 symbol: public(String[8])
 balanceOf: public(HashMap[address, uint256])
 totalSupply: public(uint256)
