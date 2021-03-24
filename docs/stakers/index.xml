@@ -4,6 +4,6 @@ Events # CommitOwnership
 owner : address, notIndexed ApplyOwnership
 owner : address, notIndexed Methods # transferOwnership # type: nonpayable function gas: 37831
 Transfers ownership by setting new owner _futureOwner candidate
-Callable by owner only
+Callable by owner only. Emit CommitOwnership event with _futureOwner
 Arguments:
 _futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38687</description></item></channel></rss>
