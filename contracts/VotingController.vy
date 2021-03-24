@@ -104,8 +104,11 @@ def _snapshot():
     @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
     @dev Only possible to call it once per voting period
     """
-    assert self.lastSnapshotTimestamp > 0, "not started"
+    # assert self.lastSnapshotTimestamp > 0, "not started" TODO: need asserts here?
     assert block.timestamp > self.nextSnapshotTimestamp, "already snapshotted"
+
+    if self.lastSnapshotTimestamp == 0:
+        return
 
     _controller: address = self.controller
     _lastReaperIndex: uint256 = Controller(_controller).lastReaperIndex()
@@ -117,14 +120,7 @@ def _snapshot():
     _votingTokenBalance: uint256 = self.coinBalances[_votingToken]
     if _farmTokenBalance + _votingTokenBalance == 0:
         return
-
-    _currentSnapshotTimestamp: uint256 = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / VOTING_PERIOD * VOTING_PERIOD
-    _lastSnapshotIndex: uint256 = self.lastSnapshotIndex
-    _dt: uint256 = _currentSnapshotTimestamp - _lastSnapshotTimestamp
-    self.lastSnapshotTimestamp = _currentSnapshotTimestamp
-    self.lastSnapshotIndex = _lastSnapshotIndex + 1
-    self.nextSnapshotTimestamp = _currentSnapshotTimestamp + VOTING_PERIOD
-
+    
     _totalVotePower: uint256 = 0
     _votingTokenRate: uint256 = 0
     _votingTokenRate = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
@@ -133,8 +129,12 @@ def _snapshot():
     if _totalVotePower == 0:
         return
 
-    if _totalVotePower == 0:
-        return
+    _currentSnapshotTimestamp: uint256 = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / VOTING_PERIOD * VOTING_PERIOD
+    _lastSnapshotIndex: uint256 = self.lastSnapshotIndex
+    _dt: uint256 = _currentSnapshotTimestamp - _lastSnapshotTimestamp
+    self.lastSnapshotTimestamp = _currentSnapshotTimestamp
+    self.lastSnapshotIndex = _lastSnapshotIndex + 1
+    self.nextSnapshotTimestamp = _currentSnapshotTimestamp + VOTING_PERIOD
 
     for i in range(1, MULTIPLIER):
         if i > _lastReaperIndex:
@@ -229,7 +229,6 @@ def voteIntegral(_reaper: address) -> uint256:
 
     if block.timestamp > self.nextSnapshotTimestamp and self.lastSnapshotTimestamp > 0:
         self._snapshot()
-        pass
 
     return self.reaperIntegratedVotes[_reaper] + self.lastVotes[_reaper] * (block.timestamp - self.lastSnapshotTimestamp)
 
