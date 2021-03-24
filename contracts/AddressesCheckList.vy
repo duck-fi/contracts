@@ -45,7 +45,7 @@ def set(_key: address, _value: bool):
 def transferOwnership(_futureOwner: address):
     """
     @notice Transfers ownership by setting new owner `_futureOwner` candidate
-    @dev Callable by owner only
+    @dev Callable by `owner` only. Emit CommitOwnership event with `_futureOwner`
     @param _futureOwner Future owner address
     """
     assert msg.sender == self.owner, "owner only"
@@ -57,7 +57,8 @@ def transferOwnership(_futureOwner: address):
 def applyOwnership():
     """
     @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
+    @dev Callable by `owner` only. Function call actually changes `owner`. 
+        Emits ApplyOwnership event with `_owner`
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner

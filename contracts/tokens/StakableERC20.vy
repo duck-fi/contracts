@@ -63,6 +63,7 @@ _liquidTotalSupply: uint256                                     # totalSupply - 
 def __init__(_name: String[32], _symbol: String[8], _decimals: uint256):
     """
     @notice Contract constructor.
+    @dev `owner` = `msg.sender`
     @param _name Token full name
     @param _symbol Token symbol
     @param _decimals Token decimals

@@ -385,7 +385,8 @@ def transferOwnership(_futureOwner: address):
 def applyOwnership():
     """
     @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
+    @dev Callable by `owner` only. Function call actually changes `owner`. 
+        Emits ApplyOwnership event with `_owner`
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner

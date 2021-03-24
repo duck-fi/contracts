@@ -20,6 +20,9 @@ implements: Ownable
 implements: Controller
 
 
+event StartMinting:
+    owner: address
+
 event CommitOwnership:
     owner: address
 
@@ -49,6 +52,9 @@ futureOwner: public(address)
 def __init__(_farmToken: address, _gasTokenCheckList: address):
     """
     @notice Contract constructor
+    @dev `_gasTokenCheckList`, `_farmToken` can't be equal `ZERO_ADDRESS`. `owner` = `admin` = `msg.sender`
+    @param _farmToken Address of FarmToken contract (DSP)
+    @param _gasTokenCheckList Address of AddressesCheckList contract with gas tokens allowed
     """
     assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
@@ -61,6 +67,9 @@ def __init__(_farmToken: address, _gasTokenCheckList: address):
 
 @internal
 def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    """
+    @notice Reduce gas function
+    """
     if _gasToken == ZERO_ADDRESS:
         return
 
@@ -99,11 +108,23 @@ def mintableTokens(_reaper: address, _account: address) -> uint256:
 
 @external
 def mintApprove(_reaper: address, _minter: address, _canMint: bool):
+    """
+    @notice Approves allowance from `msg.sender` to `_spender` address for `_amount` of tokens
+    @dev ERC20 function. Emits a `Approval` event with `msg.sender`, `_spender`, `_amount`.
+    @param _reaper Allowed account to send tokens from `msg.sender`
+    @param _minter Allowed account to send tokens from `msg.sender`
+    @param _canMint Allowed amount to send tokens from `msg.sender`
+    """
     self.mintAllowance[_reaper][msg.sender][_minter] = _canMint
 
 
 @external
 def addReaper(_reaper: address):
+    """
+    @notice Add `Reaper` from `Controller`.
+    @dev Callable by owner only. `_reaper` can't be equal `ZERO_ADDRESS` and duplicated.
+    @param _reaper Address of Reaper contract for adding
+    """
     assert msg.sender == self.owner, "owner only"
     assert _reaper != ZERO_ADDRESS
     reaperIndex: uint256 = self.indexByReaper[_reaper]
@@ -117,6 +138,11 @@ def addReaper(_reaper: address):
 
 @external
 def removeReaper(_reaper: address):
+    """
+    @notice Remove `Reaper` from `Controller`.
+    @dev Callable by owner only. `_reaper` should be added before.
+    @param _reaper Address of Reaper contract for removing
+    """
     assert msg.sender == self.owner, "owner only"
     reaperIndex: uint256 = self.indexByReaper[_reaper]
     assert reaperIndex > 0, "reaper is not exist"
@@ -133,6 +159,12 @@ def removeReaper(_reaper: address):
 @external
 @nonreentrant('lock')
 def claimAdminFee(_reaper: address, _gasToken: address = ZERO_ADDRESS):
+    """
+    @notice Claim `admin` fee.
+    @dev Callable by `admin` only. `_reaper` should be added before.
+    @param _reaper Address of `Reaper` contract for claiming admin fee
+    @param _gasToken Gas token address (optional)
+    """
     assert msg.sender == self.admin, "admin only"
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
 
@@ -150,6 +182,11 @@ def claimAdminFee(_reaper: address, _gasToken: address = ZERO_ADDRESS):
 
 @external
 def setAdmin(_admin: address):
+    """
+    @notice Set address of `admin`.
+    @dev Callable by `owner` only. `_admin` can't be equal `ZERO_ADDRESS`.
+    @param _admin Address of new `admin`
+    """
     assert msg.sender == self.owner, "owner only"
     assert _admin != ZERO_ADDRESS, "zero address"
     self.admin = _admin
@@ -157,15 +194,20 @@ def setAdmin(_admin: address):
 
 @external
 def startMinting():
+    """
+    @notice Allow to claim tokens rewards.
+    @dev Callable by `owner` only. Emits StartMinting event.
+    """
     assert msg.sender == self.owner, "owner only"
     self.startMintFor = True
+    log StartMinting(msg.sender)
 
 
 @external
 def transferOwnership(_futureOwner: address):
     """
     @notice Transfers ownership by setting new owner `_futureOwner` candidate
-    @dev Callable by owner only
+    @dev Callable by `owner` only. Emit CommitOwnership event with `_futureOwner`
     @param _futureOwner Future owner address
     """
     assert msg.sender == self.owner, "owner only"
@@ -177,7 +219,8 @@ def transferOwnership(_futureOwner: address):
 def applyOwnership():
     """
     @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
+    @dev Callable by `owner` only. Function call actually changes `owner`. 
+        Emits ApplyOwnership event with `_owner`
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner
