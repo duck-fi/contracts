@@ -110,6 +110,16 @@ def balanceOf(_account: address = msg.sender) -> uint256:
 
 @external
 def deposit(_account: address, _amount: uint256) -> bool:
+    """
+    @notice Deposit tokens from other stakable network. Mint `_amount` tokens for `_account`.
+    @dev Emits a `Transfer` event from `ZERO_ADDRESS` to `_account` with `_amount`. 
+        `_account` can't be equal `ZERO_ADDRESS` and `_amount` must be greater `0`.
+        Deposit is forbid if the contract is deprecated. Callable by `owner` only.
+        Reward is not stake for funds deposited recently (after last `stake` call).
+    @param _account Account to mint tokens for
+    @param _amount Amount to mint
+    @return Boolean success value
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
     assert _amount > 0, "amount is 0"
@@ -138,6 +148,14 @@ def deposit(_account: address, _amount: uint256) -> bool:
 
 @external
 def stake(_reward: uint256) -> bool:
+    """
+    @notice Stake reward. Mint `_reward` tokens for all holders immediently (low cost).
+    @dev Emits a `Reward` event. `_reward` must be greater `0`.
+        Deposit is forbid if the contract is deprecated. Callable by `owner` only.
+        Reward is not stake for funds deposited recently (after last `stake` call) and first call.
+    @param _reward Amount to mint reward
+    @return Boolean success value
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
     assert _reward > 0, "reward is 0"
@@ -164,6 +182,13 @@ def stake(_reward: uint256) -> bool:
 
 @external
 def withdraw(_account: address) -> bool:
+    """
+    @notice Withdraw tokens back to other stakable network. Burn all token balance for `_account`.
+    @dev Emits a `Transfer` event from `_account` to `ZERO_ADDRESS` for all token balance. 
+        Deposit is forbid if the contract is deprecated. Callable by `owner` only.
+    @param _account Account for burn all tokens
+    @return Boolean success value
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
 
@@ -277,15 +302,20 @@ def transferFrom(_sender: address, _recipient: address, _amount: uint256) -> boo
 @view
 @external
 def totalSupply() -> uint256:
+    """
+    @notice Total supply of tokens.
+    @dev ERC20 function.
+    @return Uint256 Total supply
+    """
     return self._liquidTotalSupply + self._liquidDeposit
 
 
 @external
 def transferOwnership(_newOwner: address):
     """
-    @notice Transfers ownership by setting new owner `_newOwner`
-    @dev Callable by owner only
-    @param _newOwner Owner address
+    @notice Transfers ownership by setting new owner `_newOwner`.
+    @dev Callable by owner only. `_newOwner` can't be equal `ZERO_ADDRESS`.
+    @param _newOwner New `owner` address
     """
     assert self.owner == msg.sender, "owner only"
     assert _newOwner != ZERO_ADDRESS, "zero address"
@@ -295,6 +325,11 @@ def transferOwnership(_newOwner: address):
 
 @external
 def setAdmin(_newAdmin: address):
+    """
+    @notice Transfers ownership by setting new admin `_newAdmin`.
+    @dev Callable by owner only. `_newOwner` can't be equal `ZERO_ADDRESS`.
+    @param _newAdmin New `admin` address
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert _newAdmin != ZERO_ADDRESS, "zero address"
     self.admin = _newAdmin
@@ -303,6 +338,10 @@ def setAdmin(_newAdmin: address):
 
 @external
 def deprecate():
+    """
+    @notice Deprecate contract.
+    @dev Callable by owner only.
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
     self.isDeprecated = True
     log Deprecate(msg.sender)
