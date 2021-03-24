@@ -8,8 +8,8 @@ Mintable and Stakable ERC20 token. balanceOf(account) = balances[account] * p(n)
 Events # Transfer
 sender : address, indexed receiver : address, indexed value : uint256, notIndexed Approval</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/tokens/strict-transfable-token/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/tokens/strict-transfable-token/</guid><description>tokens/StrictTransfableToken.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
 Strict Transferable Token
-Based on the ERC-20 token that cannot be freely transferred https://eips.ethereum.org/EIPS/eip-20. Transferable for white list only.
-ERC20 token
+Based on the ERC-20 token that cannot be freely transferred. Transfer awailable for _transfableAccount only. decimals() = 18.
+Burnable and Mintable ERC20 token.
 Events # Transfer
 sender : address, indexed receiver : address, indexed value : uint256, notIndexed Approval
 owner : address, indexed spender : address, indexed value : uint256, notIndexed CommitOwnership</description></item></channel></rss>
