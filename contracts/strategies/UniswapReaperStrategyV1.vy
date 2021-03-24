@@ -84,6 +84,11 @@ def availableToWithdraw(_amount: uint256, _account: address) -> uint256:
 
 @external
 def transferOwnership(_futureOwner: address):
+    """
+    @notice Transfers ownership by setting new owner `_futureOwner` candidate
+    @dev Callable by owner only
+    @param _futureOwner Future owner address
+    """
     assert msg.sender == self.owner, "owner only"
     self.futureOwner = _futureOwner
     log CommitOwnership(_futureOwner)
@@ -91,6 +96,10 @@ def transferOwnership(_futureOwner: address):
 
 @external
 def applyOwnership():
+    """
+    @notice Applies transfer ownership
+    @dev Callable by owner only. Function call actually changes owner
+    """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner
     assert _owner != ZERO_ADDRESS, "owner not set"

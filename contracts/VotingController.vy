@@ -319,9 +319,9 @@ def startVoting(_votingDelay: uint256 = 0):
 @external
 def transferOwnership(_futureOwner: address):
     """
-    @notice Sets new future owner address
+    @notice Transfers ownership by setting new owner `_futureOwner` candidate
     @dev Callable by owner only
-    @param _futureOwner New future owner address
+    @param _futureOwner Future owner address
     """
     assert msg.sender == self.owner, "owner only"
     self.futureOwner = _futureOwner

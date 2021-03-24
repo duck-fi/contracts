@@ -36,9 +36,10 @@ def test_mint_not_minter(farm_token, thomas, exception_tester):
                      thomas, 1, {'from': thomas})
 
 
-def test_success_update_minter_by_owner(farm_token, deployer, morpheus):
-    farm_token.setMinter(morpheus, {'from': deployer})
+def test_not_updatable_minter(exception_tester, farm_token, deployer, morpheus):
     farm_token.setMinter(deployer, {'from': deployer})
+    exception_tester("can set the minter only once, at creation", farm_token.setMinter,
+                     morpheus, {'from': deployer})
 
 
 def test_transferFrom_without_approval_by_minter(farm_token, deployer, morpheus):

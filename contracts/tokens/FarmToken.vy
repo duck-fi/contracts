@@ -3,11 +3,16 @@
 @title Dispersion Farm Token
 @author Dispersion Finance Team
 @license MIT
-@notice ERC20 token with linear mining supply, rate changes every year
-@dev Based on the ERC-20 token standard as defined at
-     https://eips.ethereum.org/EIPS/eip-20.
+@notice Burnable and Mintable ERC20 token with linear mining supply, rate changes every year. 
+    `INITIAL_SUPPLY`(premine for pool initialization -> `5_000` and early birds -> `400_000`) = `405_000`. 
+    Emission for the first year will be between `500_000` and `1_000_000`. 
+    For second year will be between `250_000` and `500_000`, etc (lazy auto-updating). 
+    Maximum emission is possible by boosting mechanisms and 
+    does not entail redistribution of profits in the `Reaper`. `decimals()` = `18`.
+@dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
      Emission is halved every year.
 """
+
 
 from vyper.interfaces import ERC20
 import interfaces.tokens.ERC20Detailed as ERC20Detailed
@@ -57,7 +62,7 @@ owner: public(address)
 futureOwner: public(address)
 minter: public(address)
 
-# ERC20
+
 name: public(String[32])
 symbol: public(String[8])
 balanceOf: public(HashMap[address, uint256])
@@ -73,8 +78,9 @@ _emissionIntegral: uint256
 @external
 def __init__(_name: String[32], _symbol: String[8]):
     """
-    @notice Contract constructor
-    @dev Premine emission is returnted to deployer
+    @notice Contract constructor.
+    @dev Premine emission is returnted to deployer. 
+        Emits a `Transfer` event originating from `ZERO_ADDRESS` to `deployer` with amount=`INITIAL_SUPPLY` 
     @param _name Token full name
     @param _symbol Token symbol
     """
@@ -90,8 +96,8 @@ def __init__(_name: String[32], _symbol: String[8]):
 @external
 def decimals() -> uint256:
     """
-    @notice Returns token decimals value
-    @dev For ERC20 compatibility
+    @notice Returns token decimals value.
+    @dev For ERC20 compatibility.
     @return Token decimals
     """
     return DECIMALS
@@ -100,10 +106,10 @@ def decimals() -> uint256:
 @external
 def setName(_name: String[32], _symbol: String[8]):
     """
-    @notice Changes token name and symbol
-    @dev Callable by owner only
-    @param _name Token full name
-    @param _symbol Token symbol
+    @notice Changes token name and symbol to `_name` and `_symbol`.
+    @dev Callable by `owner` only.
+    @param _name New token name
+    @param _symbol New token symbol
     """
     assert msg.sender == self.owner, "owner only"
     self.name = _name
@@ -113,11 +119,13 @@ def setName(_name: String[32], _symbol: String[8]):
 @external
 def setMinter(_minter: address):
     """
-    @notice Sets minter contract address
-    @dev Callable by owner only
+    @notice Sets minter contract address.
+    @dev Only callable once by `owner`, when `minter` has not yet been set. 
+        `_minter` can't be equal `ZERO_ADDRESS`.
     @param _minter Minter contract which allowed to mint for new tokens
     """
     assert msg.sender == self.owner, "owner only"
+    assert self.minter == ZERO_ADDRESS, "can set the minter only once, at creation"
     assert _minter != ZERO_ADDRESS, "zero address"
     self.minter = _minter
 
@@ -126,7 +134,6 @@ def setMinter(_minter: address):
 def _updateYearEmission() -> uint256:
     """
     @notice Updates emission per year value
-    @dev Internal function
     """
     _lastEmissionUpdateTimestamp: uint256 = self.lastEmissionUpdateTimestamp
     if _lastEmissionUpdateTimestamp == 0:
@@ -149,7 +156,6 @@ def _updateYearEmission() -> uint256:
 def _currentEmissionIntegral() -> uint256:
     """
     @notice Updates current emission integral (max total supply at block.timestamp)
-    @dev Internal function
     """
     currentYearMaxEmission: uint256 = self._updateYearEmission() 
     return self._emissionIntegral + currentYearMaxEmission * (block.timestamp - self.lastEmissionUpdateTimestamp) / YEAR
@@ -158,8 +164,9 @@ def _currentEmissionIntegral() -> uint256:
 @external
 def mint(_account: address, _amount: uint256):
     """
-    @notice Mints new tokens for account `_account` with amount `_amount`
-    @dev Callable by minter only
+    @notice Mints new tokens for account `_account` with amount `_amount`.
+    @dev Callable by `minter` only. Emits a `Transfer` event originating from `ZERO_ADDRESS`. 
+        `_account` can't be equal `ZERO_ADDRESS`.
     @param _account Account to mint tokens for
     @param _amount Amount to mint
     """
@@ -176,8 +183,9 @@ def mint(_account: address, _amount: uint256):
 @external
 def startEmission():
     """
-    @notice Starts token emission
-    @dev Callable by owner only
+    @notice Starts token emission.
+    @dev Only callable once by `owner`, when `lastEmissionUpdateTimestamp` has not yet been set. 
+        Emits a `YearEmissionUpdate` event with `INITIAL_YEAR_EMISSION`
     """
     assert msg.sender == self.owner, "owner only"
     assert self.lastEmissionUpdateTimestamp == 0, "emission already started"
@@ -190,7 +198,9 @@ def startEmission():
 @external
 def yearEmission() -> uint256:
     """
-    @notice Updates emission per year value
+    @notice Lazy update emission per year value.
+    @dev Emits a `YearEmissionUpdate` when `_yearEmission` has been changed.
+    @return Emission per year value
     """
     return self._updateYearEmission()
 
@@ -198,7 +208,9 @@ def yearEmission() -> uint256:
 @external
 def emissionIntegral() -> uint256:
     """
-    @notice Updates current emission integral (max total supply at block.timestamp)
+    @notice Lazy update current emission integral (max total supply at block.timestamp)
+    @dev Emits a `YearEmissionUpdate` when `_yearEmission` has been changed.
+    @return Emission integral value
     """
     return self._currentEmissionIntegral()
 
@@ -207,7 +219,8 @@ def emissionIntegral() -> uint256:
 def transfer(_recipient : address, _amount : uint256) -> bool:
     """
     @notice Transfers `_amount` of tokens from `msg.sender` to `_recipient` address
-    @dev ERC20 function
+    @dev ERC20 function. Emits a `Transfer` event with `msg.sender`, `_recipient`, `_amount`. 
+        `_recipient` can't be equal `ZERO_ADDRESS`
     @param _recipient Account to send tokens to
     @param _amount Amount to send
     @return Boolean success value
@@ -223,7 +236,9 @@ def transfer(_recipient : address, _amount : uint256) -> bool:
 def transferFrom(_sender : address, _recipient : address, _amount : uint256) -> bool:
     """
     @notice Transfers `_amount` of tokens from `_sender` to `_recipient` address
-    @dev ERC20 function. Allowance from `_sender` to `msg.sender` is needed
+    @dev ERC20 function. Allowance from `_sender` to `msg.sender` is needed. 
+        Emits a `Transfer` event with `_sender`, `_recipient`, `_amount`. 
+        `_sender` and `_recipient` can't be equal `ZERO_ADDRESS`
     @param _sender Account to send tokens from
     @param _recipient Account to send tokens to
     @param _amount Amount to send
@@ -247,7 +262,10 @@ def transferFrom(_sender : address, _recipient : address, _amount : uint256) -> 
 def approve(_spender : address, _amount : uint256) -> bool:
     """
     @notice Approves allowance from `msg.sender` to `_spender` address for `_amount` of tokens
-    @dev ERC20 function
+    @dev ERC20 function. Emits a `Approval` event with `msg.sender`, `_spender`, `_amount`.
+        Approval may only be from zero -> nonzero or from nonzero -> zero in order
+        to mitigate the potential race condition described here:
+        https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
     @param _spender Allowed account to send tokens from `msg.sender`
     @param _amount Allowed amount to send tokens from `msg.sender`
     @return Boolean success value
@@ -259,14 +277,16 @@ def approve(_spender : address, _amount : uint256) -> bool:
 
 
 @external
-def burn(_amount: uint256):
+def burn(_amount: uint256) -> bool:
     """
-    @notice Burns `_amount` of tokens from `msg.sender`
+    @notice Burn `_value` tokens belonging to `msg.sender`
+    @dev Emits a `Transfer` event with a destination of `ZERO_ADDRESS`
     @param _amount Amount to burn
     """
     self.totalSupply -= _amount
     self.balanceOf[msg.sender] -= _amount
     log Transfer(msg.sender, ZERO_ADDRESS, _amount)
+    return True
 
 
 @external
