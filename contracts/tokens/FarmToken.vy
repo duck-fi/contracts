@@ -8,7 +8,7 @@
     Emission for the first year will be between `500_000` and `1_000_000`. 
     For second year will be between `250_000` and `500_000`, etc (lazy auto-updating). 
     Maximum emission is possible by boosting mechanisms and 
-    does not entail redistribution of profits in the `Reaper`.
+    does not entail redistribution of profits in the `Reaper`. `decimals()` = `18`.
 @dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
      Emission is halved every year.
 """
