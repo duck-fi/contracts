@@ -1,4 +1,9 @@
-# @version ^0.2.0
+# @version ^0.2.11
+"""
+@title ERC20
+@author Dispersion Finance Team
+@license MIT
+"""
 
 
 from vyper.interfaces import ERC20

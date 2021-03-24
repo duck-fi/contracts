@@ -1,4 +1,4 @@
-# @version ^0.2.0
+# @version ^0.2.11
 """
 @title Stakable ERC20 Token
 @author Dispersion Finance Team

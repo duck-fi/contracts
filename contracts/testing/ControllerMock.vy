@@ -1,4 +1,10 @@
-# @version ^0.2.0
+# @version ^0.2.11
+"""
+@title Controller Mock
+@author Dispersion Finance Team
+@license MIT
+"""
+
 
 import interfaces.Controller as Controller
 

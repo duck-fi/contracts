@@ -1,4 +1,10 @@
-# @version ^0.2.0
+# @version ^0.2.11
+"""
+@title Addresses Check List
+@author Dispersion Finance Team
+@license MIT
+"""
+
 
 import interfaces.Ownable as Ownable
 import interfaces.AddressesCheckList as AddressesCheckList
