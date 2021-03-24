@@ -108,13 +108,6 @@ def mintableTokens(_reaper: address, _account: address) -> uint256:
 
 @external
 def mintApprove(_reaper: address, _minter: address, _canMint: bool):
-    """
-    @notice Approves allowance from `msg.sender` to `_spender` address for `_amount` of tokens
-    @dev ERC20 function. Emits a `Approval` event with `msg.sender`, `_spender`, `_amount`.
-    @param _reaper Allowed account to send tokens from `msg.sender`
-    @param _minter Allowed account to send tokens from `msg.sender`
-    @param _canMint Allowed amount to send tokens from `msg.sender`
-    """
     self.mintAllowance[_reaper][msg.sender][_minter] = _canMint
 
 
