@@ -51,7 +51,7 @@ event ApplyOwnership:
 DAY: constant(uint256) = 86_400
 WEEK: constant(uint256) = 7 * DAY
 MULTIPLIER: constant(uint256) = 10 ** 18
-INIT_VOTING_TIME: constant(uint256) = 1_609_372_800 # Thursday, 31 December 2020, 0:00:00 GMT
+INIT_VOTING_TIME: constant(uint256) = 1_609_372_800                                             # Thursday, 31 December 2020, 0:00:00 GMT
 VOTING_PERIOD: constant(uint256) = WEEK
 FARM_TOKEN_RATE: constant(uint256) = 1
 VOTING_TOKEN_RATE: constant(uint256) = 2
@@ -66,22 +66,26 @@ farmToken: public(address)
 votingToken: public(address)
 controller: public(address)
 gasTokenCheckList: public(address)
-balances: public(HashMap[address, HashMap[address, HashMap[address, uint256]]]) # reaper -> coin -> account -> amount
-balancesUnlockTimestamp: public(HashMap[address, HashMap[address, HashMap[address, uint256]]]) # reaper -> coin -> account -> unlock timestamp
-reaperBalances: public(HashMap[address, HashMap[address, uint256]]) # reaper -> coin -> balance
-lastVotes: public(HashMap[address, uint256])  # reaper -> lastVotes
-reaperIntegratedVotes: public(HashMap[address, uint256]) # reaper -> integrated votes
+balances: public(HashMap[address, HashMap[address, HashMap[address, uint256]]])                 # reaper -> coin -> account -> amount
+balancesUnlockTimestamp: public(HashMap[address, HashMap[address, HashMap[address, uint256]]])  # reaper -> coin -> account -> unlock timestamp
+reaperBalances: public(HashMap[address, HashMap[address, uint256]])                             # reaper -> coin -> balance
+lastVotes: public(HashMap[address, uint256])                                                    # reaper -> lastVotes
+reaperIntegratedVotes: public(HashMap[address, uint256])                                        # reaper -> integrated votes
 nextSnapshotTimestamp: public(uint256)
 lastSnapshotTimestamp: public(uint256)
 lastSnapshotIndex: public(uint256)
-snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER]) # [snapshot index, record index]
-coinBalances: public(HashMap[address, uint256]) # coin -> balance
+snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER])                                   # [snapshot index, record index]
+coinBalances: public(HashMap[address, uint256])                                                 # coin -> balance
 
 
 @external
 def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: address):
     """
     @notice Contract constructor
+    @dev `_controller`, `_gasTokenCheckList`, `_farmToken` can't be equal `ZERO_ADDRESS`
+    @param _controller Address of Controller contract
+    @param _gasTokenCheckList Address of AddressesCheckList contract with gas tokens allowed
+    @param _farmToken Address of FarmToken contract (DSP)
     """
     assert _controller != ZERO_ADDRESS, "controller is not set"
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
@@ -95,6 +99,9 @@ def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: addr
 
 @internal
 def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callDataLength: uint256):
+    """
+    @notice Reduce gas function
+    """
     if _gasToken == ZERO_ADDRESS:
         return
 
@@ -335,8 +342,8 @@ def transferOwnership(_futureOwner: address):
 @external
 def applyOwnership():
     """
-    @notice Applies new future owner address as current owner
-    @dev Callable by owner only
+    @notice Applies transfer ownership
+    @dev Callable by owner only. Function call actually changes owner
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner
@@ -347,6 +354,11 @@ def applyOwnership():
 
 @external
 def setVotingToken(_votingToken: address):
+    """
+    @notice Set voting token address.
+    @dev Callable once by owner only. `_votingToken` can't be equal `ZERO_ADDRESS`.
+    @param _votingToken New address of `StrictTransferableToken`(ERC20 for voting) contract
+    """
     assert msg.sender == self.owner, "owner only"
     assert _votingToken != ZERO_ADDRESS, "zero address"
     assert self.votingToken == ZERO_ADDRESS, "set only once"
