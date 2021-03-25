@@ -80,6 +80,9 @@ lastSnapshotIndex: public(uint256)
 snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER])                                   # [snapshot index, record index]
 coinBalances: public(HashMap[address, uint256])                                                 # coin -> balance
 
+votingTokenRate: public(uint256)
+votingTokenRateAmplifier: public(uint256)
+
 
 @external
 def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: address):
@@ -98,6 +101,8 @@ def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: addr
     self.gasTokenCheckList = _gasTokenCheckList
     self.farmToken = _farmToken
     self.owner = msg.sender
+    self.votingTokenRate = VOTING_TOKEN_RATE
+    self.votingTokenRateAmplifier = VOTING_TOKEN_RATE_AMPLIFIER
 
 
 @internal
@@ -137,7 +142,9 @@ def _snapshot():
     _totalVotePower: uint256 = 0
 
     if _farmTokenBalance + _votingTokenBalance > 0:
-        _votingTokenRate = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+        _votingRate: uint256 = self.votingTokenRate
+        _votingRateAmplifier: uint256 = self.votingTokenRateAmplifier
+        _votingTokenRate = MULTIPLIER * _votingRate + MULTIPLIER * _votingRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
         _totalVotePower = _votingTokenBalance * _votingTokenRate / MULTIPLIER + _farmTokenBalance * FARM_TOKEN_RATE
 
     _currentSnapshotTimestamp: uint256 = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / VOTING_PERIOD * VOTING_PERIOD
@@ -266,7 +273,9 @@ def reaperVotePower(_reaper: address) -> uint256:
     if _farmTokenBalance + _votingTokenBalance == 0:
         return 0
 
-    _votingTokenRate: uint256 = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+    _votingRate: uint256 = self.votingTokenRate
+    _votingRateAmplifier: uint256 = self.votingTokenRateAmplifier
+    _votingTokenRate: uint256 = MULTIPLIER * _votingRate + MULTIPLIER * _votingRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
     return self.reaperBalances[_reaper][_votingToken] * _votingTokenRate / MULTIPLIER + self.reaperBalances[_reaper][_farmToken] * FARM_TOKEN_RATE
 
 
@@ -285,7 +294,9 @@ def totalVotePower() -> uint256:
     if _farmTokenBalance + _votingTokenBalance == 0:
         return 0
 
-    _votingTokenRate: uint256 = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+    _votingRate: uint256 = self.votingTokenRate
+    _votingRateAmplifier: uint256 = self.votingTokenRateAmplifier
+    _votingTokenRate: uint256 = MULTIPLIER * _votingRate + MULTIPLIER * _votingRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
     return self.coinBalances[_votingToken] * _votingTokenRate / MULTIPLIER + self.coinBalances[_farmToken] * FARM_TOKEN_RATE
 
 
@@ -310,7 +321,9 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
     if _farmTokenBalance + _votingTokenBalance == 0:
         return 0
 
-    _votingTokenRate: uint256 = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+    _votingRate: uint256 = self.votingTokenRate
+    _votingRateAmplifier: uint256 = self.votingTokenRateAmplifier
+    _votingTokenRate: uint256 = MULTIPLIER * _votingRate + MULTIPLIER * _votingRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
     return self.balances[_reaper][_votingToken][_account] * _votingTokenRate / MULTIPLIER + self.balances[_reaper][_farmToken][_account] * FARM_TOKEN_RATE
 
 
@@ -380,3 +393,16 @@ def setVotingToken(_votingToken: address):
     assert _votingToken != ZERO_ADDRESS, "zero address"
     assert self.votingToken == ZERO_ADDRESS, "set only once"
     self.votingToken = _votingToken
+
+
+@external
+def setVotingTokenRate(_rate: uint256, _amplifier: uint256):
+    """
+    @notice Set voting token address.
+    @dev Callable once by owner only. `_votingToken` can't be equal `ZERO_ADDRESS`.
+    @param _votingToken New address of `StrictTransferableToken`(ERC20 for voting) contract
+    """
+    assert msg.sender == self.owner, "owner only"
+    assert _rate > 0 and _amplifier > 0, "can't be equal zero"
+    self.votingTokenRate = _rate
+    self.votingTokenRateAmplifier = _amplifier
