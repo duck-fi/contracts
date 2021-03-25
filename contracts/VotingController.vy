@@ -85,7 +85,7 @@ coinBalances: public(HashMap[address, uint256])                                 
 def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: address):
     """
     @notice Contract constructor
-    @dev `_controller`, `_gasTokenCheckList`, `_farmToken` can't be equal `ZERO_ADDRESS`
+    @dev `_controller`, `_gasTokenCheckList`, `_farmToken` can't be equal `ZERO_ADDRESS`. `owner` = `msg.sender`
     @param _controller Address of Controller contract
     @param _gasTokenCheckList Address of AddressesCheckList contract with gas tokens allowed
     @param _farmToken Address of FarmToken contract (DSP)
@@ -182,6 +182,7 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address 
     @param _reaper Reaper to vote for
     @param _coin Coin which is used to vote
     @param _amount Amount which is used to vote
+    @param _gasToken Gas token address (optional)
     """
     _gasStart: uint256 = msg.gas
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
@@ -205,6 +206,7 @@ def unvote(_reaper: address, _coin: address, _amount: uint256, _gasToken: addres
     @param _reaper Reaper to unvote for
     @param _coin Coin which is used to unvote
     @param _amount Amount which is used to unvote
+    @param _gasToken Gas token address (optional)
     """
     _gasStart: uint256 = msg.gas
     assert self.balancesUnlockTimestamp[_reaper][_coin][msg.sender] < block.timestamp, "tokens are locked"
@@ -311,6 +313,12 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
 
 @external
 def startVoting(_votingDelay: uint256 = 0):
+    """
+    @notice Unlock and start voting mechanism.
+    @dev Callable once by `controller` only. Emit `StartVoting(_votingDelay)` event.
+        Init equal distribution of votes (`1/REAPERS_COUNT`).
+    @param _votingDelay Initial delay defore next voting
+    """
     assert msg.sender == self.controller, "controller only"
     assert self.lastSnapshotTimestamp == 0, "already started"
 

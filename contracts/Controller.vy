@@ -3,6 +3,8 @@
 @title Controller
 @author Dispersion Finance Team
 @license MIT
+@notice Controls liquidity `Reaper's` and the emission of coins through the `Reapers`.
+    Add/remove `Reaper` from voting/emission.
 """
 
 
@@ -225,7 +227,7 @@ def startEmission(_votingController: address, _votingDelay: uint256):
     @dev Callable by `owner` only. 
         Emits `YearEmissionUpdate(INITIAL_YEAR_EMISSION)` and `StartVoting(_votingDelay)` events
     @param _votingController Address of `VotingController` contract
-    @param _votingDelay Initial delay for next voting
+    @param _votingDelay Initial delay defore next voting
     """
     assert msg.sender == self.owner, "owner only"
     Farmable(self.farmToken).startEmission()
