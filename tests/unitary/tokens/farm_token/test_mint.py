@@ -27,8 +27,8 @@ def test_fail_to_update_minter_zero_owner(farm_token, exception_tester, deployer
                      ZERO_ADDRESS, {'from': deployer})
 
 
-def test_fail_to_startEmission_not_by_owner(farm_token, thomas, ownable_exception_tester):
-    ownable_exception_tester(farm_token.startEmission, {'from': thomas})
+def test_fail_to_startEmission_not_by_owner(farm_token, thomas, exception_tester):
+    exception_tester("minter only", farm_token.startEmission, {'from': thomas})
 
 
 def test_mint_not_minter(farm_token, thomas, exception_tester):
