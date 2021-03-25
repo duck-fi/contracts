@@ -41,6 +41,9 @@ event VoteApproval:
     voterAccount: address
     canVote: bool
 
+event StartVoting:
+    delay: uint256
+
 event CommitOwnership:
     admin: address
 
@@ -308,7 +311,7 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
 
 @external
 def startVoting(_votingDelay: uint256 = 0):
-    assert msg.sender == self.owner, "owner only"
+    assert msg.sender == self.controller, "controller only"
     assert self.lastSnapshotTimestamp == 0, "already started"
 
     # initial voting round: we share equally for all reapers
@@ -325,6 +328,8 @@ def startVoting(_votingDelay: uint256 = 0):
         _reaperShare: uint256 = MULTIPLIER / _totalVoteBalance
         self.snapshots[0][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: 1, share: _reaperShare})
         self.lastVotes[_currentReaper] = _reaperShare
+    
+    log StartVoting(_votingDelay)
 
 
 @external

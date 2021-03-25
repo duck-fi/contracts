@@ -184,10 +184,10 @@ def mint(_account: address, _amount: uint256):
 def startEmission():
     """
     @notice Starts token emission.
-    @dev Only callable once by `owner`, when `lastEmissionUpdateTimestamp` has not yet been set. 
+    @dev Only callable once by `minter`, when `lastEmissionUpdateTimestamp` has not yet been set. 
         Emits a `YearEmissionUpdate` event with `INITIAL_YEAR_EMISSION`
     """
-    assert msg.sender == self.owner, "owner only"
+    assert msg.sender == self.minter, "minter only"
     assert self.lastEmissionUpdateTimestamp == 0, "emission already started"
     self._yearEmission = INITIAL_YEAR_EMISSION
     self.lastEmissionUpdateTimestamp = block.timestamp

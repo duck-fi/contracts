@@ -17,3 +17,8 @@ def emissionIntegral() -> uint256:
 @external
 def startEmissionTimestamp() -> uint256: 
     return 0
+
+
+@external
+def startEmission():
+    pass

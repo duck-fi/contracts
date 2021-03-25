@@ -10,7 +10,9 @@ import interfaces.Controller as Controller
 import interfaces.Minter as Minter
 import interfaces.Ownable as Ownable
 import interfaces.tokens.ERC20Mintable as ERC20Mintable
+import interfaces.tokens.Farmable as Farmable
 import interfaces.Reaper as Reaper
+import interfaces.VotingController as VotingController
 import interfaces.GasToken as GasToken
 import interfaces.AddressesCheckList as AddressesCheckList
 
@@ -217,10 +219,24 @@ def startMinting():
 
 
 @external
+def startEmission(_votingController: address, _votingDelay: uint256):
+    """
+    @notice Start emission of `FarmToken`.
+    @dev Callable by `owner` only. 
+        Emits `YearEmissionUpdate(INITIAL_YEAR_EMISSION)` and `StartVoting(_votingDelay)` events
+    @param _votingController Address of `VotingController` contract
+    @param _votingDelay Initial delay for next voting
+    """
+    assert msg.sender == self.owner, "owner only"
+    Farmable(self.farmToken).startEmission()
+    VotingController(_votingController).startVoting(_votingDelay)
+
+
+@external
 def transferOwnership(_futureOwner: address):
     """
     @notice Transfers ownership by setting new owner `_futureOwner` candidate
-    @dev Callable by `owner` only. Emit CommitOwnership event with `_futureOwner`
+    @dev Callable by `owner` only. log YearEmissionUpdate(INITIAL_YEAR_EMISSION)
     @param _futureOwner Future owner address
     """
     assert msg.sender == self.owner, "owner only"
