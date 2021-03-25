@@ -8,11 +8,11 @@ def test_mint_not_started(controller, reaper_mock, ZERO_ADDRESS, exception_teste
     controller.removeReaper(reaper_mock, {'from': neo})
 
 
-def test_start_mint_owner_only(controller, reaper_mock, ZERO_ADDRESS, ownable_exception_tester, morpheus):
+def test_start_mint_owner_only(controller, ownable_exception_tester, morpheus):
     ownable_exception_tester(controller.startMinting, {'from': morpheus})
 
 
-def test_start_mint(controller, reaper_mock, neo):
+def test_start_mint(controller, neo):
     assert not controller.startMintFor()
     controller.startMinting({'from': neo})
     assert controller.startMintFor()
