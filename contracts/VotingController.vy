@@ -119,10 +119,7 @@ def _snapshot():
     @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
     @dev Only possible to call it once per voting period
     """
-    # assert self.lastSnapshotTimestamp > 0, "not started" TODO: need asserts here?
-    assert block.timestamp > self.nextSnapshotTimestamp, "already snapshotted"
-
-    if self.lastSnapshotTimestamp == 0:
+    if self.lastSnapshotTimestamp == 0 or block.timestamp < self.nextSnapshotTimestamp:
         return
 
     _controller: address = self.controller
@@ -136,13 +133,12 @@ def _snapshot():
     if _farmTokenBalance + _votingTokenBalance == 0:
         return
     
-    _totalVotePower: uint256 = 0
     _votingTokenRate: uint256 = 0
-    _votingTokenRate = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
-    _totalVotePower = self.coinBalances[_votingToken] * _votingTokenRate / MULTIPLIER + self.coinBalances[_farmToken] * FARM_TOKEN_RATE
+    _totalVotePower: uint256 = 0
 
-    if _totalVotePower == 0:
-        return
+    if _farmTokenBalance + _votingTokenBalance > 0:
+        _votingTokenRate = MULTIPLIER * VOTING_TOKEN_RATE + MULTIPLIER * VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+        _totalVotePower = _votingTokenBalance * _votingTokenRate / MULTIPLIER + _farmTokenBalance * FARM_TOKEN_RATE
 
     _currentSnapshotTimestamp: uint256 = INIT_VOTING_TIME + (block.timestamp - INIT_VOTING_TIME) / VOTING_PERIOD * VOTING_PERIOD
     _lastSnapshotIndex: uint256 = self.lastSnapshotIndex
@@ -158,12 +154,15 @@ def _snapshot():
         _currentReaper: address = Controller(_controller).reapers(i)
         _reaperVoteBalance: uint256 = 0
 
-        if _farmTokenBalance + _votingTokenBalance > 0:
+        if _totalVotePower == 0:
+            self.snapshots[_lastSnapshotIndex + 1][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: 0, share: 0})
+            self.reaperIntegratedVotes[_currentReaper] += self.lastVotes[_currentReaper] * _dt
+            self.lastVotes[_currentReaper] = 0
+        else:
             _reaperVoteBalance = self.reaperBalances[_currentReaper][_votingToken] * _votingTokenRate / MULTIPLIER + self.reaperBalances[_currentReaper][_farmToken] * FARM_TOKEN_RATE
-
-        self.snapshots[_lastSnapshotIndex + 1][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: _reaperVoteBalance, share: _reaperVoteBalance * MULTIPLIER / _totalVotePower})
-        self.reaperIntegratedVotes[_currentReaper] += self.lastVotes[_currentReaper] * _dt
-        self.lastVotes[_currentReaper] = _reaperVoteBalance * MULTIPLIER / _totalVotePower
+            self.snapshots[_lastSnapshotIndex + 1][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: _reaperVoteBalance, share: _reaperVoteBalance * MULTIPLIER / _totalVotePower})
+            self.reaperIntegratedVotes[_currentReaper] += self.lastVotes[_currentReaper] * _dt
+            self.lastVotes[_currentReaper] = _reaperVoteBalance * MULTIPLIER / _totalVotePower
 
 
 @external
@@ -274,6 +273,10 @@ def reaperVotePower(_reaper: address) -> uint256:
 @view
 @external
 def totalVotePower() -> uint256:
+    """
+    @notice Returns current total vote power
+    @return Vote power
+    """
     _farmToken: address = self.farmToken
     _votingToken: address = self.votingToken
     _farmTokenBalance: uint256 = self.coinBalances[_farmToken]
