@@ -81,6 +81,13 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
 @external
 @nonreentrant('lock')
 def mintFor(_reaper: address, _account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
+    """
+    @notice Mint available tokens from `_reaper` for `_account`.
+    @dev `_reaper` should be added before. `startMintFor` should be equal `True`
+    @param _reaper Address of Reaper contract for minting(claiming)
+    @param _account Address of account for balance query (`msg.sender` by default)
+    @param _gasToken Gas token address (optional)
+    """
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
     assert self.startMintFor, "minting is not started yet"
 
@@ -100,7 +107,14 @@ def mintFor(_reaper: address, _account: address = msg.sender, _gasToken: address
 
 
 @external
-def mintableTokens(_reaper: address, _account: address) -> uint256:
+def mintableTokens(_reaper: address, _account: address = msg.sender) -> uint256:
+    """
+    @notice Balance of tokens to mint from `_reaper` for `_account`.
+    @dev `_reaper` should be added before.
+    @param _reaper Address of Reaper contract for minting(claiming)
+    @param _account Address of account for balance query (`msg.sender` by default)
+    @return Count of tokens available for minting
+    """
     assert self.indexByReaper[_reaper] > 0, "reaper is not supported"
     Reaper(_reaper).snapshot(_account, ZERO_ADDRESS)
     return Reaper(_reaper).reapIntegralFor(_account) - self.minted[_reaper][_account]
@@ -108,6 +122,12 @@ def mintableTokens(_reaper: address, _account: address) -> uint256:
 
 @external
 def mintApprove(_reaper: address, _minter: address, _canMint: bool):
+    """
+    @notice Approve to mint farm token.
+    @param _reaper Address of Reaper contract for minting
+    @param _minter Allowed account to mint tokens to `msg.sender`
+    @param _canMint Mint possibility
+    """
     self.mintAllowance[_reaper][msg.sender][_minter] = _canMint
 
 
