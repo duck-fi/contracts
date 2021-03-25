@@ -398,9 +398,8 @@ def setVotingToken(_votingToken: address):
 @external
 def setVotingTokenRate(_rate: uint256, _amplifier: uint256):
     """
-    @notice Set voting token address.
-    @dev Callable once by owner only. `_votingToken` can't be equal `ZERO_ADDRESS`.
-    @param _votingToken New address of `StrictTransferableToken`(ERC20 for voting) contract
+    @notice Set voting token rate and amplifier.
+    @dev Callable by owner only. `_rate` and `_rate` should be greater `0`.
     """
     assert msg.sender == self.owner, "owner only"
     assert _rate > 0 and _amplifier > 0, "can't be equal zero"
