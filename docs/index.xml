@@ -47,4 +47,4 @@ Voting Controller
 Events # Vote
 reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed Unvote
 reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed VoteApproval
-reaper : address, notIndexed coin : address, notIndexed ownerAccount : address, notIndexed voterAccount : address, notIndexed canVote : bool, notIndexed CommitOwnership</description></item></channel></rss>
+reaper : address, notIndexed coin : address, notIndexed ownerAccount : address, notIndexed voterAccount : address, notIndexed canVote : bool, notIndexed StartVoting</description></item></channel></rss>
