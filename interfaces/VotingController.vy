@@ -82,7 +82,6 @@ def availableToUnvote(_reaper: address, _coin: address, _account: address) -> ui
     return 0
 
 
-@view
 @external
 def voteIntegral(_reaper: address) -> uint256:
     return 0

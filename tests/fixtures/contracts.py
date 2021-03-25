@@ -52,6 +52,12 @@ def reaper_2(Reaper, lp_token, farm_token, controller, voting_controller, boosti
 
 
 @pytest.fixture(scope="module")
+def reaper_3(Reaper, lp_token, farm_token, controller, voting_controller, boosting_controller, deployer, gas_token_check_list):
+    yield Reaper.deploy(lp_token, farm_token, controller, voting_controller,
+                             boosting_controller, gas_token_check_list, 0, {'from': deployer})
+
+
+@pytest.fixture(scope="module")
 def reaper_strategy_mock(ReaperStrategyMock, reaper, lp_token, deployer):
     yield ReaperStrategyMock.deploy(lp_token, reaper, {'from': deployer})
 

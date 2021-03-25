@@ -1,9 +1,12 @@
+from brownie.test import given, strategy
+
 VOTE_DIVIDER = 10 ** 18
 YEAR_EMISSION = 1_000_000 * 10 ** 18
 
 
-def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, day):
-    amount = 10**18
+@given(amount=strategy('uint256', min_value=10**3, max_value=10**23))
+def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, day, amount):
+    # amount = 10**3
     lp_token.transfer(morpheus, 10 * amount, {'from': deployer})
     lp_token.transfer(trinity, 10 * amount, {'from': deployer})
     initial_balance = lp_token.balanceOf(deployer)
@@ -229,10 +232,16 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
     # 5th snapshot for both: 10 days for deployer and 2 day for morpheus
     # deployer should get EMISSION / 2 (no boost) / 10 (days) * 9 (8 (day) + 1 (2*0.5 day))  
     # morpheus should get EMISSION / 2 (no boost) / 10 (days) * 1 (2*0.5 day)
-    chain.mine(1, init_ts + 10 * day)
-    tx8_1 = reaper.snapshot({'from': deployer})
-    chain.mine(1, init_ts + 10 * day)
-    tx8 = reaper.snapshot({'from': morpheus})
+    while True:
+        chain.mine(1, init_ts + 10 * day)
+        tx8 = reaper.snapshot({'from': deployer})
+        chain.mine(1, init_ts + 10 * day)
+        tx8_1 = reaper.snapshot({'from': morpheus})
+        if tx8.timestamp == tx8_1.timestamp:
+            break
+        else:
+            chain.undo(2)
+    
     assert reaper.balances(deployer) == amount
     assert reaper.balances(morpheus) == amount
     assert reaper.totalBalances() == 2 * amount
@@ -279,10 +288,16 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
     # 6th snapshot for both: 12 days for deployer and 4 day for morpheus
     # deployer should get EMISSION / 2 (no boost) / 12 (days) * 10 (8 (day) + 2 (4*0.5 day))  
     # morpheus should get EMISSION / 2 (no boost) / 12 (days) * 2  (4*0.5 day)
-    chain.mine(1, init_ts + 12 * day)
-    tx9 = reaper.snapshot({'from': deployer})
-    chain.mine(1, init_ts + 12 * day)
-    tx9 = reaper.snapshot({'from': morpheus})
+    while True:
+        chain.mine(1, init_ts + 12 * day)
+        tx9 = reaper.snapshot({'from': deployer})
+        chain.mine(1, init_ts + 12 * day)
+        tx9_1 = reaper.snapshot({'from': morpheus})
+        if tx9.timestamp == tx9_1.timestamp:
+            break
+        else:
+            chain.undo(2)
+
     assert reaper.balances(deployer) == amount
     assert reaper.balances(morpheus) == amount
     assert reaper.totalBalances() == 2 * amount
@@ -384,10 +399,16 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
     last_unit_cost_integral_trinity = reaper.lastUnitCostIntegralFor(trinity)
 
     # wait for 15 days and check emission trinity == emission morpheus
-    chain.mine(1, init_ts + 35 * day)
-    tx13 = reaper.snapshot({'from': morpheus})
-    chain.mine(1, init_ts + 35 * day)
-    tx13 = reaper.snapshot({'from': trinity})
+    while True:
+        chain.mine(1, init_ts + 35 * day)
+        tx13 = reaper.snapshot({'from': morpheus})
+        chain.mine(1, init_ts + 35 * day)
+        tx13_1 = reaper.snapshot({'from': trinity})
+        if tx13.timestamp == tx13_1.timestamp:
+            break
+        else:
+            chain.undo(2)
+
     assert reaper.balances(deployer) == 0
     assert reaper.balances(morpheus) == amount
     assert reaper.balances(trinity) == 5 * amount
@@ -444,8 +465,14 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
     print("dt", tx13.timestamp - tx2.timestamp)
 
     # snapshot for deployer does not matter and it updates user integrals but reapIntegralFor(deployer) stays the same
-    chain.mine(1, init_ts + 35 * day)
-    tx13 = reaper.snapshot({'from': deployer})
+    while True:
+        chain.mine(1, init_ts + 35 * day)
+        tx13 = reaper.snapshot({'from': deployer})
+        if tx13.timestamp == init_ts + 35 * day:
+            break
+        else:
+            chain.undo(2)
+
     assert reaper.balances(deployer) == 0
     assert reaper.balances(morpheus) == amount
     assert reaper.balances(trinity) == 5 * amount
@@ -477,8 +504,13 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
     assert reaper.totalBoostIntegralFor(deployer) == 0
 
     # withdraw 4 * amount from trinity
-    chain.mine(1, init_ts + 35 * day)
-    tx13 = reaper.withdraw(4 * amount, {'from': trinity})
+    while True:
+        chain.mine(1, init_ts + 35 * day)
+        tx13 = reaper.withdraw(4 * amount, {'from': trinity})
+        if tx13.timestamp == init_ts + 35 * day:
+            break
+        else:
+            chain.undo(1)
 
     # wait for day and snapshot morpheus
     chain.mine(1, init_ts + 36 * day)
@@ -494,10 +526,16 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
 
     # wait for 3 * day and snapshot both
     # check emission trinity == emission morpheus
-    chain.mine(1, init_ts + 45 * day)
-    tx14 = reaper.snapshot({'from': morpheus})
-    chain.mine(1, init_ts + 45 * day)
-    tx14 = reaper.snapshot({'from': trinity})
+    while True:
+        chain.mine(1, init_ts + 45 * day)
+        tx14 = reaper.snapshot({'from': morpheus})
+        chain.mine(1, init_ts + 45 * day)
+        tx14_1 = reaper.snapshot({'from': trinity})
+        if tx14.timestamp == tx14_1.timestamp:
+            break
+        else:
+            chain.undo(2)
+
     assert reaper.balances(deployer) == 0
     assert reaper.balances(morpheus) == amount
     assert reaper.balances(trinity) == amount
@@ -552,19 +590,30 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
     print("dt", tx14.timestamp - tx2.timestamp)
 
     # withdraw amount for morpheus and trinity
-    chain.mine(1, init_ts + 45 * day)
-    tx15 = reaper.withdraw(amount, {'from': morpheus})
-    chain.mine(1, init_ts + 45 * day)
-    tx15 = reaper.withdraw(amount, {'from': trinity})
+    while True:
+        chain.mine(1, init_ts + 45 * day)
+        tx15 = reaper.withdraw(amount, {'from': morpheus})
+        chain.mine(1, init_ts + 45 * day)
+        tx15_1 = reaper.withdraw(amount, {'from': trinity})
+        if tx15.timestamp == tx15_1.timestamp:
+            break
+        else:
+            chain.undo(2)
 
     # wait for 2 days and snapshot all
     # check emission has not been changed
-    chain.mine(1, init_ts + 47 * day)
-    tx16 = reaper.snapshot({'from': deployer})
-    chain.mine(1, init_ts + 47 * day)
-    tx16 = reaper.snapshot({'from': morpheus})
-    chain.mine(1, init_ts + 47 * day)
-    tx16 = reaper.snapshot({'from': trinity})
+    while True:
+        chain.mine(1, init_ts + 47 * day)
+        tx16 = reaper.snapshot({'from': deployer})
+        chain.mine(1, init_ts + 47 * day)
+        tx16_1 = reaper.snapshot({'from': morpheus})
+        chain.mine(1, init_ts + 47 * day)
+        tx16_2 = reaper.snapshot({'from': trinity})
+        if tx16.timestamp == tx16_1.timestamp and tx16.timestamp == tx16_2.timestamp:
+            break
+        else:
+            chain.undo(3)
+
     assert reaper.balances(deployer) == 0
     assert reaper.balances(morpheus) == 0
     assert reaper.balances(trinity) == 0
