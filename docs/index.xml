@@ -43,7 +43,8 @@ Callable by owner only
 Arguments:
 _futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38747</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/voting-controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/voting-controller/</guid><description>VotingController.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
 Voting Controller
+For voting, Reaper's from Controller are used.
+Сontrols voting for the distribution of farm token emission by Reaper's.
 Events # Vote
 reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed Unvote
-reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed VoteApproval
-reaper : address, notIndexed coin : address, notIndexed ownerAccount : address, notIndexed voterAccount : address, notIndexed canVote : bool, notIndexed StartVoting</description></item></channel></rss>
+reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed VoteApproval</description></item></channel></rss>
