@@ -1,6 +1,13 @@
-# @version ^0.2.0
+# @version ^0.2.11
+"""
+@title Controller Mock
+@author Dispersion Finance Team
+@license MIT
+"""
+
 
 import interfaces.Controller as Controller
+import interfaces.VotingController as VotingController
 
 
 implements: Controller
@@ -20,6 +27,18 @@ def __init__():
 @external
 def farmToken() -> address:
     return ZERO_ADDRESS
+
+
+@external
+def startEmission(_votingController: address, _votingDelay: uint256):
+    """
+    @notice Start emission of `FarmToken`.
+    @dev Callable by `owner` only. 
+        Emits `YearEmissionUpdate(INITIAL_YEAR_EMISSION)` and `StartVoting(_votingDelay)` events
+    @param _votingController Address of `VotingController` contract
+    @param _votingDelay Initial delay defore next voting
+    """
+    VotingController(_votingController).startVoting(_votingDelay)
 
 
 @external

@@ -32,7 +32,10 @@ def controller_mock(ControllerMock, deployer, reaper_1_mock, reaper_2_mock, reap
 
 @pytest.fixture(scope="module")
 def controller(Controller, gas_token_check_list, farm_token, deployer):
-    yield Controller.deploy(farm_token, gas_token_check_list, {'from': deployer})
+    controller = Controller.deploy(
+        farm_token, gas_token_check_list, {'from': deployer})
+    farm_token.setMinter(controller, {'from': deployer})
+    yield controller
 
 
 @pytest.fixture(scope="module")
@@ -136,6 +139,8 @@ def curve_ve_mock(CurveVEMock, crv_token_mock, deployer):
 
 @pytest.fixture(scope="module")
 def curve_staker_mocked(CurveStaker, curve_ve_mock, curve_gauge_mock, crv_token_mock, lp_token, deployer):
-    contract = CurveStaker.deploy(curve_gauge_mock, lp_token, crv_token_mock, curve_ve_mock, {'from': deployer})
-    lp_token.approve(curve_gauge_mock, 2 ** 256 - 1, {'from': contract}) # TODO: max int
+    contract = CurveStaker.deploy(
+        curve_gauge_mock, lp_token, crv_token_mock, curve_ve_mock, {'from': deployer})
+    lp_token.approve(curve_gauge_mock, 2 ** 256 - 1,
+                     {'from': contract})  # TODO: max int
     yield contract

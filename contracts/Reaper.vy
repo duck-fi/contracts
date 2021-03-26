@@ -1,4 +1,9 @@
-# @version ^0.2.0
+# @version ^0.2.11
+"""
+@title Reaper
+@author Dispersion Finance Team
+@license MIT
+"""
 
 
 from vyper.interfaces import ERC20
@@ -380,7 +385,8 @@ def transferOwnership(_futureOwner: address):
 def applyOwnership():
     """
     @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
+    @dev Callable by `owner` only. Function call actually changes `owner`. 
+        Emits ApplyOwnership event with `_owner`
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner

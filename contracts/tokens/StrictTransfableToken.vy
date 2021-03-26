@@ -1,4 +1,4 @@
-# @version ^0.2.0
+# @version ^0.2.11
 """
 @title Strict Transferable Token
 @author Dispersion Finance Team
@@ -59,6 +59,7 @@ totalSupply: public(uint256)
 def __init__(_name: String[32], _symbol: String[8], _mintersCheckList: address, _transfableAccount: address):
     """
     @notice Contract constructor.
+    @dev `owner` = `msg.sender`
     @param _name Token full name
     @param _symbol Token symbol
     @param _mintersCheckList Minters check list. List of addresses that are allowed to mint coins
@@ -194,7 +195,7 @@ def burn(_amount: uint256):
 def transferOwnership(_futureOwner: address):
     """
     @notice Transfers ownership by setting new owner `_futureOwner` candidate
-    @dev Callable by owner only
+    @dev Callable by `owner` only. Emit CommitOwnership event with `_futureOwner`
     @param _futureOwner Future owner address
     """
     assert msg.sender == self.owner, "owner only"
@@ -206,7 +207,8 @@ def transferOwnership(_futureOwner: address):
 def applyOwnership():
     """
     @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
+    @dev Callable by `owner` only. Function call actually changes `owner`. 
+        Emits ApplyOwnership event with `_owner`
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner
