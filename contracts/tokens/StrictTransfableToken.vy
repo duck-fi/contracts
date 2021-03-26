@@ -14,7 +14,7 @@ import interfaces.tokens.ERC20Detailed as ERC20Detailed
 import interfaces.tokens.ERC20Burnable as ERC20Burnable
 import interfaces.tokens.ERC20Mintable as ERC20Mintable
 import interfaces.Ownable as Ownable
-import interfaces.AddressesCheckList as AddressesCheckList
+import interfaces.WhiteList as WhiteList
 
 
 implements: ERC20
@@ -107,7 +107,7 @@ def mint(_account: address, _amount: uint256):
     @param _account Account to mint tokens for
     @param _amount Amount to mint
     """
-    assert AddressesCheckList(self.mintersCheckList).get(msg.sender), "minter only"
+    assert WhiteList(self.mintersCheckList).check(msg.sender), "minter only"
     assert _account != ZERO_ADDRESS, "zero address"
     self.totalSupply += _amount
     self.balanceOf[_account] += _amount

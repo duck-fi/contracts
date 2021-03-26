@@ -14,7 +14,7 @@ import interfaces.tokens.Farmable as Farmable
 import interfaces.VotingController as VotingController
 import interfaces.BoostingController as BoostingController
 import interfaces.GasToken as GasToken
-import interfaces.AddressesCheckList as AddressesCheckList
+import interfaces.WhiteList as WhiteList
 
 
 implements: Reaper
@@ -89,7 +89,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token"
+    assert WhiteList(self.gasTokenCheckList).check(_gasToken), "unsupported gas token"
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 

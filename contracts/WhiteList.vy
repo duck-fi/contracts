@@ -1,17 +1,17 @@
 # @version ^0.2.11
 """
-@title Addresses Check List
+@title White List
 @author Dispersion Finance Team
 @license MIT
 """
 
 
 import interfaces.Ownable as Ownable
-import interfaces.AddressesCheckList as AddressesCheckList
+import interfaces.WhiteList as WhiteList
 
 
 implements: Ownable
-implements: AddressesCheckList
+implements: WhiteList
 
 
 event CommitOwnership:
@@ -23,22 +23,40 @@ event ApplyOwnership:
 
 owner: public(address)
 futureOwner: public(address)
-get: public(HashMap[address, bool])
+check: public(HashMap[address, bool])
 
 
 @external
 def __init__():
     """
     @notice Contract constructor
+    @dev `owner` = `msg.sender`. 
     """
     self.owner = msg.sender
 
 
 @external
-def set(_key: address, _value: bool):
+def addAddress(_account: address):
+    """
+    @notice Adds address to list for later verification(`check`).
+    @dev Callable by `owner` only. `_account` can't be equal `ZERO_ADDRESS`. 
+    @param _account Address to add to list
+    """
     assert msg.sender == self.owner, "owner only"
-    assert _key != ZERO_ADDRESS, "zero address"
-    self.get[_key] = _value
+    assert _account != ZERO_ADDRESS, "zero address"
+    self.check[_account] = True
+
+
+@external
+def removeAddress(_account: address):
+    """
+    @notice Remove address from list.
+    @dev Callable by `owner` only. `_account` can't be equal `ZERO_ADDRESS`.
+    @param _account Address to remove from list
+    """
+    assert msg.sender == self.owner, "owner only"
+    assert _account != ZERO_ADDRESS, "zero address"
+    self.check[_account] = False
 
 
 @external
