@@ -216,6 +216,7 @@ def startMinting():
     @dev Callable by `owner` only. Emits StartMinting event.
     """
     assert msg.sender == self.owner, "owner only"
+    assert not self.startMintFor, "already started"
     self.startMintFor = True
     log StartMinting(msg.sender)
 
