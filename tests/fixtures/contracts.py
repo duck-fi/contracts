@@ -90,35 +90,35 @@ def initial_emission_distributor(InitialEmissionDistributor, farm_token, deploye
 
 
 @pytest.fixture(scope="module")
-def addresses_check_list(AddressesCheckList, deployer):
-    yield AddressesCheckList.deploy({'from': deployer})
+def addresses_check_list(WhiteList, deployer):
+    yield WhiteList.deploy({'from': deployer})
 
 
 @pytest.fixture(scope="module")
-def gas_token_check_list(AddressesCheckList, deployer, chi_token):
-    check_list = AddressesCheckList.deploy({'from': deployer})
-    check_list.set(chi_token, True, {'from': deployer})
+def gas_token_check_list(WhiteList, deployer, chi_token):
+    check_list = WhiteList.deploy({'from': deployer})
+    check_list.addAddress(chi_token, {'from': deployer})
     yield check_list
 
 
 @pytest.fixture(scope="module")
-def voting_white_list(AddressesCheckList, deployer):
-    check_list = AddressesCheckList.deploy({'from': deployer})
-    check_list.set(deployer, True, {'from': deployer})
+def voting_white_list(WhiteList, deployer):
+    check_list = WhiteList.deploy({'from': deployer})
+    check_list.addAddress(deployer, {'from': deployer})
     yield check_list
 
 
 @pytest.fixture(scope="module")
-def boosting_white_list(AddressesCheckList, deployer):
-    check_list = AddressesCheckList.deploy({'from': deployer})
-    check_list.set(deployer, True, {'from': deployer})
+def boosting_white_list(WhiteList, deployer):
+    check_list = WhiteList.deploy({'from': deployer})
+    check_list.addAddress(deployer, {'from': deployer})
     yield check_list
 
 
 @pytest.fixture(scope="module")
-def white_list(AddressesCheckList, deployer):
-    check_list = AddressesCheckList.deploy({'from': deployer})
-    check_list.set(deployer, True, {'from': deployer})
+def white_list(WhiteList, deployer):
+    check_list = WhiteList.deploy({'from': deployer})
+    check_list.addAddress(deployer, {'from': deployer})
     yield check_list
 
 
