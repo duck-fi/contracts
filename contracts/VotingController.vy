@@ -3,6 +3,8 @@
 @title Voting Controller
 @author Dispersion Finance Team
 @license MIT
+@notice Сontrols voting for the distribution of farm token emission by `Reaper's`.
+@dev For voting, `Reaper's` from `Controller` are used.
 """
 
 from vyper.interfaces import ERC20
@@ -175,6 +177,11 @@ def _snapshot():
 @external
 @nonreentrant('lock')
 def snapshot(_gasToken: address = ZERO_ADDRESS):
+    """
+    @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
+    @dev Only possible to call it once per voting period
+    @param _gasToken Gas token address (optional)
+    """
     _gasStart: uint256 = msg.gas
     self._snapshot()
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
@@ -244,7 +251,7 @@ def availableToUnvote(_reaper: address, _coin: address, _account: address) -> ui
 @external
 def voteIntegral(_reaper: address) -> uint256:
     """
-    @notice Returns current vote integral for reaper `_reaper` multiplied on 1e18
+    @notice Returns current vote integral (lazy update) for reaper `_reaper` multiplied on 1e18
     @param _reaper Reaper to get its vote integral for
     @return Vote integral multiplied on 1e18
     """
