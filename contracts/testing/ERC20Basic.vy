@@ -117,15 +117,23 @@ def burn(amount: uint256) -> bool:
 
 
 @external
-def transferOwnership(_future_owner: address):
+def transferOwnership(_futureOwner: address):
+    """
+    @notice Transfers ownership by setting new owner `_futureOwner` candidate
+    @dev Callable by owner only
+    @param _futureOwner Future owner address
+    """
     assert msg.sender == self.owner, "owner only"
-
-    self.future_owner = _future_owner
-    log CommitOwnership(_future_owner)
+    self.future_owner = _futureOwner
+    log CommitOwnership(_futureOwner)
 
 
 @external
 def applyOwnership():
+    """
+    @notice Applies transfer ownership
+    @dev Callable by owner only. Function call actually changes owner
+    """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.future_owner
     assert _owner != ZERO_ADDRESS, "owner not set"

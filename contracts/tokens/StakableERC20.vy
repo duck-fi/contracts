@@ -1,4 +1,14 @@
 # @version ^0.2.0
+"""
+@title Stakable ERC20 Token
+@author Dispersion Finance Team
+@license MIT
+@notice Mintable and Stakable ERC20 token.
+    `balanceOf(account) = balances[account] * p(n) / p(i)`, `p(n) = p(n-1) * (1 + reward / totalSupply)`.
+    Reward is not stake for funds deposited recently.
+@dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
+     [USDN](https://etherscan.io/address/0x674C6Ad92Fd080e4004b2312b45f796a192D27a0) for example.
+"""
 
 from vyper.interfaces import ERC20
 import interfaces.tokens.Stakable as Stakable
@@ -51,6 +61,12 @@ _liquidTotalSupply: uint256                                     # totalSupply - 
 
 @external
 def __init__(_name: String[32], _symbol: String[8], _decimals: uint256):
+    """
+    @notice Contract constructor.
+    @param _name Token full name
+    @param _symbol Token symbol
+    @param _decimals Token decimals
+    """
     self.name = _name
     self.symbol = _symbol
     self.decimals = _decimals
@@ -82,12 +98,28 @@ def _balanceOf(_account: address) -> uint256:
 
 @view
 @external
-def balanceOf(_account: address = msg.sender) -> uint256: 
+def balanceOf(_account: address = msg.sender) -> uint256:
+    """
+    @notice Balance of ERC20 token for `_account`.
+    @dev For ERC20 compatibility.
+    @param _account Address of account for balance query (`msg.sender` by default)
+    @return Balance of ERC20 token
+    """
     return self._balanceOf(_account)
 
 
 @external
 def deposit(_account: address, _amount: uint256) -> bool:
+    """
+    @notice Deposit tokens from other stakable network. Mint `_amount` tokens for `_account`.
+    @dev Emits a `Transfer` event from `ZERO_ADDRESS` to `_account` with `_amount`. 
+        `_account` can't be equal `ZERO_ADDRESS` and `_amount` must be greater `0`.
+        Deposit is forbid if the contract is deprecated. Callable by `owner` only.
+        Reward is not stake for funds deposited recently (after last `stake` call).
+    @param _account Account to mint tokens for
+    @param _amount Amount to mint
+    @return Boolean success value
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
     assert _amount > 0, "amount is 0"
@@ -116,6 +148,14 @@ def deposit(_account: address, _amount: uint256) -> bool:
 
 @external
 def stake(_reward: uint256) -> bool:
+    """
+    @notice Stake reward. Mint `_reward` tokens for all holders immediently (low cost).
+    @dev Emits a `Reward` event. `_reward` must be greater `0`.
+        Deposit is forbid if the contract is deprecated. Callable by `owner` only.
+        Reward is not stake for funds deposited recently (after last `stake` call) and first call.
+    @param _reward Amount to mint reward
+    @return Boolean success value
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
     assert _reward > 0, "reward is 0"
@@ -142,6 +182,13 @@ def stake(_reward: uint256) -> bool:
 
 @external
 def withdraw(_account: address) -> bool:
+    """
+    @notice Withdraw tokens back to other stakable network. Burn all token balance for `_account`.
+    @dev Emits a `Transfer` event from `_account` to `ZERO_ADDRESS` for all token balance. 
+        Deposit is forbid if the contract is deprecated. Callable by `owner` only.
+    @param _account Account for burn all tokens
+    @return Boolean success value
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert not self.isDeprecated, "deprecated"
 
@@ -175,6 +222,13 @@ def _approve(_owner: address, _spender: address, _amount: uint256):
 
 @external
 def approve(_spender: address, _amount: uint256) -> bool:
+    """
+    @notice Approves allowance from `msg.sender` to `_spender` address for `_amount` of tokens
+    @dev ERC20 function. Emits a `Approval` event with `msg.sender`, `_spender`, `_amount`.
+    @param _spender Allowed account to send tokens from `msg.sender`
+    @param _amount Allowed amount to send tokens from `msg.sender`
+    @return Boolean success value
+    """
     self._approve(msg.sender, _spender, _amount)
     return True
 
@@ -215,12 +269,30 @@ def _transfer(_sender: address, _recipient: address, _amount: uint256):
 
 @external
 def transfer(_recipient: address, _amount:uint256) -> bool:
+    """
+    @notice Transfers `_amount` of tokens from `msg.sender` to `_recipient` address
+    @dev ERC20 function. Emits a `Transfer` event with `msg.sender`, `_recipient`, `_amount`. 
+        `_recipient` can't be equal `ZERO_ADDRESS`
+    @param _recipient Account to send tokens to
+    @param _amount Amount to send
+    @return Boolean success value
+    """
     self._transfer(msg.sender, _recipient, _amount)
     return True
 
 
 @external
 def transferFrom(_sender: address, _recipient: address, _amount: uint256) -> bool:
+    """
+    @notice Transfers `_amount` of tokens from `_sender` to `_recipient` address
+    @dev ERC20 function. Allowance from `_sender` to `msg.sender` is needed. 
+        Emits a `Transfer` event with `_sender`, `_recipient`, `_amount`. 
+        `_sender` and `_recipient` can't be equal `ZERO_ADDRESS`
+    @param _sender Account to send tokens from
+    @param _recipient Account to send tokens to
+    @param _amount Amount to send
+    @return Boolean success value
+    """
     assert _sender != ZERO_ADDRESS, "sender is zero address"
     self._transfer(_sender, _recipient, _amount)
     self._approve(_sender, msg.sender, self.allowance[_sender][msg.sender] - _amount)
@@ -230,11 +302,21 @@ def transferFrom(_sender: address, _recipient: address, _amount: uint256) -> boo
 @view
 @external
 def totalSupply() -> uint256:
+    """
+    @notice Total supply of tokens.
+    @dev ERC20 function.
+    @return Uint256 Total supply
+    """
     return self._liquidTotalSupply + self._liquidDeposit
 
 
 @external
 def transferOwnership(_newOwner: address):
+    """
+    @notice Transfers ownership by setting new owner `_newOwner`.
+    @dev Callable by owner only. `_newOwner` can't be equal `ZERO_ADDRESS`.
+    @param _newOwner New `owner` address
+    """
     assert self.owner == msg.sender, "owner only"
     assert _newOwner != ZERO_ADDRESS, "zero address"
     self.owner = _newOwner
@@ -243,6 +325,11 @@ def transferOwnership(_newOwner: address):
 
 @external
 def setAdmin(_newAdmin: address):
+    """
+    @notice Transfers ownership by setting new admin `_newAdmin`.
+    @dev Callable by owner only. `_newOwner` can't be equal `ZERO_ADDRESS`.
+    @param _newAdmin New `admin` address
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "owner or admin only"
     assert _newAdmin != ZERO_ADDRESS, "zero address"
     self.admin = _newAdmin
@@ -251,6 +338,10 @@ def setAdmin(_newAdmin: address):
 
 @external
 def deprecate():
+    """
+    @notice Deprecate contract.
+    @dev Callable by owner only.
+    """
     assert self.owner == msg.sender or self.admin == msg.sender, "only owner or admin"
     self.isDeprecated = True
     log Deprecate(msg.sender)
