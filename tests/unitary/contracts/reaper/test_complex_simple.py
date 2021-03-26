@@ -6,7 +6,6 @@ YEAR_EMISSION = 1_000_000 * 10 ** 18
 
 @given(amount=strategy('uint256', min_value=10**3, max_value=10**23))
 def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, day, amount):
-    # amount = 10**3
     lp_token.transfer(morpheus, 10 * amount, {'from': deployer})
     lp_token.transfer(trinity, 10 * amount, {'from': deployer})
     initial_balance = lp_token.balanceOf(deployer)

@@ -21,8 +21,11 @@ def test_boost_farm_token_not_approved(boosting_controller_mocked, farm_token, d
                      1, 2 * week, {'from': deployer})
 
 
-@given(amount=strategy('uint256', min_value=10 ** 10, max_value=10 ** 13), delta=strategy('uint256', min_value=8_640, max_value=86_400 * 3))
-def test_boost_farm_token(boosting_controller_mocked, farm_token, deployer, amount, delta, week, chain):
+# @given(amount=strategy('uint256', min_value=10 ** 10, max_value=10 ** 13), delta=strategy('uint256', min_value=8_640, max_value=86_400 * 3))
+# @given(amount=strategy('uint256', min_value=10 ** 10, max_value=10 ** 13), delta=strategy('uint256', min_value=8_640, max_value=86_400 * 3))
+def test_boost_farm_token(boosting_controller_mocked, farm_token, deployer, week, chain):
+    delta = 8_640 #TODO:
+    amount = 10 ** 10 #TODO:
     minLockTime = 2 * week
     warmupTime = 2 * week
     # boost with farm_token 1st time
@@ -68,6 +71,12 @@ def test_boost_farm_token(boosting_controller_mocked, farm_token, deployer, amou
     assert boosting_controller_mocked.boostIntegralFor(deployer) == 0
     assert boosting_controller_mocked.lastBoostTimestampFor(
         deployer) == blockTimestamp
+    
+    print("boosts0", boosting_controller_mocked.boosts(deployer)[0])
+    print("boosts1", boosting_controller_mocked.boosts(deployer)[1])
+    print("boosts2", boosting_controller_mocked.boosts(deployer)[2])
+    print("boosts3", boosting_controller_mocked.boosts(deployer)[3])
+
     # wait for some time (up to quater of warmup)
     chain.mine(1, blockTimestamp + warmupTime / 4)
     tx2 = boosting_controller_mocked.updateBoostIntegral()
@@ -125,6 +134,12 @@ def test_boost_farm_token(boosting_controller_mocked, farm_token, deployer, amou
         deployer)
     previous_integral_deployer = boosting_controller_mocked.boostIntegralFor(
         deployer)
+
+    print("boosts0", boosting_controller_mocked.boosts(deployer)[0])
+    print("boosts1", boosting_controller_mocked.boosts(deployer)[1])
+    print("boosts2", boosting_controller_mocked.boosts(deployer)[2])
+    print("boosts3", boosting_controller_mocked.boosts(deployer)[3])
+
     # wait for some time (end of warmup + quater of reduction)
     chain.mine(1, blockTimestamp +
                warmupTime + minLockTime / 4)
@@ -152,6 +167,12 @@ def test_boost_farm_token(boosting_controller_mocked, farm_token, deployer, amou
         2]) / 2) + math.floor((amount + instant_value_2) * (boosting_controller_mocked.boosts(deployer)[2] - blockTimestamp_2) / 2) + previous_integral_deployer) <= 1
     previous_integral_deployer = boosting_controller_mocked.boostIntegralFor(
         deployer)
+
+    print("boosts0", boosting_controller_mocked.boosts(deployer)[0])
+    print("boosts1", boosting_controller_mocked.boosts(deployer)[1])
+    print("boosts2", boosting_controller_mocked.boosts(deployer)[2])
+    print("boosts3", boosting_controller_mocked.boosts(deployer)[3])
+    assert False
     # wait for some time (end of warmup + 3/4 of reduction)
     chain.mine(1, blockTimestamp +
                warmupTime + minLockTime * 3 / 4)

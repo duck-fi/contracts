@@ -96,6 +96,9 @@ def depositApprove(_spender: address, _amount: uint256):
 
 
 debugg:public(uint256)
+debug1:public(uint256)
+debug2:public(uint256)
+debug3:public(uint256)
 debuggg:public(uint256)
 @internal
 def _snapshot(_account: address):
@@ -112,6 +115,7 @@ def _snapshot(_account: address):
         # false - update reaper integrals and cont
     # update user integrals
 
+    _lastSnapshotTimestampFor: uint256 = self.lastSnapshotTimestampFor[_account]
     self.lastSnapshotTimestampFor[_account] = block.timestamp
     
     # if _emissionIntegral == 0:
@@ -153,7 +157,6 @@ def _snapshot(_account: address):
         self.voteIntegral = _voteIntegral
         self.lastSnapshotTimestamp = block.timestamp
     
-    _lastSnapshotTimestampFor: uint256 = self.lastSnapshotTimestampFor[_account]
     if _lastSnapshotTimestampFor == 0:
         # init user integrals
         _boostingController: address = self.boostingController
@@ -216,14 +219,12 @@ def _snapshot(_account: address):
     #     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
     #     return
 
-    # dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
-    # if dt == 0:
-    #     self.debugg = 12
-    #     return
+    dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
+    if dt == 0:
+        return
     
-    _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
     # check boosting
-    boost_emission: uint256 = 0
+    boost_balance: uint256 = 0
     _boostingController: address = self.boostingController
     _boostIntegral: uint256 = BoostingController(_boostingController).accountBoostIntegral(_account)
     accountBoost: uint256 = _boostIntegral - self.boostIntegralFor[_account]
@@ -232,12 +233,18 @@ def _snapshot(_account: address):
         totalBoost: uint256 = _totalBoostIntegral - self.totalBoostIntegralFor[_account]
         
         if totalBoost > 0: 
-            boost_emission = (_balancesIntegral - self.balancesIntegralFor[_account]) * accountBoost / totalBoost
+            boost_balance = (_balancesIntegral - self.balancesIntegralFor[_account]) / dt * accountBoost / totalBoost
             self.totalBoostIntegralFor[_account] = _totalBoostIntegral
 
         self.boostIntegralFor[_account] = _boostIntegral
 
-    _account_emission: uint256 = min(_max_emission, _max_emission * TOKENLESS_PRODUCTION / 100 + boost_emission)
+    self.debug1 = (_balancesIntegral - self.balancesIntegralFor[_account])
+    self.debug2 = boost_balance * (100 - TOKENLESS_PRODUCTION) / 100
+    self.debug3 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100)
+
+    _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
+    _account_emission: uint256 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100) * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
+    _account_emission = min(_max_emission, _account_emission)
     if _account_emission != _max_emission:
         _adminFee: uint256 = self.adminFee
         if _adminFee != 0:
