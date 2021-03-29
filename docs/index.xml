@@ -1,59 +1,51 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Contracts on</title><link>https://dispersion-fi.github.io/contracts/docs/</link><description>Recent content in Contracts on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://dispersion-fi.github.io/contracts/docs/index.xml" rel="self" type="application/rss+xml"/><item><title/><link>https://dispersion-fi.github.io/contracts/docs/addresses-check-list/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/addresses-check-list/</guid><description>AddressesCheckList.vy # vyper: 0.2.10
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Contracts on</title><link>https://dispersion-fi.github.io/contracts/docs/</link><description>Recent content in Contracts on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://dispersion-fi.github.io/contracts/docs/index.xml" rel="self" type="application/rss+xml"/><item><title/><link>https://dispersion-fi.github.io/contracts/docs/addresses-check-list/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/addresses-check-list/</guid><description>AddressesCheckList.vy # vyper: 0.2.11
 Events # CommitOwnership
 admin : address, notIndexed ApplyOwnership
 admin : address, notIndexed Methods # transferOwnership # type: nonpayable function gas: 37651
-Sets new future owner address
+Transfers ownership by setting new owner _futureOwner candidate
 Callable by owner only
 Arguments:
-_futureOwner: - New future owner address applyOwnership # type: nonpayable function gas: 38507
-Applies new future owner address as current owner</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/boosting-controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/boosting-controller/</guid><description>BoostingController.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
-Boosting Controller
+_futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38507
+Applies transfer ownership</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/boosting-controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/boosting-controller/</guid><description>BoostingController.vy # vyper: 0.2.11
 Events # Boost
 coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed Unboost
 coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed CommitOwnership
 admin : address, notIndexed ApplyOwnership
-admin : address, notIndexed Methods # boost # type: nonpayable function</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/controller/</guid><description>Controller.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
-Controller
-Controls liquidity Reaper's and the emission of coins through the Reapers. Add/remove Reaper from voting/emission.
-Events # StartMinting
-owner : address, notIndexed CommitOwnership
+admin : address, notIndexed Methods # boost # type: nonpayable function
+Boost reward using tokens _coin with amount _amount for user msg.</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/controller/</guid><description>Controller.vy # vyper: 0.2.11
+Events # CommitOwnership
 owner : address, notIndexed ApplyOwnership
-owner : address, notIndexed Methods # init # type: nonpayable constructor
-Contract constructor
-_gasTokenCheckList, _farmToken can't be equal ZERO_ADDRESS.</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/initial-emission-distributor/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/initial-emission-distributor/</guid><description>InitialEmissionDistributor.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
-Initial Emission Distributor
+owner : address, notIndexed Methods # transferOwnership # type: nonpayable function gas: 37861
+Transfers ownership by setting new owner _futureOwner candidate
+Callable by owner only
+Arguments:
+_futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38717
+Applies transfer ownership</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/initial-emission-distributor/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/initial-emission-distributor/</guid><description>InitialEmissionDistributor.vy # vyper: 0.2.11
 Events # CommitOwnership
 owner : address, notIndexed ApplyOwnership
 owner : address, notIndexed Claim
 account : address, notIndexed amount : uint256, notIndexed Methods # transferOwnership # type: nonpayable function gas: 37771
 Transfers ownership by setting new owner _futureOwner candidate
-Callable by owner only.</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/reaper-reward-distributor/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/reaper-reward-distributor/</guid><description>ReaperRewardDistributor.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
-Reaper Reward Distributor
+Callable by owner only
+Arguments:
+_futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38627</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/reaper-reward-distributor/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/reaper-reward-distributor/</guid><description>ReaperRewardDistributor.vy # vyper: 0.2.11
 Events # Claim
 coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed CommitOwnership
 owner : address, notIndexed ApplyOwnership
 owner : address, notIndexed Methods # transferOwnership # type: nonpayable function gas: 37771
-Transfers ownership by setting new owner _futureOwner candidate</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/reaper/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/reaper/</guid><description>Reaper.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
-Reaper
+Transfers ownership by setting new owner _futureOwner candidate
+Callable by owner only
+Arguments:
+_futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38627</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/reaper/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/reaper/</guid><description>Reaper.vy # vyper: 0.2.11
 Events # CommitOwnership
 owner : address, notIndexed ApplyOwnership
 owner : address, notIndexed Methods # transferOwnership # type: nonpayable function gas: 37891
 Transfers ownership by setting new owner _futureOwner candidate
 Callable by owner only
 Arguments:
-_futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38747</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/voting-controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/voting-controller/</guid><description>VotingController.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
-Voting Controller
-For voting, Reaper's from Controller are used.
-Сontrols voting for the distribution of farm token emission by Reaper's.
+_futureOwner: - Future owner address applyOwnership # type: nonpayable function gas: 38747
+Applies transfer ownership</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/voting-controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/voting-controller/</guid><description>VotingController.vy # vyper: 0.2.11
 Events # Vote
 reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed Unvote
-reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed VoteApproval</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/white-list/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/white-list/</guid><description>WhiteList.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
-White List
-Events # CommitOwnership
-admin : address, notIndexed ApplyOwnership
-admin : address, notIndexed Methods # init # type: nonpayable constructor
-Contract constructor
-owner = msg.sender.
-addAddress # type: nonpayable function gas: 36500
-Adds address to list for later verification(check).
-Callable by owner only.</description></item></channel></rss>
+reaper : address, notIndexed coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed VoteApproval
+reaper : address, notIndexed coin : address, notIndexed ownerAccount : address, notIndexed voterAccount : address, notIndexed canVote : bool, notIndexed CommitOwnership</description></item></channel></rss>
