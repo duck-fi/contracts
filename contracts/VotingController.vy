@@ -70,6 +70,7 @@ futureOwner: public(address)
 farmToken: public(address)
 votingToken: public(address)
 controller: public(address)
+contractCheckList: public(address)
 gasTokenCheckList: public(address)
 balances: public(HashMap[address, HashMap[address, HashMap[address, uint256]]])                 # reaper -> coin -> account -> amount
 balancesUnlockTimestamp: public(HashMap[address, HashMap[address, HashMap[address, uint256]]])  # reaper -> coin -> account -> unlock timestamp
@@ -87,7 +88,7 @@ votingTokenRateAmplifier: public(uint256)
 
 
 @external
-def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: address):
+def __init__(_controller: address, _gasTokenCheckList: address, _contractCheckList: address, _farmToken: address):
     """
     @notice Contract constructor
     @dev `_controller`, `_gasTokenCheckList`, `_farmToken` can't be equal `ZERO_ADDRESS`. `owner` = `msg.sender`
@@ -97,10 +98,12 @@ def __init__(_controller: address, _gasTokenCheckList: address, _farmToken: addr
     """
     assert _controller != ZERO_ADDRESS, "controller is not set"
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
+    assert _contractCheckList != ZERO_ADDRESS, "contractCheckList is not set"
     assert _farmToken != ZERO_ADDRESS, "farmToken is not set"
 
     self.controller = _controller
     self.gasTokenCheckList = _gasTokenCheckList
+    self.contractCheckList = _contractCheckList
     self.farmToken = _farmToken
     self.owner = msg.sender
     self.votingTokenRate = VOTING_TOKEN_RATE
@@ -191,7 +194,7 @@ def snapshot(_gasToken: address = ZERO_ADDRESS):
 @nonreentrant('lock')
 def vote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address = ZERO_ADDRESS):
     """
-    @notice Vote for reaper `_reaper` using tokens `_coin` with amount `_amount` for user `_account`
+    @notice Vote for reaper `_reaper` using tokens `_coin` with amount `_amount` for user `msg.sender`
     @param _reaper Reaper to vote for
     @param _coin Coin which is used to vote
     @param _amount Amount which is used to vote
@@ -200,6 +203,10 @@ def vote(_reaper: address, _coin: address, _amount: uint256, _gasToken: address 
     _gasStart: uint256 = msg.gas
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
     assert _coin == self.farmToken or (_coin == self.votingToken and _coin != ZERO_ADDRESS), "invalid coin"
+
+    if msg.sender != tx.origin:
+        assert WhiteList(self.contractCheckList).check(msg.sender), "contract should be in white list"
+
     self.balances[_reaper][_coin][msg.sender] += _amount
     self.balancesUnlockTimestamp[_reaper][_coin][msg.sender] = block.timestamp + VOTING_PERIOD
     self.reaperBalances[_reaper][_coin] += _amount
