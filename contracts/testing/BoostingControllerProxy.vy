@@ -19,7 +19,8 @@ def __init__(_boostingController: address):
 
 
 @external
-def boost(_coin: address, _amount: uint256, _lockTime: uint256, _gasToken: address = ZERO_ADDRESS):
+def boost(_amount: uint256, _lockTime: uint256, _gasToken: address = ZERO_ADDRESS):
+    _coin: address = BoostingController(self.boostingController).boostingToken()
     ERC20(_coin).transferFrom(msg.sender, self, _amount)
     ERC20(_coin).approve(self.boostingController, _amount)
-    BoostingController(self.boostingController).boost(_coin, _amount, _lockTime, _gasToken)
+    BoostingController(self.boostingController).boost(_amount, _lockTime, _gasToken)
