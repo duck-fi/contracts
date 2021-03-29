@@ -100,10 +100,10 @@ def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boost
     last_balances_integral = reaper.balancesIntegral()
     last_reap_integral_deployer = reaper.reapIntegralFor(deployer)
 
-    # boost an account
+    # boost an account on 10 week (2 week - warmup, 8 week - reduction)
     while True:
         chain.mine(1, init_ts + day)
-        tx4 = boosting_controller.boost(farm_token, 10**18, 4 * week, {'from': deployer})
+        tx4 = boosting_controller.boost(farm_token, 10**18, 10 * week, {'from': deployer})
         if tx4.timestamp == init_ts + day:
             break
         else:
@@ -137,12 +137,11 @@ def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boost
     # assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
     boost_koeff = reaper.boostIntegralFor(deployer) / reaper.totalBoostIntegralFor(deployer)
     print(boost_koeff)
-    print(amount // 2 + boost_koeff * amount // 2)
     assert reaper.reapIntegralFor(deployer) == int(amount // 2 + boost_koeff * amount // 2) * (reaper.lastUnitCostIntegralFor(deployer) - last_unit_cost_integral) // VOTE_DIVIDER + last_reap_integral_deployer
     assert reaper.lastSnapshotTimestamp() == tx5.timestamp
     assert reaper.lastSnapshotTimestampFor(deployer) == tx5.timestamp
     assert reaper.voteIntegral() == (tx5.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
-    assert abs(reaper.boostIntegralFor(deployer) / reaper.totalBoostIntegralFor(deployer) - 0.035) < 10 ** (-3)
+    assert abs(boost_koeff - 0.035) < 10 ** (-3)
     assert reaper.totalBoostIntegralFor(deployer) == 10**18 * (tx5.timestamp - init_boost_timestamp)
     last_unit_cost_integral = reaper.unitCostIntegral()
     last_emission_intergal = reaper.emissionIntegral()
@@ -150,59 +149,25 @@ def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boost
     last_balances_integral = reaper.balancesIntegral()
     last_reap_integral_deployer = reaper.reapIntegralFor(deployer)
 
-    print("tx5.timestamp",tx5.timestamp)
-    print("reaper.reapIntegralFor(deployer)", reaper.reapIntegralFor(deployer))
-    print("boosting_controller.updateBoostIntegral()", boosting_controller.updateBoostIntegral().return_value)
-    print("boosting_controller.accountBoostIntegral(deployer)", boosting_controller.accountBoostIntegral(deployer).return_value)
-    print("boosts0", boosting_controller.boosts(deployer)[0])
-    print("boosts1", boosting_controller.boosts(deployer)[1])
-    print("boosts2", boosting_controller.boosts(deployer)[2])
-    print("boosts3", boosting_controller.boosts(deployer)[3])
+    # 3rd snapshot
+    while True:
+        chain.mine(1, init_boost_timestamp + 2 * week)
+        tx6 = reaper.snapshot({'from': deployer})
+        if tx6.timestamp == init_boost_timestamp + 2 * week:
+            break
+        else:
+            chain.undo(1)
 
-    assert False
-
-    # print("last_emission_intergal", last_emission_intergal)
-    # print("last_vote_integral", last_vote_integral-init_vote_integral)
-    # print("last_unit_cost_integral", last_unit_cost_integral)
-    # print((tx4.timestamp - tx2.timestamp))
-    # print("last_reap_integral_deployer", last_reap_integral_deployer)
-    # print("-------------")
-
-    # # 3rd snapshot
-    # chain.mine(1, init_ts + 5 * day)
-    # tx5 = reaper.snapshot({'from': deployer})
-    # assert reaper.balances(deployer) == amount
-    # assert reaper.totalBalances() == amount
-    # assert reaper.balancesIntegral() == amount * (tx5.timestamp - tx2.timestamp)
-    # assert reaper.balancesIntegralFor(deployer) == amount * (tx5.timestamp - tx2.timestamp)
-    # assert reaper.emissionIntegral() == YEAR_EMISSION * (tx5.timestamp - initial_emission_timestamp) // year
-    # assert reaper.unitCostIntegral() == (reaper.emissionIntegral() - last_emission_intergal) * (reaper.voteIntegral() - last_vote_integral) // (reaper.balancesIntegral() - last_balances_integral) + last_unit_cost_integral
-    # assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
-    # assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer)
-    # assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
-    # assert reaper.reapIntegralFor(deployer) == (reaper.lastUnitCostIntegralFor(deployer) - last_unit_cost_integral) * amount // 2 // VOTE_DIVIDER + last_reap_integral_deployer
-    # assert reaper.lastSnapshotTimestamp() == tx5.timestamp
-    # assert reaper.lastSnapshotTimestampFor(deployer) == tx5.timestamp
-    # assert reaper.voteIntegral() == (tx5.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
-    # assert reaper.boostIntegralFor(deployer) == 0
-    # assert reaper.totalBoostIntegralFor(deployer) == 0
-    # last_unit_cost_integral = reaper.unitCostIntegral()
-    # last_emission_intergal = reaper.emissionIntegral()
-    # last_vote_integral = reaper.voteIntegral()
-    # last_balances_integral = reaper.balancesIntegral()
-    # last_reap_integral_deployer = reaper.reapIntegralFor(deployer)
-
-    # # 4th snapshot
-    # chain.mine(1, init_ts + 7 * day)
-    # tx6 = reaper.snapshot({'from': deployer})
-    # assert reaper.balances(deployer) == amount
-    # assert reaper.totalBalances() == amount
-    # assert reaper.balancesIntegral() == amount * (tx6.timestamp - tx2.timestamp)
-    # assert reaper.balancesIntegralFor(deployer) == amount * (tx6.timestamp - tx2.timestamp)
-    # assert reaper.emissionIntegral() == YEAR_EMISSION * (tx6.timestamp - initial_emission_timestamp) // year
-    # assert reaper.unitCostIntegral() == (reaper.emissionIntegral() - last_emission_intergal) * (reaper.voteIntegral() - last_vote_integral) // (reaper.balancesIntegral() - last_balances_integral) + last_unit_cost_integral
-    # assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
-    # assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer)
+    assert reaper.balances(deployer) == amount
+    assert reaper.totalBalances() == amount
+    assert reaper.balancesIntegral() == amount * (tx6.timestamp - tx2.timestamp)
+    assert reaper.balancesIntegralFor(deployer) == amount * (tx6.timestamp - tx2.timestamp)
+    assert reaper.emissionIntegral() == YEAR_EMISSION * (tx6.timestamp - initial_emission_timestamp) // year
+    assert reaper.unitCostIntegral() == (reaper.emissionIntegral() - last_emission_intergal) * (reaper.voteIntegral() - last_vote_integral) // (reaper.balancesIntegral() - last_balances_integral) + last_unit_cost_integral
+    assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
+    assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer)
+    boost_koeff = reaper.boostIntegralFor(deployer) / reaper.totalBoostIntegralFor(deployer)
+    print(boost_koeff) # TODO
     # assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
     # assert reaper.reapIntegralFor(deployer) == (reaper.lastUnitCostIntegralFor(deployer) - last_unit_cost_integral) * amount // 2 // VOTE_DIVIDER + last_reap_integral_deployer
     # assert reaper.lastSnapshotTimestamp() == tx6.timestamp
@@ -210,12 +175,44 @@ def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boost
     # assert reaper.voteIntegral() == (tx6.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
     # assert reaper.boostIntegralFor(deployer) == 0
     # assert reaper.totalBoostIntegralFor(deployer) == 0
-    # last_unit_cost_integral = reaper.unitCostIntegral()
-    # last_emission_intergal = reaper.emissionIntegral()
-    # last_vote_integral = reaper.voteIntegral()
-    # last_balances_integral = reaper.balancesIntegral()
-    # last_unit_cost_integral_deployer = reaper.lastUnitCostIntegralFor(deployer)
-    # last_reap_integral_deployer = reaper.reapIntegralFor(deployer)
+    last_unit_cost_integral = reaper.unitCostIntegral()
+    last_emission_intergal = reaper.emissionIntegral()
+    last_vote_integral = reaper.voteIntegral()
+    last_balances_integral = reaper.balancesIntegral()
+    last_reap_integral_deployer = reaper.reapIntegralFor(deployer)
+
+    # 4th snapshot
+    while True:
+        chain.mine(1, init_boost_timestamp + 4 * week)
+        tx7 = reaper.snapshot({'from': deployer})
+        if tx7.timestamp == init_boost_timestamp + 4 * week:
+            break
+        else:
+            chain.undo(1)
+    assert reaper.balances(deployer) == amount
+    assert reaper.totalBalances() == amount
+    assert reaper.balancesIntegral() == amount * (tx7.timestamp - tx2.timestamp)
+    assert reaper.balancesIntegralFor(deployer) == amount * (tx7.timestamp - tx2.timestamp)
+    assert reaper.emissionIntegral() == YEAR_EMISSION * (tx7.timestamp - initial_emission_timestamp) // year
+    assert reaper.unitCostIntegral() == (reaper.emissionIntegral() - last_emission_intergal) * (reaper.voteIntegral() - last_vote_integral) // (reaper.balancesIntegral() - last_balances_integral) + last_unit_cost_integral
+    assert reaper.unitCostIntegral() == reaper.lastUnitCostIntegralFor(deployer)
+    assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer)
+    boost_koeff = reaper.boostIntegralFor(deployer) / reaper.totalBoostIntegralFor(deployer)
+    print(boost_koeff)
+     #TODO: here error
+    assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
+    assert reaper.reapIntegralFor(deployer) == (reaper.lastUnitCostIntegralFor(deployer) - last_unit_cost_integral) * amount // 2 // VOTE_DIVIDER + last_reap_integral_deployer
+    assert reaper.lastSnapshotTimestamp() == tx7.timestamp
+    assert reaper.lastSnapshotTimestampFor(deployer) == tx7.timestamp
+    assert reaper.voteIntegral() == (tx7.timestamp - voting_controller.lastSnapshotTimestamp()) * VOTE_DIVIDER
+    assert reaper.boostIntegralFor(deployer) == 0
+    assert reaper.totalBoostIntegralFor(deployer) == 0
+    last_unit_cost_integral = reaper.unitCostIntegral()
+    last_emission_intergal = reaper.emissionIntegral()
+    last_vote_integral = reaper.voteIntegral()
+    last_balances_integral = reaper.balancesIntegral()
+    last_unit_cost_integral_deployer = reaper.lastUnitCostIntegralFor(deployer)
+    last_reap_integral_deployer = reaper.reapIntegralFor(deployer)
 
     # print("last_emission_intergal", last_emission_intergal)
     # print("last_vote_integral", last_vote_integral-init_vote_integral)
