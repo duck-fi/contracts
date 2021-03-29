@@ -51,6 +51,7 @@ owner: public(address)
 futureOwner: public(address)
 
 gasTokenCheckList: public(address)
+contractCheckList: public(address)
 boostingToken: public(address)
 boostIntegral: public(uint256)
 lastBoostTimestamp: public(uint256)
@@ -62,12 +63,15 @@ totalBalance: public(uint256)
 
 
 @external
-def __init__(_gasTokenCheckList: address):
+def __init__(_gasTokenCheckList: address, _contractCheckList: address):
     """
     @notice Contract constructor
     """
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
+    assert _contractCheckList != ZERO_ADDRESS, "contractCheckList is not set"
+
     self.gasTokenCheckList = _gasTokenCheckList
+    self.contractCheckList = _contractCheckList
     self.owner = msg.sender
 
 
@@ -179,6 +183,9 @@ def boost(_amount: uint256, _lockTime: uint256, _gasToken: address = ZERO_ADDRES
     _gasStart: uint256 = msg.gas
     _boostingToken: address = self.boostingToken
     assert _lockTime >= WARMUP_TIME, "locktime is too short"
+
+    if msg.sender != tx.origin:
+        assert WhiteList(self.contractCheckList).check(msg.sender), "contract should be in white list"
 
     self._updateBoostIntegral()
     self._updateAccountBoostIntegral(msg.sender)
