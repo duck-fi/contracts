@@ -70,13 +70,13 @@ def voting_controller_mocked(VotingController, controller_mock, farm_token, depl
 
 
 @pytest.fixture(scope="module")
-def boosting_controller(BoostingController, farm_token, gas_token_check_list, deployer):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
+def boosting_controller(BoostingController, gas_token_check_list, deployer):
+    yield BoostingController.deploy(gas_token_check_list, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
-def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_list, deployer):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
+def boosting_controller_mocked(BoostingController, gas_token_check_list, deployer):
+    yield BoostingController.deploy(gas_token_check_list, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
