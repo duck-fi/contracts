@@ -9,8 +9,8 @@ _futureOwner: - New future owner address applyOwnership # type: nonpayable funct
 Applies new future owner address as current owner</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/boosting-controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/boosting-controller/</guid><description>BoostingController.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
 Boosting Controller
 Events # Boost
-account : address, notIndexed amount : uint256, notIndexed lockTime : uint256, notIndexed Unboost
-account : address, notIndexed amount : uint256, notIndexed CommitOwnership
+coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed Unboost
+coin : address, notIndexed account : address, notIndexed amount : uint256, notIndexed CommitOwnership
 admin : address, notIndexed ApplyOwnership
 admin : address, notIndexed Methods # boost # type: nonpayable function</description></item><item><title/><link>https://dispersion-fi.github.io/contracts/docs/controller/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://dispersion-fi.github.io/contracts/docs/controller/</guid><description>Controller.vy # vyper: 0.2.11 author: Dispersion Finance Team license: MIT
 Controller
