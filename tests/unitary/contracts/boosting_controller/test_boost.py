@@ -578,17 +578,3 @@ def test_boost_boosting_token(boosting_controller_mocked, boosting_token_mocked,
     assert boosting_controller_mocked.boostIntegralFor(
         morpheus) == previous_integral_morpheus
     assert boosting_controller_mocked.boostIntegral() == previous_integral
-
-
-def test_boost_contract(boosting_controller_mocked_proxy, exception_tester, farm_token, deployer, contract_white_list, week):
-    farm_token.approve(boosting_controller_mocked_proxy,
-                       1_000, {'from': deployer})
-
-    exception_tester("", boosting_controller_mocked_proxy.boost,
-                     farm_token, 1_000, 2 * week, {'from': deployer})
-
-    contract_white_list.addAddress(
-        boosting_controller_mocked_proxy, {'from': deployer})
-
-    boosting_controller_mocked_proxy.boost(
-        farm_token, 1_000, 2 * week, {'from': deployer})

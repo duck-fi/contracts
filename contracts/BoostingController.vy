@@ -57,7 +57,6 @@ futureOwner: public(address)
 
 farmToken: public(address)
 gasTokenCheckList: public(address)
-contractCheckList: public(address)
 boostingToken: public(address)
 boostIntegral: public(uint256)
 lastBoostTimestamp: public(uint256)
@@ -69,17 +68,15 @@ coinBalances: public(HashMap[address, uint256]) # coin -> balance
 
 
 @external
-def __init__(_farmToken: address, _gasTokenCheckList: address, _contractCheckList: address):
+def __init__(_farmToken: address, _gasTokenCheckList: address):
     """
     @notice Contract constructor
     """
     assert _farmToken != ZERO_ADDRESS, "farmToken is not set"
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
-    assert _contractCheckList != ZERO_ADDRESS, "contractCheckList is not set"
 
     self.farmToken = _farmToken
     self.gasTokenCheckList = _gasTokenCheckList
-    self.contractCheckList = _contractCheckList
     self.owner = msg.sender
 
 
@@ -199,9 +196,6 @@ def boost(_coin: address, _amount: uint256, _lockTime: uint256, _gasToken: addre
     _boostingToken: address = self.boostingToken
     assert _lockTime >= MIN_LOCKING_PERIOD, "locktime is too short"
     assert _coin == self.farmToken or (_coin == _boostingToken and _coin != ZERO_ADDRESS), "invalid coin"
-
-    if msg.sender != tx.origin:
-        assert WhiteList(self.contractCheckList).check(msg.sender), "contract should be in white list"
 
     self._updateBoostIntegral()
     self._updateAccountBoostIntegral(msg.sender)

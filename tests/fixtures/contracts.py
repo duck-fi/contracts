@@ -17,11 +17,6 @@ def reaper_3_mock(accounts):
 
 
 @pytest.fixture(scope="module")
-def proxy_deployer(ProxyDeployer, deployer):
-    yield ProxyDeployer.deploy({'from': deployer})
-
-
-@pytest.fixture(scope="module")
 def reaper_mock(ReaperMock, lp_token, farm_token, deployer):
     yield ReaperMock.deploy(lp_token, farm_token, {'from': deployer})
 
@@ -65,38 +60,23 @@ def reaper_strategy_mock(ReaperStrategyMock, reaper, lp_token, deployer):
 
 
 @pytest.fixture(scope="module")
-def voting_controller(VotingController, controller, farm_token, deployer, gas_token_check_list, contract_white_list):
-    yield VotingController.deploy(controller, gas_token_check_list, contract_white_list, farm_token, {'from': deployer})
-
-
-@pytest.fixture(scope="module")
-def voting_controller_proxy(VotingControllerProxy, voting_controller, deployer):
-    yield VotingControllerProxy.deploy(voting_controller, {'from': deployer})
+def voting_controller(VotingController, controller, farm_token, deployer, gas_token_check_list):
+    yield VotingController.deploy(controller, gas_token_check_list, farm_token, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
-def voting_controller_mocked(VotingController, controller_mock, farm_token, deployer, gas_token_check_list, contract_white_list):
-    yield VotingController.deploy(controller_mock, gas_token_check_list, contract_white_list, farm_token, {'from': deployer})
+def voting_controller_mocked(VotingController, controller_mock, farm_token, deployer, gas_token_check_list):
+    yield VotingController.deploy(controller_mock, gas_token_check_list, farm_token, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
-def voting_controller_mocked_proxy(VotingControllerProxy, voting_controller_mocked, deployer):
-    yield VotingControllerProxy.deploy(voting_controller_mocked, {'from': deployer})
+def boosting_controller(BoostingController, farm_token, gas_token_check_list, deployer):
+    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
-def boosting_controller(BoostingController, farm_token, gas_token_check_list, deployer, contract_white_list):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, contract_white_list, {'from': deployer})
-
-
-@ pytest.fixture(scope="module")
-def boosting_controller_proxy(BoostingControllerProxy, boosting_controller, deployer):
-    yield BoostingControllerProxy.deploy(boosting_controller, {'from': deployer})
-
-
-@ pytest.fixture(scope="module")
-def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_list, deployer, contract_white_list):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, contract_white_list, {'from': deployer})
+def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_list, deployer):
+    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
@@ -145,11 +125,6 @@ def white_list(WhiteList, deployer):
     check_list = WhiteList.deploy({'from': deployer})
     check_list.addAddress(deployer, {'from': deployer})
     yield check_list
-
-
-@ pytest.fixture(scope="module")
-def contract_white_list(WhiteList, deployer):
-    yield WhiteList.deploy({'from': deployer})
 
 
 @ pytest.fixture(scope="module")
