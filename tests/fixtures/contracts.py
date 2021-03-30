@@ -17,6 +17,11 @@ def reaper_3_mock(accounts):
 
 
 @pytest.fixture(scope="module")
+def proxy_deployer(ProxyDeployer, deployer):
+    yield ProxyDeployer.deploy({'from': deployer})
+
+
+@pytest.fixture(scope="module")
 def reaper_mock(ReaperMock, lp_token, farm_token, deployer):
     yield ReaperMock.deploy(lp_token, farm_token, {'from': deployer})
 
@@ -80,8 +85,18 @@ def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_l
 
 
 @ pytest.fixture(scope="module")
-def boosting_controller_mocked_proxy(BoostingControllerProxy, boosting_controller_mocked, deployer):
-    yield BoostingControllerProxy.deploy(boosting_controller_mocked, {'from': deployer})
+def voting_controller_mocked(VotingController, controller_mock, farm_token, deployer, gas_token_check_list):
+    yield VotingController.deploy(controller_mock, gas_token_check_list, farm_token, {'from': deployer})
+
+
+@ pytest.fixture(scope="module")
+def boosting_controller(BoostingController, gas_token_check_list, deployer):
+    yield BoostingController.deploy(gas_token_check_list, {'from': deployer})
+
+
+@ pytest.fixture(scope="module")
+def boosting_controller_mocked(BoostingController, gas_token_check_list, deployer):
+    yield BoostingController.deploy(gas_token_check_list, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
