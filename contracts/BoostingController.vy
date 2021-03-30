@@ -63,15 +63,13 @@ totalBalance: public(uint256)
 
 
 @external
-def __init__(_gasTokenCheckList: address, _contractCheckList: address):
+def __init__(_gasTokenCheckList: address):
     """
     @notice Contract constructor
     """
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
-    assert _contractCheckList != ZERO_ADDRESS, "contractCheckList is not set"
 
     self.gasTokenCheckList = _gasTokenCheckList
-    self.contractCheckList = _contractCheckList
     self.owner = msg.sender
 
 

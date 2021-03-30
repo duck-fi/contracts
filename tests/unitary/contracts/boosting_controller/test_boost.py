@@ -297,18 +297,3 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
     assert boosting_controller_mocked.boostIntegralFor(
         morpheus) == previous_integral_morpheus
     assert boosting_controller_mocked.boostIntegral() == previous_integral
-
-
-# TODO: resolve problem with proxy boosting (because u cannot use strict transfable token with proxy transferFrom)
-# def test_boost_contract(boosting_controller_mocked_proxy, exception_tester, boosting_token_mocked, deployer, contract_white_list, week):
-#     boosting_token_mocked.mint(deployer, 100000000000000000, {'from': deployer})
-#     boosting_token_mocked.approve(
-#         boosting_controller_mocked_proxy, 1_000, {'from': deployer})
-
-#     exception_tester("", boosting_controller_mocked_proxy.boost,
-#                      1_000, 2 * week, {'from': deployer})
-
-#     contract_white_list.addAddress(
-#         boosting_controller_mocked_proxy, {'from': deployer})
-
-#     boosting_controller_mocked_proxy.boost(1_000, 2 * week, {'from': deployer})
