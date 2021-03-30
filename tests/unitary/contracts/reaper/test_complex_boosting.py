@@ -3,27 +3,26 @@ from brownie.test import given, strategy
 VOTE_DIVIDER = 10 ** 18
 YEAR_EMISSION = 1_000_000 * 10 ** 18
 
-# TODO: impl
+
 @given(amount=strategy('uint256', min_value=10**3, max_value=10**23))
-def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boosting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, week, day, amount):
+def test_complex_boosting(lp_token, reaper, controller, voting_controller, boosting_controller_mocked, boosting_token_mocked, deployer, morpheus, trinity, MAX_UINT256, chain, year, week, day, amount):
     lp_token.transfer(morpheus, 10 * amount, {'from': deployer})
     lp_token.transfer(trinity, 10 * amount, {'from': deployer})
     initial_balance = lp_token.balanceOf(deployer)
     lp_token.approve(reaper, MAX_UINT256, {'from': deployer})
     lp_token.approve(reaper, MAX_UINT256, {'from': morpheus})
     lp_token.approve(reaper, MAX_UINT256, {'from': trinity})
-    farm_token.approve(boosting_controller, MAX_UINT256, {'from': deployer})
+    boosting_token_mocked.mint(deployer, 10**18, {'from': deployer})
+    boosting_token_mocked.approve(boosting_controller_mocked, 10**18, {'from': deployer})
     init_ts = chain.time()
 
     while True:
         chain.mine(1, init_ts)
-        tx1 = farm_token.startEmission({'from': deployer})
-        chain.mine(1, init_ts)
-        tx1_1 = voting_controller.startVoting({'from': deployer})
-        if tx1.timestamp == tx1_1.timestamp:
+        tx1 = controller.startEmission(voting_controller, 0, {'from': deployer})
+        if tx1.timestamp == init_ts:
             break
         else:
-            chain.undo(2)
+            chain.undo(1)
 
     assert reaper.balances(deployer) == 0
     assert reaper.totalBalances() == 0
@@ -103,7 +102,7 @@ def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boost
     # boost an account on 10 week (2 week - warmup, 8 week - reduction)
     while True:
         chain.mine(1, init_ts + day)
-        tx4 = boosting_controller.boost(farm_token, 10**18, 10 * week, {'from': deployer})
+        tx4 = boosting_controller_mocked.boost(10**18, 10 * week, {'from': deployer})
         if tx4.timestamp == init_ts + day:
             break
         else:
@@ -189,6 +188,7 @@ def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boost
             break
         else:
             chain.undo(1)
+    
     assert reaper.balances(deployer) == amount
     assert reaper.totalBalances() == amount
     assert reaper.balancesIntegral() == amount * (tx7.timestamp - tx2.timestamp)
@@ -199,7 +199,7 @@ def test_complex_boosting(farm_token, lp_token, reaper, voting_controller, boost
     assert reaper.reapIntegral() == reaper.reapIntegralFor(deployer)
     boost_koeff = reaper.boostIntegralFor(deployer) / reaper.totalBoostIntegralFor(deployer)
     print(boost_koeff)
-     #TODO: here error
+    # TODO: here error
     assert abs(reaper.reapIntegralFor(deployer) - reaper.emissionIntegral() // 2) <= 10 ** 8 # no boosting <=> 50% of emission, loss is about 1e-8
     assert reaper.reapIntegralFor(deployer) == (reaper.lastUnitCostIntegralFor(deployer) - last_unit_cost_integral) * amount // 2 // VOTE_DIVIDER + last_reap_integral_deployer
     assert reaper.lastSnapshotTimestamp() == tx7.timestamp

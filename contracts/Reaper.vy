@@ -169,6 +169,7 @@ def _snapshot(_account: address):
         self.lastSnapshotTimestampFor[_account] = block.timestamp
         self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
         self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+        self.balancesIntegralFor[_account] = _balancesIntegral
         return
 
     # dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
@@ -243,9 +244,9 @@ def _snapshot(_account: address):
 
         self.boostIntegralFor[_account] = _boostIntegral
 
-    self.debug1 = (_balancesIntegral - self.balancesIntegralFor[_account])
-    self.debug2 = boost_balance * (100 - TOKENLESS_PRODUCTION) / 100
-    self.debug3 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100)
+    # self.debug1 = (_balancesIntegral - self.balancesIntegralFor[_account])
+    # self.debug2 = boost_balance * (100 - TOKENLESS_PRODUCTION) / 100
+    # self.debug3 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100)
 
     _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
     _account_emission: uint256 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100) * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER

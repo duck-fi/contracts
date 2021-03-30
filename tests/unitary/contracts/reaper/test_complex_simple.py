@@ -5,7 +5,7 @@ YEAR_EMISSION = 1_000_000 * 10 ** 18
 
 
 @given(amount=strategy('uint256', min_value=10**3, max_value=10**23))
-def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, day, amount):
+def test_complex_simple(farm_token, lp_token, reaper, controller, voting_controller, deployer, morpheus, trinity, MAX_UINT256, chain, year, day, amount):
     lp_token.transfer(morpheus, 10 * amount, {'from': deployer})
     lp_token.transfer(trinity, 10 * amount, {'from': deployer})
     initial_balance = lp_token.balanceOf(deployer)
@@ -13,12 +13,15 @@ def test_complex_simple(farm_token, lp_token, reaper, voting_controller, deploye
     lp_token.approve(reaper, MAX_UINT256, {'from': morpheus})
     lp_token.approve(reaper, MAX_UINT256, {'from': trinity})
     init_ts = chain.time()
+
     chain.mine(1, init_ts)
-    tx = farm_token.startEmission({'from': deployer})
+    tx = controller.startEmission(voting_controller, 0, {'from': deployer})
     initial_emission_timestamp = tx.timestamp
-    chain.mine(1, init_ts)
-    tx = voting_controller.startVoting({'from': deployer})
     initial_voting_timestamp = tx.timestamp
+
+    # tx = farm_token.startEmission({'from': deployer})
+    # chain.mine(1, init_ts)
+    # tx = voting_controller.startVoting({'from': deployer})
     assert reaper.balances(deployer) == 0
     assert reaper.totalBalances() == 0
     assert reaper.balancesIntegral() == 0
