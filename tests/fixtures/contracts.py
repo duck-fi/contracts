@@ -85,8 +85,8 @@ def voting_controller_mocked_proxy(VotingControllerProxy, voting_controller_mock
 
 
 @ pytest.fixture(scope="module")
-def boosting_controller(BoostingController, farm_token, gas_token_check_list, deployer, contract_white_list):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, contract_white_list, {'from': deployer})
+def boosting_controller(BoostingController, gas_token_check_list, deployer, contract_white_list):
+    yield BoostingController.deploy(gas_token_check_list, contract_white_list, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
@@ -95,8 +95,8 @@ def boosting_controller_proxy(BoostingControllerProxy, boosting_controller, depl
 
 
 @ pytest.fixture(scope="module")
-def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_list, deployer, contract_white_list):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, contract_white_list, {'from': deployer})
+def boosting_controller_mocked(BoostingController, gas_token_check_list, deployer, contract_white_list):
+    yield BoostingController.deploy(gas_token_check_list, contract_white_list, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
