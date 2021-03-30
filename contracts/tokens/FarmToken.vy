@@ -1,4 +1,4 @@
-# @version ^0.2.0
+# @version ^0.2.11
 """
 @title Dispersion Farm Token
 @author Dispersion Finance Team
@@ -79,8 +79,8 @@ _emissionIntegral: uint256
 def __init__(_name: String[32], _symbol: String[8]):
     """
     @notice Contract constructor.
-    @dev Premine emission is returnted to deployer. 
-        Emits a `Transfer` event originating from `ZERO_ADDRESS` to `deployer` with amount=`INITIAL_SUPPLY` 
+    @dev Premine emission is returnted to deployer. `owner` = `msg.sender`
+        Emits a `Transfer` event originating from `ZERO_ADDRESS` to `deployer` with amount=`INITIAL_SUPPLY`
     @param _name Token full name
     @param _symbol Token symbol
     """
@@ -184,10 +184,10 @@ def mint(_account: address, _amount: uint256):
 def startEmission():
     """
     @notice Starts token emission.
-    @dev Only callable once by `owner`, when `lastEmissionUpdateTimestamp` has not yet been set. 
+    @dev Only callable once by `minter`, when `lastEmissionUpdateTimestamp` has not yet been set. 
         Emits a `YearEmissionUpdate` event with `INITIAL_YEAR_EMISSION`
     """
-    assert msg.sender == self.owner, "owner only"
+    assert msg.sender == self.minter, "minter only"
     assert self.lastEmissionUpdateTimestamp == 0, "emission already started"
     self._yearEmission = INITIAL_YEAR_EMISSION
     self.lastEmissionUpdateTimestamp = block.timestamp
@@ -293,7 +293,7 @@ def burn(_amount: uint256) -> bool:
 def transferOwnership(_futureOwner: address):
     """
     @notice Transfers ownership by setting new owner `_futureOwner` candidate
-    @dev Callable by owner only
+    @dev Callable by `owner` only. Emit CommitOwnership event with `_futureOwner`
     @param _futureOwner Future owner address
     """
     assert msg.sender == self.owner, "owner only"
@@ -305,7 +305,8 @@ def transferOwnership(_futureOwner: address):
 def applyOwnership():
     """
     @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
+    @dev Callable by `owner` only. Function call actually changes `owner`. 
+        Emits ApplyOwnership event with `_owner`
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner

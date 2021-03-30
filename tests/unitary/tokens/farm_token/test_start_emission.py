@@ -1,13 +1,13 @@
 import brownie
 
 
-def test_not_by_owner(farm_token, thomas, ownable_exception_tester):
-    ownable_exception_tester(farm_token.startEmission, {'from': thomas})
+def test_not_by_owner(farm_token, thomas, exception_tester):
+    exception_tester("minter only", farm_token.startEmission, {'from': thomas})
 
 
-def test_success_startEmission(farm_token, deployer, chain):
+def test_success_startEmission(farm_token, voting_controller, controller, deployer, chain):
     t1 = chain.time()
-    farm_token.startEmission({'from': deployer})
+    controller.startEmission(voting_controller, 0, {'from': deployer})
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
     startEmissionTimestamp = farm_token.startEmissionTimestamp()
     t2 = chain.time()
@@ -16,6 +16,6 @@ def test_success_startEmission(farm_token, deployer, chain):
     assert startEmissionTimestamp >= t1 and startEmissionTimestamp <= t2
 
 
-def test_fail_double_startEmission(farm_token, deployer, exception_tester):
-    exception_tester("emission already started",
-                     farm_token.startEmission, {'from': deployer})
+def test_fail_double_startEmission(controller, voting_controller, deployer, exception_tester):
+    exception_tester("", controller.startEmission,
+                     voting_controller, 0, {'from': deployer})

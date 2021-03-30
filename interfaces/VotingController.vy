@@ -1,4 +1,4 @@
-# @version ^0.2.0
+# @version ^0.2.11
 
 
 @view
@@ -103,3 +103,8 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
 @external
 def totalVotePower() -> uint256:
     return 0
+
+
+@external
+def startVoting(_votingDelay: uint256 = 0):
+    pass

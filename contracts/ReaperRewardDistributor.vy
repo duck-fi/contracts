@@ -1,4 +1,9 @@
-# @version ^0.2.0
+# @version ^0.2.11
+"""
+@title Reaper Reward Distributor
+@author Dispersion Finance Team
+@license MIT
+"""
 
 
 from vyper.interfaces import ERC20
@@ -6,7 +11,7 @@ import interfaces.Ownable as Ownable
 import interfaces.ReaperRewardDistributor as ReaperRewardDistributor
 import interfaces.Reaper as Reaper
 import interfaces.GasToken as GasToken
-import interfaces.AddressesCheckList as AddressesCheckList
+import interfaces.WhiteList as WhiteList
 
 
 implements: Ownable
@@ -58,7 +63,7 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
     if _gasToken == ZERO_ADDRESS:
         return
 
-    assert AddressesCheckList(self.gasTokenCheckList).get(_gasToken), "unsupported gas token"
+    assert WhiteList(self.gasTokenCheckList).check(_gasToken), "unsupported gas token"
     gasSpent: uint256 = MIN_GAS_CONSTANT + _gasStart - msg.gas + 16 * _callDataLength
     GasToken(_gasToken).freeFromUpTo(_from, (gasSpent + 14154) / 41130)
 
@@ -151,7 +156,7 @@ def claimAdminFee(_coin: address, _gasToken: address = ZERO_ADDRESS):
 def transferOwnership(_futureOwner: address):
     """
     @notice Transfers ownership by setting new owner `_futureOwner` candidate
-    @dev Callable by owner only
+    @dev Callable by `owner` only. Emit CommitOwnership event with `_futureOwner`
     @param _futureOwner Future owner address
     """
     assert msg.sender == self.owner, "owner only"
@@ -163,7 +168,8 @@ def transferOwnership(_futureOwner: address):
 def applyOwnership():
     """
     @notice Applies transfer ownership
-    @dev Callable by owner only. Function call actually changes owner
+    @dev Callable by `owner` only. Function call actually changes `owner`. 
+        Emits ApplyOwnership event with `_owner`
     """
     assert msg.sender == self.owner, "owner only"
     _owner: address = self.futureOwner

@@ -30,7 +30,8 @@ def test_unapproved(voting_controller_mocked, reaper_1_mock, exception_tester, f
 def test_vote_farm_token(exception_tester, voting_controller_mocked, farm_token, reaper_1_mock, deployer, amount, week, chain):
     initial_balance = farm_token.balanceOf(deployer)
     farm_token.approve(voting_controller_mocked, amount, {'from': deployer})
-    assert voting_controller_mocked.voteIntegral(reaper_1_mock).return_value == 0
+    assert voting_controller_mocked.voteIntegral(
+        reaper_1_mock).return_value == 0
     tx1 = voting_controller_mocked.vote(
         reaper_1_mock, farm_token, amount, {'from': deployer})
     assert tx1.return_value is None
@@ -173,3 +174,17 @@ def test_vote_gas_reducing_not_valid_token(voting_controller_mocked, farm_token,
     farm_token.approve(voting_controller_mocked, amount, {'from': deployer})
     exception_tester("unsupported gas token", voting_controller_mocked.vote,
                      reaper_1_mock, farm_token, amount, farm_token, {'from': deployer})
+
+
+def test_vote_contract(voting_controller_mocked_proxy, exception_tester, reaper_1_mock, farm_token, deployer, contract_white_list, ZERO_ADDRESS):
+    farm_token.approve(voting_controller_mocked_proxy,
+                       1_000, {'from': deployer})
+
+    exception_tester("", voting_controller_mocked_proxy.vote,
+                     reaper_1_mock, farm_token, 1_000, {'from': deployer})
+
+    contract_white_list.addAddress(
+        voting_controller_mocked_proxy, {'from': deployer})
+
+    voting_controller_mocked_proxy.vote(
+        reaper_1_mock, farm_token, 1_000, {'from': deployer})
