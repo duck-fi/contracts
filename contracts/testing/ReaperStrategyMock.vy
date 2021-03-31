@@ -41,8 +41,9 @@ def invest(_amount: uint256):
 
 
 @external
-def reap():
+def reap() -> uint256:
     self.isReapCalled = True
+    return 0
 
 
 @external
