@@ -43,7 +43,9 @@ if __name__ == "__main__":
                     source = abi['source'].replace(
                         '\n', '\\n').replace("'", "''")
 
-                byte_code = abi['bytecode']
+                byte_code = ""
+                if "bytecode" in abi:
+                    byte_code = abi['bytecode']
 
                 abi_str = json.dumps(abi['abi'], separators=(',', ':'))
 
