@@ -10,10 +10,10 @@ Events #  Boost
  account : address, notIndexed amount : uint256, notIndexed lockTime : uint256, notIndexed   Unboost
  account : address, notIndexed amount : uint256, notIndexed   CommitOwnership
  admin : address, notIndexed   ApplyOwnership
- admin : address, notIndexed   Methods #  boost #   type: nonpayable function"><meta property="og:type" content="article"><meta property="og:url" content="https://dispersion-fi.github.io/contracts/docs/boosting-controller/"><meta property="article:section" content="docs"><title>Boosting Controller |</title><link rel=manifest href=/contracts/manifest.json><link rel=icon href=/contracts/favicon.png type=image/x-icon><link rel=stylesheet href=/contracts/book.min.2bc2364a4a4b31f0ec1debecf0a8f90a840821f143dfe1ac6a0f7cbcbdcf64ac.css integrity="sha256-K8I2SkpLMfDsHevs8Kj5CoQIIfFD3+Gsag98vL3PZKw="><script defer src=/contracts/en.search.min.80f1d84c1b6bb9806a3ff979655419acb2b497b76126c729018fad0cd82556dc.js integrity="sha256-gPHYTBtruYBqP/l5ZVQZrLK0l7dhJscpAY+tDNglVtw="></script><script defer src=/contracts/sw.min.1413aa9dea2d79dfeef3d50ecd9ed2503c011945a81fe9965b018cac51b6bc5d.js integrity="sha256-FBOqneoted/u89UOzZ7SUDwBGUWoH+mWWwGMrFG2vF0="></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+ admin : address, notIndexed   Methods #  boost #   type: nonpayable function"><meta property="og:type" content="article"><meta property="og:url" content="https://dispersion-fi.github.io/contracts/docs/boosting-controller/"><meta property="article:section" content="docs"><title>Boosting Controller |</title><link rel=manifest href=/contracts/manifest.json><link rel=icon href=/contracts/favicon.png type=image/x-icon><link rel=stylesheet href=/contracts/book.min.2bc2364a4a4b31f0ec1debecf0a8f90a840821f143dfe1ac6a0f7cbcbdcf64ac.css integrity="sha256-K8I2SkpLMfDsHevs8Kj5CoQIIfFD3+Gsag98vL3PZKw="><script defer src=/contracts/en.search.min.fb6dd0e691dee8716e3b6cb5344dffd7a391ea6f6161550f79e8ef090f26fb28.js integrity="sha256-+23Q5pHe6HFuO2y1NE3/16OR6m9hYVUPeejvCQ8m+yg="></script><script defer src=/contracts/sw.min.1413aa9dea2d79dfeef3d50ecd9ed2503c011945a81fe9965b018cac51b6bc5d.js integrity="sha256-FBOqneoted/u89UOzZ7SUDwBGUWoH+mWWwGMrFG2vF0="></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
 <input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a href=/contracts><img src=/contracts/img/logo.svg alt=Logo><span></span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/addresses-check-list/>Addresses Check List</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/boosting-controller/ class=active>Boosting Controller</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/controller/>Controller</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/initial-emission-distributor/>Initial Emission Distributor</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/reaper-reward-distributor/>Reaper Reward Distributor</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/reaper/>Reaper</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/voting-controller/>Voting Controller</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/white-list/>White List</a></li><li><span>Stakers</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/stakers/curve-staker/>Curve Staker</a></li></ul></li><li><span>Strategies</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/strategies/curve-reaper-strategy-v1/>Curve Reaper Strategy V1</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/strategies/uniswap-reaper-strategy-v1/>Uniswap Reaper Strategy V1</a></li><li><span>Reaper</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/strategies/reaper/proxy-reaper-strategy/>Proxy Reaper Strategy</a></li></ul></li></ul></li><li><span>Testing</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/controller-mock/>Controller Mock</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/curve-gauge-mock/>Curve Gauge Mock</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/curve-minter-mock/>Curve Minter Mock</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/curve-vemock/>Curve Vemock</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/erc20basic/>Erc20basic</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/reaper-mock/>Reaper Mock</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/testing/reaper-strategy-mock/>Reaper Strategy Mock</a></li></ul></li><li><span>Tokens</span><ul><li><a href=https://dispersion-fi.github.io/contracts/docs/tokens/farm-token/>Farm Token</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/tokens/stakable-erc20/>Stakable Erc20</a></li><li><a href=https://dispersion-fi.github.io/contracts/docs/tokens/strict-transfable-token/>Strict Transfable Token</a></li></ul></li></ul><ul><li><a href=/contracts/docs/>Contracts</a></li></ul></nav><script>(function(){var a=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(b){localStorage.setItem("menu.scrollTop",a.scrollTop)}),a.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/contracts/svg/menu.svg class=book-icon alt=Menu></label>
 <strong>Boosting Controller</strong>
-<label for=toc-control><img src=/contracts/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#events>Events</a></li><li><a href=#methods>Methods</a><ul><li><a href=#boost>boost</a></li><li><a href=#boost-1>boost</a></li><li><a href=#unboost>unboost</a></li><li><a href=#unboost-1>unboost</a></li><li><a href=#availabletounboost>availableToUnboost</a></li><li><a href=#accountboostintegral>accountBoostIntegral</a></li><li><a href=#updateboostintegral>updateBoostIntegral</a></li><li><a href=#transferownership>transferOwnership</a></li><li><a href=#applyownership>applyOwnership</a></li><li><a href=#__init__><strong>init</strong></a></li></ul></li><li><a href=#abi>ABI</a></li><li><a href=#byte-code>Byte code</a></li></ul></nav></aside></header><article class=markdown><h1 id=boostingcontrollervy>BoostingController.vy
+<label for=toc-control><img src=/contracts/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#events>Events</a></li><li><a href=#methods>Methods</a><ul><li><a href=#boost>boost</a></li><li><a href=#boost-1>boost</a></li><li><a href=#unboost>unboost</a></li><li><a href=#unboost-1>unboost</a></li><li><a href=#availabletounboost>availableToUnboost</a></li><li><a href=#transferownership>transferOwnership</a></li><li><a href=#applyownership>applyOwnership</a></li><li><a href=#__init__><strong>init</strong></a></li></ul></li><li><a href=#abi>ABI</a></li><li><a href=#byte-code>Byte code</a></li></ul></nav></aside></header><article class=markdown><h1 id=boostingcontrollervy>BoostingController.vy
 <a class=anchor href=#boostingcontrollervy>#</a></h1><blockquote><p>vyper: <code>0.2.11</code>
 author: <code>Dispersion Finance Team</code>
 license: <code>MIT</code></p></blockquote><p><strong>Boosting Controller</strong></p><h2 id=events>Events
@@ -24,15 +24,11 @@ license: <code>MIT</code></p></blockquote><p><strong>Boosting Controller</strong
 <a class=anchor href=#unboost>#</a></h3><blockquote><p>type: <code>nonpayable function</code></p></blockquote><p>Unboost for account <code>msg.sender</code> and withdraw all available boost tokens</p><p><em>Only possible with unlocked amount, withdraw all amount</em></p><p>Arguments:</p><ul><li><code>_gasToken</code>: - <em>Gas token for tx cost reduction</em></li></ul><h3 id=unboost-1>unboost
 <a class=anchor href=#unboost-1>#</a></h3><blockquote><p>type: <code>nonpayable function</code></p></blockquote><p><em>Only possible with unlocked amount, withdraw all amount</em></p><p>Arguments:</p><ul><li><code>_gasToken</code>: - <em>Gas token for tx cost reduction</em></li></ul><h3 id=availabletounboost>availableToUnboost
 <a class=anchor href=#availabletounboost>#</a></h3><blockquote><p>type: <code>view function</code>
-gas: <code>2465</code></p></blockquote><p>Check for available withdrawal amount for account <code>_account</code></p><p>Arguments:</p><ul><li><code>_account</code>: - <em>Account who is unboosting</em></li></ul><p>Returns:</p><ul><li><code>_0</code> - Unlocked amount to withdraw</li></ul><h3 id=accountboostintegral>accountBoostIntegral
-<a class=anchor href=#accountboostintegral>#</a></h3><blockquote><p>type: <code>nonpayable function</code>
-gas: <code>373626</code></p></blockquote><p>Returns current boost integral for account <code>_account</code></p><p>Arguments:</p><ul><li><code>_account</code>: - <em>Account to get its boost integral for</em></li></ul><p>Returns:</p><ul><li><code>_0</code> - Account boost integral</li></ul><h3 id=updateboostintegral>updateBoostIntegral
-<a class=anchor href=#updateboostintegral>#</a></h3><blockquote><p>type: <code>nonpayable function</code>
-gas: <code>73915</code></p></blockquote><p>Returns common boost integral</p><p>Returns:</p><ul><li><code>_0</code> - Common boost integral</li></ul><h3 id=transferownership>transferOwnership
+gas: <code>2465</code></p></blockquote><p>Check for available withdrawal amount for account <code>_account</code></p><p>Arguments:</p><ul><li><code>_account</code>: - <em>Account who is unboosting</em></li></ul><p>Returns:</p><ul><li><code>_0</code> - Unlocked amount to withdraw</li></ul><h3 id=transferownership>transferOwnership
 <a class=anchor href=#transferownership>#</a></h3><blockquote><p>type: <code>nonpayable function</code>
-gas: <code>37801</code></p></blockquote><p>Transfers ownership by setting new owner <code>_futureOwner</code> candidate</p><p><em>Callable by <code>owner</code> only. Emit CommitOwnership event with <code>_futureOwner</code></em></p><p>Arguments:</p><ul><li><code>_futureOwner</code>: - <em>Future owner address</em></li></ul><h3 id=applyownership>applyOwnership
+gas: <code>37771</code></p></blockquote><p>Transfers ownership by setting new owner <code>_futureOwner</code> candidate</p><p><em>Callable by <code>owner</code> only. Emit CommitOwnership event with <code>_futureOwner</code></em></p><p>Arguments:</p><ul><li><code>_futureOwner</code>: - <em>Future owner address</em></li></ul><h3 id=applyownership>applyOwnership
 <a class=anchor href=#applyownership>#</a></h3><blockquote><p>type: <code>nonpayable function</code>
-gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>Callable by <code>owner</code> only. Function call actually changes <code>owner</code>. Emits ApplyOwnership event with <code>_owner</code></em></p><h3 id=__init__><strong>init</strong>
+gas: <code>38627</code></p></blockquote><p>Applies transfer ownership</p><p><em>Callable by <code>owner</code> only. Function call actually changes <code>owner</code>. Emits ApplyOwnership event with <code>_owner</code></em></p><h3 id=__init__><strong>init</strong>
 <a class=anchor href=#__init__>#</a></h3><blockquote><p>type: <code>nonpayable constructor</code></p></blockquote><p>Contract constructor</p><h2 id=abi>ABI
 <a class=anchor href=#abi>#</a></h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json>[
   {
@@ -185,7 +181,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
     <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
-    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;accountBoostIntegral&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;updateAccountBoostFactorIntegral&#34;</span>,
     <span style=color:#f92672>&#34;inputs&#34;</span>: [
       {
         <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;_account&#34;</span>,
@@ -198,20 +194,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>373626</span>
-  },
-  {
-    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
-    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
-    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;updateBoostIntegral&#34;</span>,
-    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
-    <span style=color:#f92672>&#34;outputs&#34;</span>: [
-      {
-        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
-        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
-      }
-    ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>73915</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1250491</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
@@ -224,7 +207,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
       }
     ],
     <span style=color:#f92672>&#34;outputs&#34;</span>: [],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>37443</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>37413</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
@@ -237,7 +220,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
       }
     ],
     <span style=color:#f92672>&#34;outputs&#34;</span>: [],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>37801</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>37771</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;nonpayable&#34;</span>,
@@ -245,7 +228,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
     <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;applyOwnership&#34;</span>,
     <span style=color:#f92672>&#34;inputs&#34;</span>: [],
     <span style=color:#f92672>&#34;outputs&#34;</span>: [],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>38657</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>38627</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -258,7 +241,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1328</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1298</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -271,7 +254,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1358</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1328</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -284,7 +267,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1388</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1358</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -297,7 +280,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1418</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1388</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -310,7 +293,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1448</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1418</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -323,7 +306,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1478</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1448</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -336,7 +319,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1508</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1478</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -366,7 +349,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>4951</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>4921</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
@@ -384,12 +367,30 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
       }
     ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1753</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;totalBoostIntegralFor&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;arg0&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
+      }
+    ],
     <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1783</span>
   },
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
     <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
-    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;lastBoostTimestampFor&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;boostFactorIntegralFor&#34;</span>,
     <span style=color:#f92672>&#34;inputs&#34;</span>: [
       {
         <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;arg0&#34;</span>,
@@ -407,7 +408,7 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
     <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
-    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;balances&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;lastBoostTimestampFor&#34;</span>,
     <span style=color:#f92672>&#34;inputs&#34;</span>: [
       {
         <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;arg0&#34;</span>,
@@ -425,6 +426,24 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
   {
     <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
     <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;balances&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;arg0&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;address&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1873</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
     <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;totalBalance&#34;</span>,
     <span style=color:#f92672>&#34;inputs&#34;</span>: [],
     <span style=color:#f92672>&#34;outputs&#34;</span>: [
@@ -433,9 +452,48 @@ gas: <code>38657</code></p></blockquote><p>Applies transfer ownership</p><p><em>
         <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
       }
     ],
-    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1658</span>
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1688</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;debug1&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1718</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;debug2&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1748</span>
+  },
+  {
+    <span style=color:#f92672>&#34;stateMutability&#34;</span>: <span style=color:#e6db74>&#34;view&#34;</span>,
+    <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;function&#34;</span>,
+    <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;debug3&#34;</span>,
+    <span style=color:#f92672>&#34;inputs&#34;</span>: [],
+    <span style=color:#f92672>&#34;outputs&#34;</span>: [
+      {
+        <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;&#34;</span>,
+        <span style=color:#f92672>&#34;type&#34;</span>: <span style=color:#e6db74>&#34;uint256&#34;</span>
+      }
+    ],
+    <span style=color:#f92672>&#34;gas&#34;</span>: <span style=color:#ae81ff>1778</span>
   }
 ]
 </code></pre></div><h2 id=byte-code>Byte code
-<a class=anchor href=#byte-code>#</a></h2><pre><code class=language-bin data-lang=bin>0x602061168761014039602061168760c03960c05160a01c1561002057600080fd5b60006101405114151515610073576308c379a061016052602061018052601c6101a0527f676173546f6b656e436865636b4c697374206973206e6f7420736574000000006101c0526101a050606461017cfd5b610140516002553360005561166f56600436101561000d57610c4b565b600035601c52600051341561002157600080fd5b6340be7bec81141561003857600061014052610069565b633c13fd4e8114156100645760443560a01c1561005457600080fd5b6020604461014037600050610069565b610434565b600c541561007657600080fd5b6001600c555a610160526004546101805262127500602435101515156100db576308c379a06101a05260206101c05260156101e0527f6c6f636b74696d6520697320746f6f2073686f72740000000000000000000000610200526101e05060646101bcfd5b32331815610168576020610220602463c23697a86101a052336101c0526101bc6003545afa61010957600080fd5b601f3d1161011657600080fd5b600050610220511515610168576308c379a0610240526020610260526020610280527f636f6e74726163742073686f756c6420626520696e207768697465206c6973746102a05261028050606461025cfd5b6101405161016051610180516006580161102f565b6101a0526101805261016052610140526101a050610140516101605161018051336101a0526101a051600658016110be565b6102005261018052610160526101405261020050600a3360e05260c052604060c02080546004358181830110156101e557600080fd5b80820190509050815550600b805460043581818301101561020557600080fd5b808201905090508155506101a060073360e05260c052604060c0208060c052602060c02054825260018160c052602060c0200154826020015260028160c052602060c0200154826040015260038160c052602060c0200154826060015250506101a05160043581818301101561027a57600080fd5b8082019050905060073360e05260c052604060c02060c052602060c0205542621275008181830110156102ac57600080fd5b80820190509050600260073360e05260c052604060c02060c052602060c0200155426024358181830110156102e057600080fd5b80820190509050610200516024358181830110156102fd57600080fd5b80820190509050808210156103125780610314565b815b90509050600360073360e05260c052604060c02060c052602060c020015560206102e060646323b872dd61022052336102405230610260526004356102805261023c6000610180515af161036757600080fd5b601f3d1161037457600080fd5b6000506102e05161038457600080fd5b336102205260043561024052602435610260527faadc628cb4fd3bb7a62795eb460290459458bdc6f387ffde727c740f42c183376060610220a16101405161016051610180516101a0516101c0516101e051610200516101405161022052336102405261016051610260526064610280526102805161026051610240516102205160065801610c51565b610200526101e0526101c0526101a0526101805261016052610140526000506000600c55005b63ac71058381141561044b5760006101405261047c565b639b2033f68114156104775760043560a01c1561046757600080fd5b602060046101403760005061047c565b6106dc565b600c541561048957600080fd5b6001600c5542600360073360e05260c052604060c02060c052602060c02001541015156104f5576308c379a06101605260206101805260116101a0527f746f6b656e7320617265206c6f636b65640000000000000000000000000000006101c0526101a050606461017cfd5b5a61016052600a3360e05260c052604060c02054610180526101405161016051610180516006580161102f565b6101a0526101805261016052610140526101a050610140516101605161018051336101a0526101a051600658016110be565b6102005261018052610160526101405261020050600b8054610180518082101561057d57600080fd5b808203905090508155506000600a3360e05260c052604060c02055600060073360e05260c052604060c02060c052602060c020556000600160073360e05260c052604060c02060c052602060c02001556000600260073360e05260c052604060c02060c052602060c02001556000600360073360e05260c052604060c02060c052602060c02001556020610240604463a9059cbb6101a052336101c052610180516101e0526101bc60006004545af161063557600080fd5b601f3d1161064257600080fd5b6000506102405161065257600080fd5b336101a052610180516101c0527f6bd86dff770855231e73d1ba58d9b4f928d4974d7d4d561bf758a66a31452f3b60406101a0a1610140516101605161018051610140516101a052336101c052610160516101e052602461020052610200516101e0516101c0516101a05160065801610c51565b6101805261016052610140526000506000600c55005b63e4b23ef88114156107415760043560a01c156106f857600080fd5b426003600760043560e05260c052604060c02060c052602060c020015410151561072757600060005260206000f35b600a60043560e05260c052604060c0205460005260206000f35b63650b109c8114156107825760043560a01c1561075d57600080fd5b6004356101405261014051600658016110be565b6101a0526101a05160005260206000f35b6364049deb8114156107a8576006580161102f565b610140526101405160005260206000f35b62a0f3148114156108bc5760043560a01c156107c357600080fd5b60005433141515610813576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b600060043514151515610865576308c379a061014052602061016052600c610180527f7a65726f206164647265737300000000000000000000000000000000000000006101a05261018050606461015cfd5b6004541515156108b4576308c379a061014052602061016052600d610180527f736574206f6e6c79206f6e6365000000000000000000000000000000000000006101a05261018050606461015cfd5b600435600455005b63f2fde38b81141561095e5760043560a01c156108d857600080fd5b60005433141515610928576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b600435600155600435610140527f2f56810a6bf40af059b96d3aea4db54081f378029a518390491093a7b67032e96020610140a1005b6301190207811415610a4c57600054331415156109ba576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b6001546101405260006101405114151515610a14576308c379a061016052602061018052600d6101a0527f6f776e6572206e6f7420736574000000000000000000000000000000000000006101c0526101a050606461017cfd5b6101405160005561014051610160527febee2d5739011062cb4f14113f3b36bf0ffe3da5c0568f64189d1012a11891056020610160a1005b638da5cb5b811415610a645760005460005260206000f35b63b9e9d1aa811415610a7c5760015460005260206000f35b63382807d4811415610a945760025460005260206000f35b62a76787811415610aab5760035460005260206000f35b637c690600811415610ac35760045460005260206000f35b630b7242dd811415610adb5760055460005260206000f35b635a278f9b811415610af35760065460005260206000f35b63fdabc986811415610b8f5760043560a01c15610b0f57600080fd5b600760043560e05260c052604060c0206101408080808460c052602060c0205481525050602081019050808060018560c052602060c020015481525050602081019050808060028560c052602060c020015481525050602081019050808060038560c052602060c02001548152505060809050905060c05260c051610140f35b63fca226c2811415610bc55760043560a01c15610bab57600080fd5b600860043560e05260c052604060c0205460005260206000f35b63ef60c22e811415610bfb5760043560a01c15610be157600080fd5b600960043560e05260c052604060c0205460005260206000f35b6327e235e3811415610c315760043560a01c15610c1757600080fd5b600a60043560e05260c052604060c0205460005260206000f35b63ad7a672f811415610c4957600b5460005260206000f35b505b60006000fd5b6101c0526101405261016052610180526101a052610140511515610c75576101c051565b6020610260602463c23697a86101e05261014051610200526101fc6002545afa610c9e57600080fd5b601f3d11610cab57600080fd5b600050610260511515610cfd576308c379a06102805260206102a05260156102c0527f756e737570706f727465642067617320746f6b656e00000000000000000000006102e0526102c050606461029cfd5b61520861018051818183011015610d1357600080fd5b808201905090505a80821015610d2857600080fd5b8082039050905060106101a0518082028215828483041417610d4957600080fd5b80905090509050818183011015610d5f57600080fd5b808201905090506101e05260206102a0604463079d229f6102005261016051610220526101e05161374a818183011015610d9857600080fd5b8082019050905061a0aa808204905090506102405261021c6000610140515af1610dc157600080fd5b601f3d11610dce57600080fd5b6000506102a0506101c051565b6101e0526101405261016052610180526101a0526101c052610180516101a05110151515610e48576308c379a0610200526020610220526013610240527f72657665727465642074696d657374616d7073000000000000000000000000006102605261024050606461021cfd5b6101c05161018051111515610e66576101a0516101c0511115610e69565b60005b1515610eb4576308c379a0610200526020610220526011610240527f74206e6f7420696e20696e74657276616c0000000000000000000000000000006102605261024050606461021cfd5b610180516101a0511415610ed05760006000526000516101e051565b6101605161014051111515610f89576101c0516101805180821015610ef457600080fd5b80820390509050610160516101405180821015610f1057600080fd5b808203905090508082028215828483041417610f2b57600080fd5b809050905090506101a0516101805180821015610f4757600080fd5b808203905090508080610f5957600080fd5b82049050905061014051818183011015610f7257600080fd5b808201905090506000526000516101e0515661102d565b610140516101c0516101805180821015610fa257600080fd5b80820390509050610140516101605180821015610fbe57600080fd5b808203905090508082028215828483041417610fd957600080fd5b809050905090506101a0516101805180821015610ff557600080fd5b80820390509050808061100757600080fd5b8204905090508082101561101a57600080fd5b808203905090506000526000516101e051565b005b6101405260065461016052426006556005546101805260006101605111156110ae576101808051600b5442610160518082101561106b57600080fd5b80820390509050808202821582848304141761108657600080fd5b8090509050905081818301101561109c57600080fd5b80820190509050815250610180516005555b6101805160005260005161014051565b610160526101405260086101405160e05260c052604060c02054610180526101a060076101405160e05260c052604060c0208060c052602060c02054825260018160c052602060c0200154826020015260028160c052602060c0200154826040015260038160c052602060c020015482606001525050610200511515611180576000600160076101405160e05260c052604060c02060c052602060c02001554260096101405160e05260c052604060c020556101805160005260005161016051565b60096101405160e05260c052604060c0205461022052426101e051111561130a576101405161016051610180516101a0516101c0516101e0516102005161022051610240516101c051610260526101a05161028052610220516102a0526101e0516102c052426102e0526102e0516102c0516102a051610280516102605160065801610ddb565b610340526102405261022052610200526101e0526101c0526101a05261018052610160526101405261034051610240526101808051610240516101c05181818301101561125357600080fd5b8082019050905042610220518082101561126c57600080fd5b80820390509050808202821582848304141761128757600080fd5b809050905090506002808204905090508181830110156112a657600080fd5b8082019050905081525061024051600160076101405160e05260c052604060c02060c052602060c02001556101805160086101405160e05260c052604060c020554260096101405160e05260c052604060c020556101805160005260005161016051565b42600360076101405160e05260c052604060c02060c052602060c02001541115611481576101e0516102205110156113c95761018080516101c0516101a05181818301101561135857600080fd5b808201905090506101e051610220518082101561137457600080fd5b80820390509050808202821582848304141761138f57600080fd5b809050905090506002808204905090508181830110156113ae57600080fd5b808201905090508152506101a0516101c0526101e051610220525b6101a051610240526101808051610240514261022051808210156113ec57600080fd5b80820390509050808202821582848304141761140757600080fd5b8090509050905081818301101561141d57600080fd5b8082019050905081525061024051600160076101405160e05260c052604060c02060c052602060c02001556101805160086101405160e05260c052604060c020554260096101405160e05260c052604060c020556101805160005260005161016051565b6101e05161022051101561151c5761018080516101c0516101a0518181830110156114ab57600080fd5b808201905090506101e05161022051808210156114c757600080fd5b8082039050905080820282158284830414176114e257600080fd5b8090509050905060028082049050905081818301101561150157600080fd5b808201905090508152506101a0516101c0526101e051610220525b610200516102205110156115945761018080516101a05161020051610220518082101561154857600080fd5b80820390509050808202821582848304141761156357600080fd5b8090509050905081818301101561157957600080fd5b808201905090508152506101a0516101c05261020051610220525b6101805160086101405160e05260c052604060c020556000600160076101405160e05260c052604060c02060c052602060c02001554260096101405160e05260c052604060c020556101805160005260005161016051565b61008361166f0361008360003961008361166f036000f3
-</code></pre></article><footer class=book-footer><div class="flex flex-wrap justify-between"></div></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#events>Events</a></li><li><a href=#methods>Methods</a><ul><li><a href=#boost>boost</a></li><li><a href=#boost-1>boost</a></li><li><a href=#unboost>unboost</a></li><li><a href=#unboost-1>unboost</a></li><li><a href=#availabletounboost>availableToUnboost</a></li><li><a href=#accountboostintegral>accountBoostIntegral</a></li><li><a href=#updateboostintegral>updateBoostIntegral</a></li><li><a href=#transferownership>transferOwnership</a></li><li><a href=#applyownership>applyOwnership</a></li><li><a href=#__init__><strong>init</strong></a></li></ul></li><li><a href=#abi>ABI</a></li><li><a href=#byte-code>Byte code</a></li></ul></nav></div></aside></main></body></html>
+<a class=anchor href=#byte-code>#</a></h2><pre><code class=language-bin data-lang=bin>0x602061195b61014039602061195b60c03960c05160a01c1561002057600080fd5b60006101405114151515610073576308c379a061016052602061018052601c6101a0527f676173546f6b656e436865636b4c697374206973206e6f7420736574000000006101c0526101a050606461017cfd5b610140516002553360005561194356600436101561000d57610c87565b600035601c52600051341561002157600080fd5b6340be7bec81141561003857600061014052610069565b633c13fd4e8114156100645760443560a01c1561005457600080fd5b6020604461014037600050610069565b61040b565b6011541561007657600080fd5b60016011555a610160526004546101805262127500602435101515156100db576308c379a06101a05260206101c05260156101e0527f6c6f636b74696d6520697320746f6f2073686f72740000000000000000000000610200526101e05060646101bcfd5b32331815610168576020610220602463c23697a86101a052336101c0526101bc6003545afa61010957600080fd5b601f3d1161011657600080fd5b600050610220511515610168576308c379a0610240526020610260526020610280527f636f6e74726163742073686f756c6420626520696e207768697465206c6973746102a05261028050606461025cfd5b610140516101605161018051336101a0526101a05160065801611644565b6102005261018052610160526101405261020050600c3360e05260c052604060c02080546004358181830110156101bc57600080fd5b80820190509050815550600d80546004358181830110156101dc57600080fd5b808201905090508155506101a060073360e05260c052604060c0208060c052602060c02054825260018160c052602060c0200154826020015260028160c052602060c0200154826040015260038160c052602060c0200154826060015250506101a05160043581818301101561025157600080fd5b8082019050905060073360e05260c052604060c02060c052602060c02055426212750081818301101561028357600080fd5b80820190509050600260073360e05260c052604060c02060c052602060c0200155426024358181830110156102b757600080fd5b80820190509050610200516024358181830110156102d457600080fd5b80820190509050808210156102e957806102eb565b815b90509050600360073360e05260c052604060c02060c052602060c020015560206102e060646323b872dd61022052336102405230610260526004356102805261023c6000610180515af161033e57600080fd5b601f3d1161034b57600080fd5b6000506102e05161035b57600080fd5b336102205260043561024052602435610260527faadc628cb4fd3bb7a62795eb460290459458bdc6f387ffde727c740f42c183376060610220a16101405161016051610180516101a0516101c0516101e051610200516101405161022052336102405261016051610260526064610280526102805161026051610240516102205160065801610c8d565b610200526101e0526101c0526101a0526101805261016052610140526000506000601155005b63ac71058381141561042257600061014052610453565b639b2033f681141561044e5760043560a01c1561043e57600080fd5b6020600461014037600050610453565b61068a565b6011541561046057600080fd5b600160115542600360073360e05260c052604060c02060c052602060c02001541015156104cc576308c379a06101605260206101805260116101a0527f746f6b656e7320617265206c6f636b65640000000000000000000000000000006101c0526101a050606461017cfd5b5a61016052600c3360e05260c052604060c0205461018052610140516101605161018051336101a0526101a05160065801611644565b6102005261018052610160526101405261020050600d8054610180518082101561052b57600080fd5b808203905090508155506000600c3360e05260c052604060c02055600060073360e05260c052604060c02060c052602060c020556000600160073360e05260c052604060c02060c052602060c02001556000600260073360e05260c052604060c02060c052602060c02001556000600360073360e05260c052604060c02060c052602060c02001556020610240604463a9059cbb6101a052336101c052610180516101e0526101bc60006004545af16105e357600080fd5b601f3d116105f057600080fd5b6000506102405161060057600080fd5b336101a052610180516101c0527f6bd86dff770855231e73d1ba58d9b4f928d4974d7d4d561bf758a66a31452f3b60406101a0a1610140516101605161018051610140516101a052336101c052610160516101e052602461020052610200516101e0516101c0516101a05160065801610c8d565b6101805261016052610140526000506000601155005b63e4b23ef88114156106ef5760043560a01c156106a657600080fd5b426003600760043560e05260c052604060c02060c052602060c02001541015156106d557600060005260206000f35b600c60043560e05260c052604060c0205460005260206000f35b63d2cb16d18114156107305760043560a01c1561070b57600080fd5b600435610140526101405160065801611644565b6101a0526101a05160005260206000f35b62a0f3148114156108445760043560a01c1561074b57600080fd5b6000543314151561079b576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b6000600435141515156107ed576308c379a061014052602061016052600c610180527f7a65726f206164647265737300000000000000000000000000000000000000006101a05261018050606461015cfd5b60045415151561083c576308c379a061014052602061016052600d610180527f736574206f6e6c79206f6e6365000000000000000000000000000000000000006101a05261018050606461015cfd5b600435600455005b63f2fde38b8114156108e65760043560a01c1561086057600080fd5b600054331415156108b0576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b600435600155600435610140527f2f56810a6bf40af059b96d3aea4db54081f378029a518390491093a7b67032e96020610140a1005b63011902078114156109d45760005433141515610942576308c379a061014052602061016052600a610180527f6f776e6572206f6e6c79000000000000000000000000000000000000000000006101a05261018050606461015cfd5b600154610140526000610140511415151561099c576308c379a061016052602061018052600d6101a0527f6f776e6572206e6f7420736574000000000000000000000000000000000000006101c0526101a050606461017cfd5b6101405160005561014051610160527febee2d5739011062cb4f14113f3b36bf0ffe3da5c0568f64189d1012a11891056020610160a1005b638da5cb5b8114156109ec5760005460005260206000f35b63b9e9d1aa811415610a045760015460005260206000f35b63382807d4811415610a1c5760025460005260206000f35b62a76787811415610a335760035460005260206000f35b637c690600811415610a4b5760045460005260206000f35b630b7242dd811415610a635760055460005260206000f35b635a278f9b811415610a7b5760065460005260206000f35b63fdabc986811415610b175760043560a01c15610a9757600080fd5b600760043560e05260c052604060c0206101408080808460c052602060c0205481525050602081019050808060018560c052602060c020015481525050602081019050808060028560c052602060c020015481525050602081019050808060038560c052602060c02001548152505060809050905060c05260c051610140f35b63fca226c2811415610b4d5760043560a01c15610b3357600080fd5b600860043560e05260c052604060c0205460005260206000f35b63a142873d811415610b835760043560a01c15610b6957600080fd5b600960043560e05260c052604060c0205460005260206000f35b633a4efeb9811415610bb95760043560a01c15610b9f57600080fd5b600a60043560e05260c052604060c0205460005260206000f35b63ef60c22e811415610bef5760043560a01c15610bd557600080fd5b600b60043560e05260c052604060c0205460005260206000f35b6327e235e3811415610c255760043560a01c15610c0b57600080fd5b600c60043560e05260c052604060c0205460005260206000f35b63ad7a672f811415610c3d57600d5460005260206000f35b637dc7c5a5811415610c5557600e5460005260206000f35b635ba88c28811415610c6d57600f5460005260206000f35b63610da891811415610c855760105460005260206000f35b505b60006000fd5b6101c0526101405261016052610180526101a052610140511515610cb1576101c051565b6020610260602463c23697a86101e05261014051610200526101fc6002545afa610cda57600080fd5b601f3d11610ce757600080fd5b600050610260511515610d39576308c379a06102805260206102a05260156102c0527f756e737570706f727465642067617320746f6b656e00000000000000000000006102e0526102c050606461029cfd5b61520861018051818183011015610d4f57600080fd5b808201905090505a80821015610d6457600080fd5b8082039050905060106101a0518082028215828483041417610d8557600080fd5b80905090509050818183011015610d9b57600080fd5b808201905090506101e05260206102a0604463079d229f6102005261016051610220526101e05161374a818183011015610dd457600080fd5b8082019050905061a0aa808204905090506102405261021c6000610140515af1610dfd57600080fd5b601f3d11610e0a57600080fd5b6000506102a0506101c051565b6101e0526101405261016052610180526101a0526101c052610180516101a05110151515610e84576308c379a0610200526020610220526013610240527f72657665727465642074696d657374616d7073000000000000000000000000006102605261024050606461021cfd5b6101c05161018051111515610ea2576101a0516101c0511115610ea5565b60005b1515610ef0576308c379a0610200526020610220526011610240527f74206e6f7420696e20696e74657276616c0000000000000000000000000000006102605261024050606461021cfd5b610180516101a0511415610f0c5760006000526000516101e051565b6101605161014051111515610fc5576101c0516101805180821015610f3057600080fd5b80820390509050610160516101405180821015610f4c57600080fd5b808203905090508082028215828483041417610f6757600080fd5b809050905090506101a0516101805180821015610f8357600080fd5b808203905090508080610f9557600080fd5b82049050905061014051818183011015610fae57600080fd5b808201905090506000526000516101e05156611069565b610140516101c0516101805180821015610fde57600080fd5b80820390509050610140516101605180821015610ffa57600080fd5b80820390509050808202821582848304141761101557600080fd5b809050905090506101a051610180518082101561103157600080fd5b80820390509050808061104357600080fd5b8204905090508082101561105657600080fd5b808203905090506000526000516101e051565b005b6101405260055461016052600654610180526101805142111515611099576101605160005260005161014051565b426006556000610180511115611106576101608051600d544261018051808210156110c357600080fd5b8082039050905080820282158284830414176110de57600080fd5b809050905090508181830110156110f457600080fd5b80820190509050815250610160516005555b6101605160005260005161014051565b610160526101405260086101405160e05260c052604060c02054610180526101a060076101405160e05260c052604060c0208060c052602060c02054825260018160c052602060c0200154826020015260028160c052602060c0200154826040015260038160c052602060c0200154826060015250506102005115156111d8576000600160076101405160e05260c052604060c02060c052602060c020015542600b6101405160e05260c052604060c020556101805160005260005161016051565b600b6101405160e05260c052604060c0205461022052426101e0511115611362576101405161016051610180516101a0516101c0516101e0516102005161022051610240516101c051610260526101a05161028052610220516102a0526101e0516102c052426102e0526102e0516102c0516102a051610280516102605160065801610e17565b610340526102405261022052610200526101e0526101c0526101a05261018052610160526101405261034051610240526101808051610240516101c0518181830110156112ab57600080fd5b808201905090504261022051808210156112c457600080fd5b8082039050905080820282158284830414176112df57600080fd5b809050905090506002808204905090508181830110156112fe57600080fd5b8082019050905081525061024051600160076101405160e05260c052604060c02060c052602060c02001556101805160086101405160e05260c052604060c0205542600b6101405160e05260c052604060c020556101805160005260005161016051565b42600360076101405160e05260c052604060c02060c052602060c020015411156114d9576101e0516102205110156114215761018080516101c0516101a0518181830110156113b057600080fd5b808201905090506101e05161022051808210156113cc57600080fd5b8082039050905080820282158284830414176113e757600080fd5b8090509050905060028082049050905081818301101561140657600080fd5b808201905090508152506101a0516101c0526101e051610220525b6101a0516102405261018080516102405142610220518082101561144457600080fd5b80820390509050808202821582848304141761145f57600080fd5b8090509050905081818301101561147557600080fd5b8082019050905081525061024051600160076101405160e05260c052604060c02060c052602060c02001556101805160086101405160e05260c052604060c0205542600b6101405160e05260c052604060c020556101805160005260005161016051565b6101e0516102205110156115745761018080516101c0516101a05181818301101561150357600080fd5b808201905090506101e051610220518082101561151f57600080fd5b80820390509050808202821582848304141761153a57600080fd5b8090509050905060028082049050905081818301101561155957600080fd5b808201905090508152506101a0516101c0526101e051610220525b610200516102205110156115ec5761018080516101a0516102005161022051808210156115a057600080fd5b8082039050905080820282158284830414176115bb57600080fd5b809050905090508181830110156115d157600080fd5b808201905090508152506101a0516101c05261020051610220525b6101805160086101405160e05260c052604060c020556000600160076101405160e05260c052604060c02060c052602060c020015542600b6101405160e05260c052604060c020556101805160005260005161016051565b61016052610140526001600e556001600f556001601055600b6101405160e05260c052604060c020546101805260086101405160e05260c052604060c020546101a05260096101405160e05260c052604060c020546101c0526101405161016051610180516101a0516101c0516101e0516006580161106b565b610200526101e0526101c0526101a052610180526101605261014052610200516101e0526101405161016051610180516101a0516101c0516101e0516102005161014051610220526102205160065801611116565b61028052610200526101e0526101c0526101a052610180526101605261014052610280516102005261018051151561176e57600c600e556101c05160096101405160e05260c052604060c02055600060005260005161016051565b600a6101405160e05260c052604060c02054610220526101c0516101e0511115156117a857600d600f556102205160005260005161016051565b6102208051610200516101a051808210156117c257600080fd5b80820390509050670de0b6b3a764000080820282158284830414176117e657600080fd5b809050905090504261018051808210156117ff57600080fd5b80820390509050808202821582848304141761181a57600080fd5b809050905090506101e0516101c0518082101561183657600080fd5b80820390509050808061184857600080fd5b82049050905081818301101561185d57600080fd5b808201905090508152506102205160105561022051600a6101405160e05260c052604060c020556102005160086101405160e05260c052604060c020556101c05160096101405160e05260c052604060c020556102205160005260005161016051565b61008361194303610083600039610083611943036000f3
+</code></pre></article><footer class=book-footer><div class="flex flex-wrap justify-between"></div></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#events>Events</a></li><li><a href=#methods>Methods</a><ul><li><a href=#boost>boost</a></li><li><a href=#boost-1>boost</a></li><li><a href=#unboost>unboost</a></li><li><a href=#unboost-1>unboost</a></li><li><a href=#availabletounboost>availableToUnboost</a></li><li><a href=#transferownership>transferOwnership</a></li><li><a href=#applyownership>applyOwnership</a></li><li><a href=#__init__><strong>init</strong></a></li></ul></li><li><a href=#abi>ABI</a></li><li><a href=#byte-code>Byte code</a></li></ul></nav></div></aside></main></body></html>
