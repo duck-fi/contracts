@@ -61,8 +61,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
 
     assert reaper.balances(deployer) == amount
     assert reaper.totalBalances() == 2 * amount
-    assert reaper.balancesIntegral() == 2 * amount * (tx3.timestamp - tx2.timestamp) + \
-        amount * (tx2.timestamp - tx1.timestamp)
+    assert reaper.balancesIntegral() == 0
     assert reaper.balancesIntegralFor(deployer) == reaper.balancesIntegral()
     assert reaper.balancesIntegralFor(morpheus) == reaper.balancesIntegral()
     assert reaper.emissionIntegral() == 0
@@ -166,7 +165,8 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     print(reaper.emissionIntegral()/reaper.reapIntegral())
 
     # modify vote share
-    voting_controller.vote(reaper, farm_token, 1, {'from': deployer}) # TODO: fix
+    voting_controller.vote(reaper, farm_token, 1, {
+                           'from': deployer})  # TODO: fix
     voting_controller.vote(reaper_2, farm_token, 3, {
                            'from': deployer})  # TODO: 3
 
