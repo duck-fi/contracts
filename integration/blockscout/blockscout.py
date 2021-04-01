@@ -39,7 +39,7 @@ if __name__ == "__main__":
                     compiler_version = abi['compiler']['version']
 
                 source = ""
-                if "source" in abi:
+                if "source" in abi and abi['source'] is not None:
                     source = abi['source'].replace(
                         '\n', '\\n').replace("'", "''")
 
