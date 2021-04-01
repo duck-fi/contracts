@@ -38,8 +38,13 @@ if __name__ == "__main__":
                 if "compiler" in abi:
                     compiler_version = abi['compiler']['version']
 
-                source = abi['source'].replace('\n', '\\n').replace("'", "''")
+                source = ""
+                if "source" in abi:
+                    source = abi['source'].replace(
+                        '\n', '\\n').replace("'", "''")
+
                 byte_code = abi['bytecode']
+
                 abi_str = json.dumps(abi['abi'], separators=(',', ':'))
 
                 sql += '''
