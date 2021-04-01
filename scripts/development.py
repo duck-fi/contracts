@@ -3,11 +3,13 @@ from brownie import (
     accounts,
     ERC20Basic,
     FarmToken,
+    StrictTransfableToken,
     StakableERC20,
     Controller,
     VotingController,
-    FarmTokenVotingStrategy,
+    BoostingController,
     Reaper,
+    WhiteList
 )
 from pathlib import Path
 from . import utils
@@ -33,6 +35,7 @@ def deploy():
     curve = utils.load_package('curvefi/curve-contract@1.0')
     curve_dao = utils.load_package('curvefi/curve-dao-contracts@1.1.0')
     uniswap = utils.load_package('Uniswap/uniswap-v2-core@1.0.1')
+    chi = utils.load_package('forest-friends/chi@1.0.1')
 
     usdn = deploy_usdn()
     usdt = deploy_erc20("Tether USD", "USDT", USDT_DECIMALS, INIT_SUPPLY)
@@ -40,8 +43,9 @@ def deploy():
     dai = deploy_erc20("Dai Stablecoin", "DAI", DAI_DECIMALS, INIT_SUPPLY)
     crv = curve_dao.ERC20CRV.deploy(
         "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
-    dft = FarmToken.deploy("Dispersion Farming Token",
-                           "DFT", DFT_DECIMALS, 20_000, {'from': DEPLOYER})
+    dsp = FarmToken.deploy("Dispersion Farming Token",
+                           "DSP", {'from': DEPLOYER})
+    chi_token = chi.ChiToken.deploy({'from': DEPLOYER})
 
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
@@ -71,19 +75,19 @@ def deploy():
     usdn_mpool_lp.set_minter(usdn_mpool, {'from': DEPLOYER})
     deposit_usdn_mpool = curve.DepositUSDN.deploy(
         usdn_mpool, usdn_mpool_lp, {'from': DEPLOYER})
-    usdn.approve(deposit_usdn_mpool, 1000 * 10 **
+    usdn.approve(deposit_usdn_mpool, 1_000 * 10 **
                  USDN_DECIMALS, {'from': DEPLOYER})
-    dai.approve(deposit_usdn_mpool, 1000 * 10 **
+    dai.approve(deposit_usdn_mpool, 1_000 * 10 **
                 DAI_DECIMALS, {'from': DEPLOYER})
-    usdc.approve(deposit_usdn_mpool, 1000 * 10 **
+    usdc.approve(deposit_usdn_mpool, 1_000 * 10 **
                  USDC_DECIMALS, {'from': DEPLOYER})
-    usdt.approve(deposit_usdn_mpool, 1000 * 10 **
+    usdt.approve(deposit_usdn_mpool, 1_000 * 10 **
                  USDT_DECIMALS, {'from': DEPLOYER})
     deposit_usdn_mpool.add_liquidity([
-        1000 * 10 ** USDN_DECIMALS,
-        1000 * 10 ** DAI_DECIMALS,
-        1000 * 10 ** USDC_DECIMALS,
-        1000 * 10 ** USDT_DECIMALS
+        1_000 * 10 ** USDN_DECIMALS,
+        1_000 * 10 ** DAI_DECIMALS,
+        1_000 * 10 ** USDC_DECIMALS,
+        1_000 * 10 ** USDT_DECIMALS
     ], 0)
 
     curve_voting_escrow = curve_dao.VotingEscrow.deploy(
@@ -95,29 +99,40 @@ def deploy():
     usdn_mpool_gauge = curve_dao.LiquidityGauge.deploy(
         usdn_mpool_lp, curve_minter, DEPLOYER, {'from': DEPLOYER})
     curve_controller.add_type(
-        "simple", 1000000000000000000, {'from': DEPLOYER})
+        "simple", 10 ** 18, {'from': DEPLOYER})
     curve_controller.add_gauge(
-        usdn_mpool_gauge, 0, 1000000000000000000, {'from': DEPLOYER})
+        usdn_mpool_gauge, 0, 10 ** 18, {'from': DEPLOYER})
 
     # Dispersion
-    controller = Controller.deploy(dft, {'from': DEPLOYER})
-    dft.setMinter(controller, {'from': DEPLOYER})
+    gas_token_check_list = WhiteList.deploy({'from': DEPLOYER})
+    gas_token_check_list.addAddress(chi_token, {'from': DEPLOYER})
 
-    voting_controller = VotingController.deploy(controller, {'from': DEPLOYER})
-    dft_voting_strategy = FarmTokenVotingStrategy.deploy(
-        voting_controller, dft, 1, WEEK, {'from': DEPLOYER})
-    voting_controller.setVotingStrategy(
-        dft, dft_voting_strategy, {'from': DEPLOYER})
+    controller = Controller.deploy(
+        dsp, gas_token_check_list, {'from': DEPLOYER})
+    dsp.setMinter(controller, {'from': DEPLOYER})
+
+    voting_controller = VotingController.deploy(
+        controller, gas_token_check_list, dsp, {'from': DEPLOYER})
+    vdsp_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
+    vdsp = StrictTransfableToken.deploy("Dispersion Voting Token",
+                                        "vDSP", vdsp_minter_check_list, voting_controller, {'from': DEPLOYER})
+    voting_controller.setVotingToken(vdsp, {'from': DEPLOYER})
+
+    boosting_controller = BoostingController.deploy(
+        gas_token_check_list, {'from': DEPLOYER})
+    bdsp_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
+    bdsp = StrictTransfableToken.deploy("Dispersion Boosting Token",
+                                        "bDSP", bdsp_minter_check_list, boosting_controller, {'from': DEPLOYER})
 
     # Reapers
     usdn_usdt_reaper = Reaper.deploy(
-        usdn_usdt_lp, dft, controller, voting_controller, 15, {'from': DEPLOYER})   # 1,5%
+        usdn_usdt_lp, dsp, controller, voting_controller, boosting_controller, gas_token_check_list, 15, {'from': DEPLOYER})   # 1,5%
     controller.addReaper(usdn_usdt_reaper, {'from': DEPLOYER})
     usdn_crv_reaper = Reaper.deploy(
-        usdn_crv_lp, dft, controller, voting_controller, 25, {'from': DEPLOYER})    # 2,5%
+        usdn_crv_lp, dsp, controller, voting_controller, boosting_controller, gas_token_check_list, 25, {'from': DEPLOYER})    # 2,5%
     controller.addReaper(usdn_crv_reaper, {'from': DEPLOYER})
     usdn_mpool_reaper = Reaper.deploy(
-        usdn_mpool_lp, dft, controller, voting_controller, 42, {'from': DEPLOYER})  # 4,2%
+        usdn_mpool_lp, dsp, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
 
 
