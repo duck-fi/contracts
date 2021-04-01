@@ -34,7 +34,10 @@ if __name__ == "__main__":
                 abi = json.loads(abi_content.read())
 
                 contract_name = abi['contractName']
-                compiler_version = abi['compiler']['version']
+                compiler_version = "-"
+                if "compiler" in abi:
+                    compiler_version = abi['compiler']['version']
+
                 source = abi['source'].replace('\n', '\\n').replace("'", "''")
                 byte_code = abi['bytecode']
                 abi_str = json.dumps(abi['abi'], separators=(',', ':'))
