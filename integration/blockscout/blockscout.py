@@ -1,31 +1,52 @@
 #!/usr/bin/python
 
-import argparse, re, json
+import argparse
+import os
+import re
+import json
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='BlockScout smart contract SQL generator')
-    parser.add_argument('--file', dest='file', type=str, help='Ganache logs', default="deploy-logs.txt")
+    parser = argparse.ArgumentParser(
+        description='BlockScout smart contract SQL generator')
+    parser.add_argument('--file', dest='file', type=str,
+                        help='Ganache logs', default="deploy-logs.txt")
     args = parser.parse_args()
 
-    sql  = ""
+    sql = ""
     with open(args.file, 'r') as content_file:
         content = content_file.read()
 
-        deployed_contracts = re.findall( r'Nonce: ([0-9]*)[\n]*(.*)Block: ([0-9]*)(.*)[\n]*(.*) deployed at: (.*)0x([0-9,x,a-z,A-Z]*)', content)
+        deployed_contracts = re.findall(
+            r'Nonce: ([0-9]*)[\n]*(.*)Block: ([0-9]*)(.*)[\n]*(.*) deployed at: (.*)0x([0-9,x,a-z,A-Z]*)', content)
         for contract in deployed_contracts:
             nonce = contract[0]
             block = contract[2]
             name = contract[4].replace(' ', '')
             address = contract[6]
 
-            with open('./build/contracts/{}.json'.format(name), 'r') as abi_content:
+            file_path = './build/contracts/{}.json'.format(name)
+
+            if not os.path.exists(file_path):
+                file_path = './build/interfaces/{}.json'.format(name)
+
+            with open(file_path, 'r') as abi_content:
                 abi = json.loads(abi_content.read())
 
                 contract_name = abi['contractName']
-                compiler_version = abi['compiler']['version']
-                source = abi['source'].replace('\n', '\\n').replace("'", "''")
-                byte_code = abi['bytecode']
+                compiler_version = "-"
+                if "compiler" in abi:
+                    compiler_version = abi['compiler']['version']
+
+                source = ""
+                if "source" in abi and abi['source'] is not None:
+                    source = abi['source'].replace(
+                        '\n', '\\n').replace("'", "''")
+
+                byte_code = ""
+                if "bytecode" in abi:
+                    byte_code = abi['bytecode']
+
                 abi_str = json.dumps(abi['abi'], separators=(',', ':'))
 
                 sql += '''
