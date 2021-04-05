@@ -41,11 +41,16 @@ def availableToUnboost(_account: address) -> uint256:
     return 0
 
 
-@external
-def accountBoostIntegral(_account: address) -> uint256:
-    return 0
+# @external
+# def accountBoostIntegral(_account: address) -> uint256:
+#     return 0
+
+
+# @external
+# def updateBoostIntegral() -> uint256:
+#     return 0
 
 
 @external
-def updateBoostIntegral() -> uint256:
+def updateAccountBoostFactorIntegral(_account: address) -> uint256:
     return 0

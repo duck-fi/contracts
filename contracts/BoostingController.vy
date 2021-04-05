@@ -57,6 +57,8 @@ boostIntegral: public(uint256)
 lastBoostTimestamp: public(uint256)
 boosts: public(HashMap[address, BoostInfo]) # account -> boostInfo
 boostIntegralFor: public(HashMap[address, uint256]) # account -> integrated votes
+totalBoostIntegralFor: public(HashMap[address, uint256]) # account -> total integrated votes
+boostFactorIntegralFor: public(HashMap[address, uint256]) # account -> integrated boost factor * 10e18
 lastBoostTimestampFor: public(HashMap[address, uint256]) # account -> last boost timestamp
 balances: public(HashMap[address, uint256]) # account -> amount
 totalBalance: public(uint256)
@@ -99,9 +101,13 @@ def _calcAmount(pointA: uint256, pointB: uint256, tsA: uint256, tsB: uint256, t:
 
 @internal
 def _updateBoostIntegral() -> uint256:
-    _lastBoostTimestamp: uint256 = self.lastBoostTimestamp
-    self.lastBoostTimestamp = block.timestamp
     _boostIntegral: uint256 = self.boostIntegral
+    _lastBoostTimestamp: uint256 = self.lastBoostTimestamp
+
+    if block.timestamp <= _lastBoostTimestamp:
+        return _boostIntegral
+
+    self.lastBoostTimestamp = block.timestamp
 
     if _lastBoostTimestamp > 0:
         _boostIntegral += self.totalBalance * (block.timestamp - _lastBoostTimestamp)
@@ -169,6 +175,30 @@ def _updateAccountBoostIntegral(_account: address) -> uint256:
     return _accountBoostIntegral
 
 
+@internal
+def _updateAccountBoostFactorIntegral(_account: address) -> uint256:
+    _lastBoostTimestampFor: uint256 = self.lastBoostTimestampFor[_account]
+    _lastBoostIntegralFor: uint256 = self.boostIntegralFor[_account]
+    _lastTotalBoostIntegralFor: uint256 = self.totalBoostIntegralFor[_account]
+    _newBoostIntegral: uint256 = self._updateBoostIntegral()
+    _newAccountBoostIntegral: uint256 = self._updateAccountBoostIntegral(_account)
+
+    if _lastBoostTimestampFor == 0:
+        self.totalBoostIntegralFor[_account] = _lastTotalBoostIntegralFor
+        return 0
+
+    _newBoostFactorIntegralFor: uint256 = self.boostFactorIntegralFor[_account]
+    if _newBoostIntegral <= _lastTotalBoostIntegralFor:
+        return _newBoostFactorIntegralFor
+
+    _newBoostFactorIntegralFor += (_newAccountBoostIntegral - _lastBoostIntegralFor) * MULTIPLIER * (block.timestamp - _lastBoostTimestampFor) / (_newBoostIntegral - _lastTotalBoostIntegralFor) 
+    self.boostFactorIntegralFor[_account] = _newBoostFactorIntegralFor
+    self.boostIntegralFor[_account] = _newAccountBoostIntegral
+    self.totalBoostIntegralFor[_account] = _newBoostIntegral
+
+    return _newBoostFactorIntegralFor
+
+
 @external
 @nonreentrant('lock')
 def boost(_amount: uint256, _lockTime: uint256, _gasToken: address = ZERO_ADDRESS):
@@ -185,8 +215,7 @@ def boost(_amount: uint256, _lockTime: uint256, _gasToken: address = ZERO_ADDRES
     if msg.sender != tx.origin:
         assert WhiteList(self.contractCheckList).check(msg.sender), "contract should be in white list"
 
-    self._updateBoostIntegral()
-    self._updateAccountBoostIntegral(msg.sender)
+    self._updateAccountBoostFactorIntegral(msg.sender)
     self.balances[msg.sender] += _amount
     self.totalBalance +=_amount
     
@@ -212,8 +241,7 @@ def unboost(_gasToken: address = ZERO_ADDRESS):
     
     _gasStart: uint256 = msg.gas
     _amount: uint256 = self.balances[msg.sender]
-    self._updateBoostIntegral()
-    self._updateAccountBoostIntegral(msg.sender)
+    self._updateAccountBoostFactorIntegral(msg.sender)
     self.totalBalance -= _amount
     self.balances[msg.sender] = 0
     self.boosts[msg.sender].targetAmount = 0
@@ -241,22 +269,8 @@ def availableToUnboost(_account: address) -> uint256:
 
 
 @external
-def accountBoostIntegral(_account: address) -> uint256:
-    """
-    @notice Returns current boost integral for account `_account`
-    @param _account Account to get its boost integral for
-    @return Account boost integral
-    """
-    return self._updateAccountBoostIntegral(_account)
-
-
-@external
-def updateBoostIntegral() -> uint256:
-    """
-    @notice Returns common boost integral
-    @return Common boost integral
-    """
-    return self._updateBoostIntegral()
+def updateAccountBoostFactorIntegral(_account: address) -> uint256:
+    return self._updateAccountBoostFactorIntegral(_account)
 
 
 @external

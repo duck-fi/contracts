@@ -56,7 +56,7 @@ lastSnapshotTimestampFor: public(HashMap[address, uint256])
 emissionIntegral: public(uint256)
 voteIntegral: public(uint256)
 boostIntegralFor: public(HashMap[address, uint256])
-totalBoostIntegralFor: public(HashMap[address, uint256])
+# totalBoostIntegralFor: public(HashMap[address, uint256])
 adminFee: public(uint256)
 isKilled: public(bool)
 
@@ -135,8 +135,8 @@ def _snapshot(_account: address):
         # init user integrals TODO: need this?
         _boostingController: address = self.boostingController
         self.lastSnapshotTimestampFor[_account] = block.timestamp
-        self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
-        self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+        # self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
+        self.boostIntegralFor[_account] = BoostingController(_boostingController).updateAccountBoostFactorIntegral(_account)
         return
     
     _unitCostIntegral: uint256 = self.unitCostIntegral
@@ -151,7 +151,7 @@ def _snapshot(_account: address):
         if _emissionIntegral > 0 and self.emissionIntegral == 0:
             _oldBalancesIntegral = 0
             _balancesIntegral = _totalBalances * (block.timestamp - Farmable(self.farmToken).startEmissionTimestamp())
-        else:
+        elif _emissionIntegral > 0: # TODO: HERE _balancesIntegral CAN REDUCE!!!! in that case (_balancesIntegral - oldbalancesIntegal) < 0 !!!
             _balancesIntegral = _totalBalances * (block.timestamp - _lastSnapshotTimestamp) + _oldBalancesIntegral
         
         if _balancesIntegral > _oldBalancesIntegral:
@@ -167,8 +167,8 @@ def _snapshot(_account: address):
         _boostingController: address = self.boostingController
         self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
         self.lastSnapshotTimestampFor[_account] = block.timestamp
-        self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
-        self.boostIntegralFor[_account] = BoostingController(_boostingController).accountBoostIntegral(_account)
+        # self.totalBoostIntegralFor[_account] = BoostingController(_boostingController).updateBoostIntegral()
+        self.boostIntegralFor[_account] = BoostingController(_boostingController).updateAccountBoostFactorIntegral(_account)
         self.balancesIntegralFor[_account] = _balancesIntegral
         return
 
@@ -228,28 +228,32 @@ def _snapshot(_account: address):
     dt: uint256 = block.timestamp - _lastSnapshotTimestampFor
     if dt == 0:
         return
-    
+
     # check boosting
-    boost_balance: uint256 = 0
+    # boost_balance: uint256 = 0
     _boostingController: address = self.boostingController
-    _boostIntegral: uint256 = BoostingController(_boostingController).accountBoostIntegral(_account)
-    accountBoost: uint256 = _boostIntegral - self.boostIntegralFor[_account]
-    if accountBoost > 0:
-        _totalBoostIntegral: uint256 = BoostingController(_boostingController).updateBoostIntegral()
-        totalBoost: uint256 = _totalBoostIntegral - self.totalBoostIntegralFor[_account]
+    _boostIntegral: uint256 = BoostingController(_boostingController).updateAccountBoostFactorIntegral(_account)
+    # TODO: optimize accuracy 
+    accountBoost: uint256 = (_balancesIntegral - self.balancesIntegralFor[_account]) * (_boostIntegral - self.boostIntegralFor[_account]) #/ dt / VOTE_DIVIDER
+    # self.debug1 = accountBoost
+    # self.debug2 = (_balancesIntegral - self.balancesIntegralFor[_account])
+    # self.debug3 = (_boostIntegral - self.boostIntegralFor[_account])
+
+    # if accountBoost > 0:
+    #     # _totalBoostIntegral: uint256 = BoostingController(_boostingController).updateBoostIntegral()
+    #     # totalBoost: uint256 = _totalBoostIntegral - self.totalBoostIntegralFor[_account]
         
-        if totalBoost > 0: 
-            boost_balance = (_balancesIntegral - self.balancesIntegralFor[_account]) / dt * accountBoost / totalBoost
-            self.totalBoostIntegralFor[_account] = _totalBoostIntegral
+    #     if totalBoost > 0: 
+    #         boost_balance = (_balancesIntegral - self.balancesIntegralFor[_account]) / dt * accountBoost / totalBoost
+    #         self.totalBoostIntegralFor[_account] = _totalBoostIntegral
 
-        self.boostIntegralFor[_account] = _boostIntegral
 
-    # self.debug1 = (_balancesIntegral - self.balancesIntegralFor[_account])
-    # self.debug2 = boost_balance * (100 - TOKENLESS_PRODUCTION) / 100
-    # self.debug3 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100)
+    self.debug1 = accountBoost
+    self.debug2 = accountBoost * (100 - TOKENLESS_PRODUCTION) / 100
+    self.debug3 = (self.balances[_account] * dt * VOTE_DIVIDER * TOKENLESS_PRODUCTION / 100 + (_balancesIntegral - self.balancesIntegralFor[_account]) * (_boostIntegral - self.boostIntegralFor[_account]) * (100 - TOKENLESS_PRODUCTION) / 100 / dt) / VOTE_DIVIDER
 
     _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
-    _account_emission: uint256 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100) * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
+    _account_emission: uint256 = self.debug3 * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / dt / VOTE_DIVIDER
     _account_emission = min(_max_emission, _account_emission)
     if _account_emission != _max_emission:
         _adminFee: uint256 = self.adminFee
@@ -259,7 +263,8 @@ def _snapshot(_account: address):
     self.reapIntegral += _account_emission
     self.reapIntegralFor[_account] += _account_emission
     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
-    self.balancesIntegralFor[_account] = _balancesIntegral # TODO: consider: do we need this?
+    self.balancesIntegralFor[_account] = _balancesIntegral
+    self.boostIntegralFor[_account] = _boostIntegral
 
 
 @external
