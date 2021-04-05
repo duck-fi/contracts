@@ -27,6 +27,12 @@ implements: Controller
 event StartMinting:
     owner: address
 
+event AddReaper:
+    reaper: address
+
+event RemoveReaper:
+    reaper: address
+
 event CommitOwnership:
     owner: address
 
@@ -34,7 +40,7 @@ event ApplyOwnership:
     owner: address
 
 
-MAX_REAPERS_COUNT: constant(uint256) = 10 ** 6
+MAX_REAPERS_COUNT: constant(uint256) = 10 ** 3
 MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
@@ -151,6 +157,7 @@ def addReaper(_reaper: address):
     self.reapers[reaperIndex] = _reaper
     self.indexByReaper[_reaper] = reaperIndex
     self.lastReaperIndex = reaperIndex
+    log AddReaper(_reaper)
 
 
 @external
@@ -171,6 +178,7 @@ def removeReaper(_reaper: address):
     self.indexByReaper[lastReaper] = reaperIndex
     self.indexByReaper[_reaper] = 0
     self.lastReaperIndex = recentReaperIndex - 1
+    log RemoveReaper(_reaper)
 
 
 @external

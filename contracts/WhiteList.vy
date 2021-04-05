@@ -20,6 +20,12 @@ event CommitOwnership:
 event ApplyOwnership:
     admin: address
 
+event AddAddress:
+    _address: address
+
+event RemoveAddress:
+    _address: address
+
 
 owner: public(address)
 futureOwner: public(address)
@@ -36,27 +42,29 @@ def __init__():
 
 
 @external
-def addAddress(_account: address):
+def addAddress(_address: address):
     """
     @notice Adds address to list for later verification(`check`).
-    @dev Callable by `owner` only. `_account` can't be equal `ZERO_ADDRESS`. 
-    @param _account Address to add to list
+    @dev Callable by `owner` only. `_address` can't be equal `ZERO_ADDRESS`. 
+    @param _address Address to add to list
     """
     assert msg.sender == self.owner, "owner only"
-    assert _account != ZERO_ADDRESS, "zero address"
-    self.check[_account] = True
+    assert _address != ZERO_ADDRESS, "zero address"
+    self.check[_address] = True
+    log AddAddress(_address)
 
 
 @external
-def removeAddress(_account: address):
+def removeAddress(_address: address):
     """
     @notice Remove address from list.
-    @dev Callable by `owner` only. `_account` can't be equal `ZERO_ADDRESS`.
-    @param _account Address to remove from list
+    @dev Callable by `owner` only. `_address` can't be equal `ZERO_ADDRESS`.
+    @param _address Address to remove from list
     """
     assert msg.sender == self.owner, "owner only"
-    assert _account != ZERO_ADDRESS, "zero address"
-    self.check[_account] = False
+    assert _address != ZERO_ADDRESS, "zero address"
+    self.check[_address] = False
+    log RemoveAddress(_address)
 
 
 @external

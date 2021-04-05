@@ -104,9 +104,6 @@ def _updateBoostIntegral() -> uint256:
     _boostIntegral: uint256 = self.boostIntegral
     _lastBoostTimestamp: uint256 = self.lastBoostTimestamp
 
-    if block.timestamp <= _lastBoostTimestamp:
-        return _boostIntegral
-
     self.lastBoostTimestamp = block.timestamp
 
     if _lastBoostTimestamp > 0:
@@ -178,19 +175,20 @@ def _updateAccountBoostIntegral(_account: address) -> uint256:
 @internal
 def _updateAccountBoostFactorIntegral(_account: address) -> uint256:
     _lastBoostTimestampFor: uint256 = self.lastBoostTimestampFor[_account]
-    _lastBoostIntegralFor: uint256 = self.boostIntegralFor[_account]
     _lastTotalBoostIntegralFor: uint256 = self.totalBoostIntegralFor[_account]
-    _newBoostIntegral: uint256 = self._updateBoostIntegral()
-    _newAccountBoostIntegral: uint256 = self._updateAccountBoostIntegral(_account)
 
     if _lastBoostTimestampFor == 0:
         self.totalBoostIntegralFor[_account] = _lastTotalBoostIntegralFor
         return 0
 
+    _lastBoostIntegralFor: uint256 = self.boostIntegralFor[_account]
+    _newBoostIntegral: uint256 = self._updateBoostIntegral()
     _newBoostFactorIntegralFor: uint256 = self.boostFactorIntegralFor[_account]
+
     if _newBoostIntegral <= _lastTotalBoostIntegralFor:
         return _newBoostFactorIntegralFor
 
+    _newAccountBoostIntegral: uint256 = self._updateAccountBoostIntegral(_account)
     _newBoostFactorIntegralFor += (_newAccountBoostIntegral - _lastBoostIntegralFor) * MULTIPLIER * (block.timestamp - _lastBoostTimestampFor) / (_newBoostIntegral - _lastTotalBoostIntegralFor) 
     self.boostFactorIntegralFor[_account] = _newBoostFactorIntegralFor
     self.boostIntegralFor[_account] = _newAccountBoostIntegral
@@ -211,9 +209,6 @@ def boost(_amount: uint256, _lockTime: uint256, _gasToken: address = ZERO_ADDRES
     _gasStart: uint256 = msg.gas
     _boostingToken: address = self.boostingToken
     assert _lockTime >= WARMUP_TIME, "locktime is too short"
-
-    if msg.sender != tx.origin:
-        assert WhiteList(self.contractCheckList).check(msg.sender), "contract should be in white list"
 
     self._updateAccountBoostFactorIntegral(msg.sender)
     self.balances[msg.sender] += _amount

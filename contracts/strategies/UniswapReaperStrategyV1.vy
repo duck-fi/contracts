@@ -54,33 +54,28 @@ def reap() -> uint256:
 
 @external
 def deposit(_amount: uint256):
-    assert msg.sender == self.reaper, "reaper only"
+    pass
 
 
 @external
 def withdraw(_amount: uint256, _account: address):
-    assert msg.sender == self.reaper, "reaper only"
     assert self.activated, "not activated"
 
 
 @external
 def claim(_amount: uint256, _account: address):
-    assert msg.sender == self.reaper, "reaper only"
     assert self.activated, "not activated"
 
 
 @view
 @external
 def availableToDeposit(_amount: uint256, _account: address) -> uint256:
-    assert msg.sender == self.reaper, "reaper only"
     return _amount
 
 
 @view
 @external
 def availableToWithdraw(_amount: uint256, _account: address) -> uint256:
-    assert msg.sender == self.reaper, "reaper only"
-
     if not self.activated:
         return 0
 

@@ -23,6 +23,9 @@ event CommitOwnership:
 event ApplyOwnership:
     owner: address
 
+event StartClaiming:
+    ts: uint256
+
 event Claim:
     account: address
     amount: uint256
@@ -66,8 +69,8 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
 @external
 def setBalances(_accounts: address[100], _amounts: uint256[100], _gasToken: address = ZERO_ADDRESS):
     assert msg.sender == self.owner, "owner only"
-
     _gasStart: uint256 = msg.gas
+
     assert self.startClaimingTimestamp == 0, "claiming already started"
 
     for i in range(0, 100):
@@ -75,7 +78,7 @@ def setBalances(_accounts: address[100], _amounts: uint256[100], _gasToken: addr
             break
         self.balances[_accounts[i]] = _amounts[i]
 
-    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 201)
 
 
 @external
@@ -83,6 +86,7 @@ def startClaiming():
     assert msg.sender == self.owner, "owner only"
     assert self.startClaimingTimestamp == 0, "claiming already started"
     self.startClaimingTimestamp = block.timestamp
+    log StartClaiming(block.timestamp)
 
 
 @external
@@ -91,18 +95,17 @@ def claim(_account: address = msg.sender, _gasToken: address = ZERO_ADDRESS):
     _startClaimingTimestamp: uint256 = self.startClaimingTimestamp
     assert _startClaimingTimestamp > 0, "claiming is not started"
 
-    _farmToken: address = self.farmToken
     _totalMinted: uint256 = self.totalMinted[_account]
-    delta_t: uint256 = block.timestamp - self.startClaimingTimestamp
-    if delta_t > LOCK_PERIOD: 
-        delta_t = LOCK_PERIOD
+    dt: uint256 = block.timestamp - _startClaimingTimestamp
+    if dt > LOCK_PERIOD: 
+        dt = LOCK_PERIOD
 
-    amount: uint256 = delta_t * self.balances[_account] / LOCK_PERIOD - _totalMinted
+    amount: uint256 = dt * self.balances[_account] / LOCK_PERIOD - _totalMinted
     self.totalMinted[_account] = _totalMinted + amount
-    assert ERC20(_farmToken).transfer(_account, amount)
+    assert ERC20(self.farmToken).transfer(_account, amount)
+    
     log Claim(_account, amount)
-
-    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 3)
+    self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 2)
 
 
 @view
@@ -112,11 +115,11 @@ def claimableTokens(_account: address) -> uint256:
     if _startClaimingTimestamp == 0:
         return 0
 
-    delta_t: uint256 = block.timestamp - self.startClaimingTimestamp
-    if delta_t > LOCK_PERIOD: 
-        delta_t = LOCK_PERIOD
+    dt: uint256 = block.timestamp - self.startClaimingTimestamp
+    if dt > LOCK_PERIOD: 
+        dt = LOCK_PERIOD
 
-    return delta_t * self.balances[_account] / LOCK_PERIOD - self.totalMinted[_account]
+    return dt * self.balances[_account] / LOCK_PERIOD - self.totalMinted[_account]
 
 
 @external

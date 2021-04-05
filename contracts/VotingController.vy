@@ -36,13 +36,6 @@ event Unvote:
     account: address
     amount: uint256
 
-event VoteApproval:
-    reaper: address
-    coin: address
-    ownerAccount: address
-    voterAccount: address
-    canVote: bool
-
 event StartVoting:
     delay: uint256
 
@@ -81,7 +74,6 @@ lastSnapshotTimestamp: public(uint256)
 lastSnapshotIndex: public(uint256)
 snapshots: public(VoteReaperSnapshot[MULTIPLIER][MULTIPLIER])                                   # [snapshot index, record index]
 coinBalances: public(HashMap[address, uint256])                                                 # coin -> balance
-
 votingTokenRate: public(uint256)
 votingTokenRateAmplifier: public(uint256)
 
@@ -126,12 +118,12 @@ def _snapshot():
     @notice Makes a snapshot and fixes voting result per voting period, also updates historical reaper vote integrals
     @dev Only possible to call it once per voting period
     """
-    if self.lastSnapshotTimestamp == 0 or block.timestamp < self.nextSnapshotTimestamp:
+    _lastSnapshotTimestamp: uint256 = self.lastSnapshotTimestamp
+    if _lastSnapshotTimestamp == 0 or block.timestamp < self.nextSnapshotTimestamp:
         return
 
     _controller: address = self.controller
     _lastReaperIndex: uint256 = Controller(_controller).lastReaperIndex()
-    _lastSnapshotTimestamp: uint256 = self.lastSnapshotTimestamp
 
     _farmToken: address = self.farmToken
     _votingToken: address = self.votingToken
@@ -161,14 +153,13 @@ def _snapshot():
             break
 
         _currentReaper: address = Controller(_controller).reapers(i)
-        _reaperVoteBalance: uint256 = 0
 
         if _totalVotePower == 0:
             self.snapshots[_lastSnapshotIndex + 1][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: 0, share: 0})
             self.reaperIntegratedVotes[_currentReaper] += self.lastVotes[_currentReaper] * _dt
             self.lastVotes[_currentReaper] = 0
         else:
-            _reaperVoteBalance = self.reaperBalances[_currentReaper][_votingToken] * _votingTokenRate / MULTIPLIER + self.reaperBalances[_currentReaper][_farmToken] * FARM_TOKEN_RATE
+            _reaperVoteBalance: uint256 = self.reaperBalances[_currentReaper][_votingToken] * _votingTokenRate / MULTIPLIER + self.reaperBalances[_currentReaper][_farmToken] * FARM_TOKEN_RATE
             self.snapshots[_lastSnapshotIndex + 1][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: _reaperVoteBalance, share: _reaperVoteBalance * MULTIPLIER / _totalVotePower})
             self.reaperIntegratedVotes[_currentReaper] += self.lastVotes[_currentReaper] * _dt
             self.lastVotes[_currentReaper] = _reaperVoteBalance * MULTIPLIER / _totalVotePower
@@ -257,10 +248,7 @@ def voteIntegral(_reaper: address) -> uint256:
     @return Vote integral multiplied on 1e18
     """
     assert Controller(self.controller).indexByReaper(_reaper) > 0, "invalid reaper"
-
-    if block.timestamp > self.nextSnapshotTimestamp and self.lastSnapshotTimestamp > 0:
-        self._snapshot()
-
+    self._snapshot()
     return self.reaperIntegratedVotes[_reaper] + self.lastVotes[_reaper] * (block.timestamp - self.lastSnapshotTimestamp)
 
 
@@ -281,9 +269,7 @@ def reaperVotePower(_reaper: address) -> uint256:
     if _farmTokenBalance + _votingTokenBalance == 0:
         return 0
 
-    _votingRate: uint256 = self.votingTokenRate
-    _votingRateAmplifier: uint256 = self.votingTokenRateAmplifier
-    _votingTokenRate: uint256 = MULTIPLIER * _votingRate + MULTIPLIER * _votingRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+    _votingTokenRate: uint256 = MULTIPLIER * self.votingTokenRate + MULTIPLIER * self.votingTokenRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
     return self.reaperBalances[_reaper][_votingToken] * _votingTokenRate / MULTIPLIER + self.reaperBalances[_reaper][_farmToken] * FARM_TOKEN_RATE
 
 
@@ -302,9 +288,7 @@ def totalVotePower() -> uint256:
     if _farmTokenBalance + _votingTokenBalance == 0:
         return 0
 
-    _votingRate: uint256 = self.votingTokenRate
-    _votingRateAmplifier: uint256 = self.votingTokenRateAmplifier
-    _votingTokenRate: uint256 = MULTIPLIER * _votingRate + MULTIPLIER * _votingRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+    _votingTokenRate: uint256 = MULTIPLIER * self.votingTokenRate + MULTIPLIER * self.votingTokenRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
     return self.coinBalances[_votingToken] * _votingTokenRate / MULTIPLIER + self.coinBalances[_farmToken] * FARM_TOKEN_RATE
 
 
@@ -329,9 +313,7 @@ def accountVotePower(_reaper: address, _account: address) -> uint256:
     if _farmTokenBalance + _votingTokenBalance == 0:
         return 0
 
-    _votingRate: uint256 = self.votingTokenRate
-    _votingRateAmplifier: uint256 = self.votingTokenRateAmplifier
-    _votingTokenRate: uint256 = MULTIPLIER * _votingRate + MULTIPLIER * _votingRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
+    _votingTokenRate: uint256 = MULTIPLIER * self.votingTokenRate + MULTIPLIER * self.votingTokenRateAmplifier * _farmTokenBalance / (_farmTokenBalance + _votingTokenBalance)
     return self.balances[_reaper][_votingToken][_account] * _votingTokenRate / MULTIPLIER + self.balances[_reaper][_farmToken][_account] * FARM_TOKEN_RATE
 
 
@@ -349,15 +331,15 @@ def startVoting(_votingDelay: uint256 = 0):
     # initial voting round: we share equally for all reapers
     _controller: address = self.controller
     _lastReaperIndex: uint256 = Controller(_controller).lastReaperIndex()
-    _totalVoteBalance: uint256 = _lastReaperIndex
+    _reaperShare: uint256 = MULTIPLIER / _lastReaperIndex
     self.lastSnapshotTimestamp = block.timestamp
     self.nextSnapshotTimestamp = INIT_VOTING_TIME + (block.timestamp + VOTING_PERIOD + _votingDelay - INIT_VOTING_TIME) / VOTING_PERIOD * VOTING_PERIOD
+
     for i in range(1, MULTIPLIER):
         if i > _lastReaperIndex:
             break
 
         _currentReaper: address = Controller(_controller).reapers(i)
-        _reaperShare: uint256 = MULTIPLIER / _totalVoteBalance
         self.snapshots[0][i] = VoteReaperSnapshot({reaper: _currentReaper, votes: 1, share: _reaperShare})
         self.lastVotes[_currentReaper] = _reaperShare
     

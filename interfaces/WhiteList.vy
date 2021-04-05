@@ -3,15 +3,15 @@
 
 @view
 @external
-def check(_account: address) -> bool:
+def check(_address: address) -> bool:
     return False
 
 
 @external
-def addAddress(_account: address):
+def addAddress(_address: address):
     pass
 
 
 @external
-def removeAddress(_account: address):
+def removeAddress(_address: address):
     pass
