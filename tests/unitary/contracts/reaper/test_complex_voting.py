@@ -76,9 +76,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     assert reaper.lastSnapshotTimestampFor(morpheus) == tx3.timestamp
     assert reaper.voteIntegral() == 0
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -145,9 +143,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     assert reaper.voteIntegral() / (tx4.timestamp - tx_emission.timestamp) / \
         VOTE_DIVIDER == 0.5
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -219,9 +215,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.375) < 10 ** (-6)
     assert voting_controller.lastVotes(reaper) == 0.25 * 10 ** 18
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -282,9 +276,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.333) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper) == 0.5 * 10 ** 18
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -337,9 +329,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.357) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper) == 0.5 * 10 ** 18
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -392,9 +382,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.375) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper) == 0.5 * 10 ** 18
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -450,9 +438,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.625) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_2) == 0.5 * 10 ** 18
     assert reaper_2.boostIntegralFor(deployer) == 0
-    assert reaper_2.totalBoostIntegralFor(deployer) == 0
     assert reaper_2.boostIntegralFor(morpheus) == 0
-    assert reaper_2.totalBoostIntegralFor(morpheus) == 0
     last_reaper_2_balances_integral = reaper_2.balancesIntegral()
     last_reaper_2_emission_integral = reaper_2.emissionIntegral()
     last_reaper_2_vote_integral = reaper_2.voteIntegral()
@@ -536,9 +522,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.366) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper) == 333333333333333333
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -596,9 +580,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.566) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_2) == 333333333333333333
     assert reaper_2.boostIntegralFor(deployer) == 0
-    assert reaper_2.totalBoostIntegralFor(deployer) == 0
     assert reaper_2.boostIntegralFor(morpheus) == 0
-    assert reaper_2.totalBoostIntegralFor(morpheus) == 0
     last_reaper_2_balances_integral = reaper_2.balancesIntegral()
     last_reaper_2_emission_integral = reaper_2.emissionIntegral()
     last_reaper_2_vote_integral = reaper_2.voteIntegral()
@@ -660,9 +642,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                reaper_3_init_timestamp.timestamp) / VOTE_DIVIDER - 0.333) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_3) == 333333333333333333
     assert reaper_3.boostIntegralFor(deployer) == 0
-    assert reaper_3.totalBoostIntegralFor(deployer) == 0
     assert reaper_3.boostIntegralFor(morpheus) == 0
-    assert reaper_3.totalBoostIntegralFor(morpheus) == 0
     last_reaper_3_balances_integral = reaper_3.balancesIntegral()
     last_reaper_3_emission_integral = reaper_3.emissionIntegral()
     last_reaper_3_vote_integral = reaper_3.voteIntegral()
@@ -738,9 +718,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.347) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper) == 250000000000000000
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -798,9 +776,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.513) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_2) == 250000000000000000
     assert reaper_2.boostIntegralFor(deployer) == 0
-    assert reaper_2.totalBoostIntegralFor(deployer) == 0
     assert reaper_2.boostIntegralFor(morpheus) == 0
-    assert reaper_2.totalBoostIntegralFor(morpheus) == 0
     last_reaper_2_balances_integral = reaper_2.balancesIntegral()
     last_reaper_2_emission_integral = reaper_2.emissionIntegral()
     last_reaper_2_vote_integral = reaper_2.voteIntegral()
@@ -862,9 +838,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                reaper_3_init_timestamp.timestamp) / VOTE_DIVIDER - 0.416) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_3) == 0.5 * 10 ** 18
     assert reaper_3.boostIntegralFor(deployer) == 0
-    assert reaper_3.totalBoostIntegralFor(deployer) == 0
     assert reaper_3.boostIntegralFor(morpheus) == 0
-    assert reaper_3.totalBoostIntegralFor(morpheus) == 0
     last_reaper_3_balances_integral = reaper_3.balancesIntegral()
     last_reaper_3_emission_integral = reaper_3.emissionIntegral()
     last_reaper_3_vote_integral = reaper_3.voteIntegral()
@@ -940,9 +914,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.369) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper) == 500000000000000000
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -1000,9 +972,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.511) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_2) == 500000000000000000
     assert reaper_2.boostIntegralFor(deployer) == 0
-    assert reaper_2.totalBoostIntegralFor(deployer) == 0
     assert reaper_2.boostIntegralFor(morpheus) == 0
-    assert reaper_2.totalBoostIntegralFor(morpheus) == 0
     last_reaper_2_balances_integral = reaper_2.balancesIntegral()
     last_reaper_2_emission_integral = reaper_2.emissionIntegral()
     last_reaper_2_vote_integral = reaper_2.voteIntegral()
@@ -1064,9 +1034,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                reaper_3_init_timestamp.timestamp) / VOTE_DIVIDER - 0.277) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_3) == 0
     assert reaper_3.boostIntegralFor(deployer) == 0
-    assert reaper_3.totalBoostIntegralFor(deployer) == 0
     assert reaper_3.boostIntegralFor(morpheus) == 0
-    assert reaper_3.totalBoostIntegralFor(morpheus) == 0
     last_reaper_3_balances_integral = reaper_3.balancesIntegral()
     last_reaper_3_emission_integral = reaper_3.emissionIntegral()
     last_reaper_3_vote_integral = reaper_3.voteIntegral()
@@ -1141,9 +1109,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.385) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper) == 500000000000000000
     assert reaper.boostIntegralFor(deployer) == 0
-    assert reaper.totalBoostIntegralFor(deployer) == 0
     assert reaper.boostIntegralFor(morpheus) == 0
-    assert reaper.totalBoostIntegralFor(morpheus) == 0
     last_balances_integral = reaper.balancesIntegral()
     last_emission_integral = reaper.emissionIntegral()
     last_vote_integral = reaper.voteIntegral()
@@ -1201,9 +1167,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                tx_emission.timestamp) / VOTE_DIVIDER - 0.511) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_2) == 500000000000000000
     assert reaper_2.boostIntegralFor(deployer) == 0
-    assert reaper_2.totalBoostIntegralFor(deployer) == 0
     assert reaper_2.boostIntegralFor(morpheus) == 0
-    assert reaper_2.totalBoostIntegralFor(morpheus) == 0
     last_reaper_2_balances_integral = reaper_2.balancesIntegral()
     last_reaper_2_emission_integral = reaper_2.emissionIntegral()
     last_reaper_2_vote_integral = reaper_2.voteIntegral()
@@ -1265,9 +1229,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
                reaper_3_init_timestamp.timestamp) / VOTE_DIVIDER - 0.208) < 10 ** (-3)
     assert voting_controller.lastVotes(reaper_3) == 0
     assert reaper_3.boostIntegralFor(deployer) == 0
-    assert reaper_3.totalBoostIntegralFor(deployer) == 0
     assert reaper_3.boostIntegralFor(morpheus) == 0
-    assert reaper_3.totalBoostIntegralFor(morpheus) == 0
     last_reaper_3_balances_integral = reaper_3.balancesIntegral()
     last_reaper_3_emission_integral = reaper_3.emissionIntegral()
     last_reaper_3_vote_integral = reaper_3.voteIntegral()

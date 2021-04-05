@@ -233,11 +233,11 @@ def _snapshot(_account: address):
     # boost_balance: uint256 = 0
     _boostingController: address = self.boostingController
     _boostIntegral: uint256 = BoostingController(_boostingController).updateAccountBoostFactorIntegral(_account)
-
-    accountBoost: uint256 = (_balancesIntegral - self.balancesIntegralFor[_account]) / dt * (_boostIntegral - self.boostIntegralFor[_account]) / dt / VOTE_DIVIDER
-    self.debug1 = accountBoost
-    self.debug2 = (_balancesIntegral - self.balancesIntegralFor[_account])
-    self.debug3 = (_boostIntegral - self.boostIntegralFor[_account])
+    # TODO: optimize accuracy 
+    accountBoost: uint256 = (_balancesIntegral - self.balancesIntegralFor[_account]) * (_boostIntegral - self.boostIntegralFor[_account]) #/ dt / VOTE_DIVIDER
+    # self.debug1 = accountBoost
+    # self.debug2 = (_balancesIntegral - self.balancesIntegralFor[_account])
+    # self.debug3 = (_boostIntegral - self.boostIntegralFor[_account])
 
     # if accountBoost > 0:
     #     # _totalBoostIntegral: uint256 = BoostingController(_boostingController).updateBoostIntegral()
@@ -248,12 +248,12 @@ def _snapshot(_account: address):
     #         self.totalBoostIntegralFor[_account] = _totalBoostIntegral
 
 
-    # self.debug1 = (_balancesIntegral - self.balancesIntegralFor[_account])
-    # self.debug2 = boost_balance * (100 - TOKENLESS_PRODUCTION) / 100
-    # self.debug3 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + boost_balance * (100 - TOKENLESS_PRODUCTION) / 100)
+    self.debug1 = accountBoost
+    self.debug2 = accountBoost * (100 - TOKENLESS_PRODUCTION) / 100
+    self.debug3 = (self.balances[_account] * dt * VOTE_DIVIDER * TOKENLESS_PRODUCTION / 100 + (_balancesIntegral - self.balancesIntegralFor[_account]) * (_boostIntegral - self.boostIntegralFor[_account]) * (100 - TOKENLESS_PRODUCTION) / 100 / dt) / VOTE_DIVIDER
 
     _max_emission: uint256 = self.balances[_account] * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
-    _account_emission: uint256 = (self.balances[_account] * TOKENLESS_PRODUCTION / 100 + accountBoost * (100 - TOKENLESS_PRODUCTION) / 100) * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / VOTE_DIVIDER
+    _account_emission: uint256 = self.debug3 * (_unitCostIntegral - self.lastUnitCostIntegralFor[_account]) / dt / VOTE_DIVIDER
     _account_emission = min(_max_emission, _account_emission)
     if _account_emission != _max_emission:
         _adminFee: uint256 = self.adminFee
@@ -263,7 +263,7 @@ def _snapshot(_account: address):
     self.reapIntegral += _account_emission
     self.reapIntegralFor[_account] += _account_emission
     self.lastUnitCostIntegralFor[_account] = _unitCostIntegral
-    self.balancesIntegralFor[_account] = _balancesIntegral # TODO: consider: do we need this?
+    self.balancesIntegralFor[_account] = _balancesIntegral
     self.boostIntegralFor[_account] = _boostIntegral
 
 

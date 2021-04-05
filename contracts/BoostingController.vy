@@ -200,10 +200,10 @@ def _updateAccountBoostFactorIntegral(_account: address) -> uint256:
         return _newBoostFactorIntegralFor
 
     _newBoostFactorIntegralFor += (_newAccountBoostIntegral - _lastBoostIntegralFor) * MULTIPLIER * (block.timestamp - _lastBoostTimestampFor) / (_newBoostIntegral - _lastTotalBoostIntegralFor) 
-    self.debug3 = _newBoostFactorIntegralFor
+    self.debug3 = _lastTotalBoostIntegralFor
     self.boostFactorIntegralFor[_account] = _newBoostFactorIntegralFor
     self.boostIntegralFor[_account] = _newAccountBoostIntegral
-    self.totalBoostIntegralFor[_account] = _lastTotalBoostIntegralFor
+    self.totalBoostIntegralFor[_account] = _newBoostIntegral
 
     return _newBoostFactorIntegralFor
 
