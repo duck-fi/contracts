@@ -43,15 +43,21 @@ def deploy():
     dai = deploy_erc20("Dai Stablecoin", "DAI", DAI_DECIMALS, INIT_SUPPLY)
     crv = curve_dao.ERC20CRV.deploy(
         "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
-    dsp = FarmToken.deploy("Dispersion Farming Token",
-                           "DSP", {'from': DEPLOYER})
+    ducks = FarmToken.deploy("DUCKS Farming Token",
+                             "DUCKS", {'from': DEPLOYER})
+    print("DUCKS: %s".format(ducks))
     chi_token = chi.ChiToken.deploy({'from': DEPLOYER})
+    print("CHI: %s".format(chi_token))
 
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
         DEPLOYER, {'from': DEPLOYER})
     usdn_usdt_lp = uniswap_factory.createPair.call(usdn, usdt)  # USDN/USDT
-    usdn_crv_lp = uniswap_factory.createPair.call(usdn, crv)   # USDN/CRV
+    print("USDN/USDT: %s".format(usdn_usdt_lp))
+    usdn_crv_lp = uniswap_factory.createPair.call(usdn, crv)    # USDN/CRV
+    print("USDN/CRV: %s".format(usdn_crv_lp))
+    usdn_ducks_lp = uniswap_factory.createPair.call(usdn, crv)  # USDN/DUCKS
+    print("USDN/DUCKS: %s".format(usdn_ducks_lp))
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
@@ -108,31 +114,31 @@ def deploy():
     gas_token_check_list.addAddress(chi_token, {'from': DEPLOYER})
 
     controller = Controller.deploy(
-        dsp, gas_token_check_list, {'from': DEPLOYER})
-    dsp.setMinter(controller, {'from': DEPLOYER})
+        ducks, gas_token_check_list, {'from': DEPLOYER})
+    ducks.setMinter(controller, {'from': DEPLOYER})
 
     voting_controller = VotingController.deploy(
-        controller, gas_token_check_list, dsp, {'from': DEPLOYER})
-    vdsp_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
-    vdsp = StrictTransfableToken.deploy("Dispersion Voting Token",
-                                        "vDSP", vdsp_minter_check_list, voting_controller, {'from': DEPLOYER})
-    voting_controller.setVotingToken(vdsp, {'from': DEPLOYER})
+        controller, gas_token_check_list, ducks, {'from': DEPLOYER})
+    vducks_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
+    vducks = StrictTransfableToken.deploy("DUCKS Voting Token",
+                                          "vDUCKS", vducks_minter_check_list, voting_controller, {'from': DEPLOYER})
+    voting_controller.setVotingToken(vducks, {'from': DEPLOYER})
 
     boosting_controller = BoostingController.deploy(
         gas_token_check_list, {'from': DEPLOYER})
-    bdsp_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
-    bdsp = StrictTransfableToken.deploy("Dispersion Boosting Token",
-                                        "bDSP", bdsp_minter_check_list, boosting_controller, {'from': DEPLOYER})
+    bducks_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
+    bducks = StrictTransfableToken.deploy("DUCKS Boosting Token",
+                                          "bDUCKS", bducks_minter_check_list, boosting_controller, {'from': DEPLOYER})
 
     # Reapers
     usdn_usdt_reaper = Reaper.deploy(
-        usdn_usdt_lp, dsp, controller, voting_controller, boosting_controller, gas_token_check_list, 15, {'from': DEPLOYER})   # 1,5%
+        usdn_usdt_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 15, {'from': DEPLOYER})   # 1,5%
     controller.addReaper(usdn_usdt_reaper, {'from': DEPLOYER})
     usdn_crv_reaper = Reaper.deploy(
-        usdn_crv_lp, dsp, controller, voting_controller, boosting_controller, gas_token_check_list, 25, {'from': DEPLOYER})    # 2,5%
+        usdn_crv_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 25, {'from': DEPLOYER})    # 2,5%
     controller.addReaper(usdn_crv_reaper, {'from': DEPLOYER})
     usdn_mpool_reaper = Reaper.deploy(
-        usdn_mpool_lp, dsp, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
+        usdn_mpool_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
 
 
