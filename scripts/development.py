@@ -138,6 +138,9 @@ def deploy():
 
     print("DUCKS: {}".format(ducks))
     print("CHI: {}".format(chi_token))
+    print(usdn_crv_lp)
+    print(usdn_usdt_lp)
+    print(usdn_ducks_lp)
     print("USDN/CRV: {}}".format(usdn_crv_lp))
     print("USDN/USDT: {}".format(usdn_usdt_lp))
     print("USDN/DUCKS: {}}".format(usdn_ducks_lp))
