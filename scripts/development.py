@@ -50,9 +50,12 @@ def deploy():
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
         DEPLOYER, {'from': DEPLOYER})
-    usdn_usdt_lp = uniswap_factory.createPair.call(usdn, usdt)  # USDN/USDT
-    usdn_crv_lp = uniswap_factory.createPair.call(usdn, crv)    # USDN/CRV
-    usdn_ducks_lp = uniswap_factory.createPair.call(usdn, crv)  # USDN/DUCKS
+    usdn_usdt_lp = uniswap_factory.createPair(
+        usdn, usdt, {'from': DEPLOYER})  # USDN/USDT
+    usdn_crv_lp = uniswap_factory.createPair(
+        usdn, crv, {'from': DEPLOYER})  # USDN/CRV
+    usdn_ducks_lp = uniswap_factory.createPair(
+        usdn, crv, {'from': DEPLOYER})  # USDN/DUCKS
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
