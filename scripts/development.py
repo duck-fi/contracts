@@ -45,19 +45,14 @@ def deploy():
         "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
     ducks = FarmToken.deploy("DUCKS Farming Token",
                              "DUCKS", {'from': DEPLOYER})
-    print("DUCKS: %s".format(ducks))
     chi_token = chi.ChiToken.deploy({'from': DEPLOYER})
-    print("CHI: %s".format(chi_token))
 
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
         DEPLOYER, {'from': DEPLOYER})
     usdn_usdt_lp = uniswap_factory.createPair.call(usdn, usdt)  # USDN/USDT
-    print("USDN/USDT: %s".format(usdn_usdt_lp))
     usdn_crv_lp = uniswap_factory.createPair.call(usdn, crv)    # USDN/CRV
-    print("USDN/CRV: %s".format(usdn_crv_lp))
     usdn_ducks_lp = uniswap_factory.createPair.call(usdn, crv)  # USDN/DUCKS
-    print("USDN/DUCKS: %s".format(usdn_ducks_lp))
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
@@ -140,6 +135,12 @@ def deploy():
     usdn_mpool_reaper = Reaper.deploy(
         usdn_mpool_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
+
+    print("DUCKS: {}".format(ducks))
+    print("CHI: {}".format(chi_token))
+    print("USDN/CRV: {}}".format(usdn_crv_lp))
+    print("USDN/USDT: {}".format(usdn_usdt_lp))
+    print("USDN/DUCKS: {}}".format(usdn_ducks_lp))
 
 
 def deploy_erc20(name, symbol, decimals, mint):
