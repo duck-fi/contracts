@@ -225,9 +225,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
     print("boosting_controller_mocked.boostIntegralFor(deployer)", boosting_controller_mocked.boostIntegralFor(deployer))
     print("boosting_controller_mocked.totalBoostIntegralFor(deployer)", boosting_controller_mocked.totalBoostIntegralFor(deployer))
     print("boosting_controller_mocked.boostFactorIntegralFor(deployer)", boosting_controller_mocked.boostFactorIntegralFor(deployer))
-    print("boosting_controller_mocked.debug1()",boosting_controller_mocked.debug1())
-    print("boosting_controller_mocked.debug2()",boosting_controller_mocked.debug2())
-    print("boosting_controller_mocked.debug3()",boosting_controller_mocked.debug3())
     print("-----")
     boost_koeff = (reaper.boostIntegralFor(deployer) - last_boost_integral_deployer)/(10**18)/(tx7.timestamp - tx6.timestamp)
     print("boost_koeff", boost_koeff)
@@ -328,9 +325,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)
     print("reaper.emissionIntegral()", reaper.emissionIntegral())
     print("reaper.boostIntegralFor(deployer)",reaper.boostIntegralFor(deployer))
-    print("reaper.debug1()",reaper.debug1())
-    print("reaper.debug2()",reaper.debug2())
-    print("reaper.debug3()",reaper.debug3())
 
     assert reaper.balances(deployer) == amount
     assert reaper.totalBalances() == amount
@@ -367,16 +361,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
     last_distributed_emission = reaper.reapIntegral()
     last_distributed_emission_deployer = reaper.reapIntegralFor(deployer)
 
-    # TODO: REMOVE
-    # while True:
-    #     chain.mine(1, init_ts + 21 * week)
-    #     tx12_1 = boosting_controller_mocked.unboost({'from': deployer})
-    #     tx12_2 = reaper.withdraw(amount, {'from': deployer})
-    #     if tx12_1.timestamp == init_ts + 21 * week and tx12_2.timestamp == init_ts + 21 * week:
-    #         break
-    #     else:
-    #         chain.undo(2)
-
     # now add morpheus without any boosts
     # deposit amount for morpheus
     while True:
@@ -396,9 +380,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
             break
         else:
             chain.undo(1)
-
-    print("reaper.lastUnitCostIntegralFor(morpheus)", reaper.lastUnitCostIntegralFor(morpheus))
-    print("reaper.boostIntegralFor(morpheus)", reaper.boostIntegralFor(morpheus))
 
     # wait until boost finish and for 2 week more without boosts, then resetup boost for morpheus (2 week - warmup, 4 week - lock)
     chain.mine(1, init_ts + 28 * week)
@@ -429,9 +410,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)
     print("reaper.emissionIntegral()", reaper.emissionIntegral())
     print("reaper.boostIntegralFor(deployer)",reaper.boostIntegralFor(deployer))
-    print("reaper.debug1()",reaper.debug1())
-    print("reaper.debug2()",reaper.debug2())
-    print("reaper.debug3()",reaper.debug3())
 
     assert reaper.balances(deployer) == amount
     assert reaper.balances(morpheus) == amount

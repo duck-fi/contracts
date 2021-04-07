@@ -37,8 +37,3 @@ def deposit(_amount: uint256):
 @external
 def withdraw(_amount: uint256, _account: address):
     pass
-
-
-@external
-def claim(_amount: uint256, _account: address):
-    pass

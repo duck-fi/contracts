@@ -62,11 +62,6 @@ def withdraw(_amount: uint256, _account: address):
     assert self.activated, "not activated"
 
 
-@external
-def claim(_amount: uint256, _account: address):
-    assert self.activated, "not activated"
-
-
 @view
 @external
 def availableToDeposit(_amount: uint256, _account: address) -> uint256:

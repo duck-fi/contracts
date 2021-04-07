@@ -32,8 +32,7 @@ def test_boost_update_on_lock(exception_tester, boosting_controller_mocked, boos
     chain.mine(
         1, blockTimestamp + warmupTime + (4 * week - warmupTime) / 4 + delta)
 
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(deployer)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(deployer)
     blockTimestamp_1 = chain.time()
 
     assert boosting_controller_mocked.balances(deployer) == amount
@@ -86,8 +85,7 @@ def test_boost_update_on_lock(exception_tester, boosting_controller_mocked, boos
     # wait for some time
     chain.mine(1, chain.time() + day)
 
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(deployer)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(deployer)
     blockTimestamp_3 = chain.time()
 
     assert boosting_controller_mocked.balances(deployer) == 0
@@ -136,8 +134,7 @@ def test_boost_update_after_reduction(boosting_controller_mocked, boosting_token
     chain.mine(
         1, blockTimestamp + 4 * week + delta)
 
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(morpheus)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_1 = chain.time()
 
     assert boosting_controller_mocked.balances(morpheus) == amount
@@ -187,8 +184,7 @@ def test_boost_update_after_reduction(boosting_controller_mocked, boosting_token
     # wait for some time
     chain.mine(1, chain.time() + day)
 
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(morpheus)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_3 = chain.time()
 
     assert boosting_controller_mocked.balances(morpheus) == 0
@@ -236,8 +232,7 @@ def test_boost_update_on_warmup_and_after_lock(boosting_controller_mocked, boost
     chain.mine(1, blockTimestamp +
                warmupTime / 2 + delta)
 
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(trinity)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(trinity)
     blockTimestamp_1 = chain.time()
 
     assert boosting_controller_mocked.balances(trinity) == amount
@@ -264,8 +259,7 @@ def test_boost_update_on_warmup_and_after_lock(boosting_controller_mocked, boost
     chain.mine(
         1, blockTimestamp + 4 * week + delta)
 
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(trinity)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(trinity)
     blockTimestamp_2 = chain.time()
 
     assert boosting_controller_mocked.balances(trinity) == amount
@@ -315,8 +309,7 @@ def test_boost_update_on_warmup_and_after_lock(boosting_controller_mocked, boost
     # wait for some time
     chain.mine(1, chain.time() + day)
 
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(trinity)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(trinity)
     blockTimestamp_4 = chain.time()
 
     assert boosting_controller_mocked.balances(trinity) == 0

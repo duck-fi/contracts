@@ -5,7 +5,7 @@
 @license MIT
 @notice Burnable and Mintable ERC20 token.
 @dev Based on the [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token that cannot be freely transferred.
-     Transfer awailable for `_transfableAccount only`. `decimals()` = `18`.
+     Transfer awailable for contracts and accounts from `transferableAccountCheckList` only. `decimals()` = `18`.
 """
 
 
@@ -46,7 +46,7 @@ DECIMALS: constant(uint256) = 18
 owner: public(address)
 futureOwner: public(address)
 mintersCheckList: public(address)
-transfableAccount: public(address)
+transferableAccountCheckList: public(address)
 
 # ERC20
 name: public(String[32])
@@ -56,22 +56,22 @@ totalSupply: public(uint256)
 
 
 @external
-def __init__(_name: String[32], _symbol: String[8], _mintersCheckList: address, _transfableAccount: address):
+def __init__(_name: String[32], _symbol: String[8], _mintersCheckList: address, _transferableAccountCheckList: address):
     """
     @notice Contract constructor.
     @dev `owner` = `msg.sender`
     @param _name Token full name
     @param _symbol Token symbol
     @param _mintersCheckList Minters check list. List of addresses that are allowed to mint coins
-    @param _transfableAccount Account address with which transfer is allowed
+    @param _transferableAccountCheckList Transferable account check list, who is allowed to transfer tokens
     """
     assert _mintersCheckList != ZERO_ADDRESS, "mintersCheckList is not set"
-    assert _transfableAccount != ZERO_ADDRESS, "caller is not set"
+    assert _transferableAccountCheckList != ZERO_ADDRESS, "transferableAccountCheckList is not set"
     self.name = _name
     self.symbol = _symbol
     self.owner = msg.sender
     self.mintersCheckList = _mintersCheckList
-    self.transfableAccount = _transfableAccount
+    self.transferableAccountCheckList = _transferableAccountCheckList
 
 
 @view
@@ -125,7 +125,9 @@ def transfer(_recipient: address, _amount: uint256) -> bool:
     @return Boolean success value
     """
     assert _recipient != ZERO_ADDRESS, "recipient is zero address"
-    assert (msg.sender == self.transfableAccount) or (_recipient == self.transfableAccount), "strict transfer"
+
+    _transferableAccountCheckList: address = self.transferableAccountCheckList
+    assert WhiteList(_transferableAccountCheckList).check(msg.sender) or WhiteList(_transferableAccountCheckList).check(_recipient), "strict transfer"
 
     self.balanceOf[msg.sender] -= _amount
     self.balanceOf[_recipient] += _amount
@@ -147,7 +149,7 @@ def transferFrom(_sender: address, _recipient: address, _amount: uint256) -> boo
     """
     assert _sender != ZERO_ADDRESS, "sender is zero address"
     assert _recipient != ZERO_ADDRESS, "recipient is zero address"
-    assert msg.sender == self.transfableAccount, "strict transfer"
+    assert WhiteList(self.transferableAccountCheckList).check(msg.sender), "strict transfer"
     
     self.balanceOf[_sender] -= _amount
     self.balanceOf[_recipient] += _amount

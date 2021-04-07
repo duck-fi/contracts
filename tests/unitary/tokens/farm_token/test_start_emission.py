@@ -5,8 +5,9 @@ def test_not_by_owner(farm_token, thomas, exception_tester):
     exception_tester("minter only", farm_token.startEmission, {'from': thomas})
 
 
-def test_success_startEmission(farm_token, voting_controller, controller, deployer, chain):
+def test_success_startEmission(farm_token, voting_controller, controller, reaper_1_mock, deployer, chain):
     t1 = chain.time()
+    controller.addReaper(reaper_1_mock) # need to have at least 1 reaper to start emission (launch voting)
     controller.startEmission(voting_controller, 0, {'from': deployer})
     lastEmissionUpdateTimestamp = farm_token.lastEmissionUpdateTimestamp()
     startEmissionTimestamp = farm_token.startEmissionTimestamp()

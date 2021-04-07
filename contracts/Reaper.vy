@@ -33,6 +33,9 @@ event Withdraw:
 event Kill:
     admin: address
 
+event Unkill:
+    admin: address
+
 event CommitOwnership:
     owner: address
 
@@ -300,6 +303,13 @@ def kill():
     assert msg.sender == self.owner, "owner only"
     self.isKilled = True
     log Kill(msg.sender)
+
+
+@external
+def unkill():
+    assert msg.sender == self.owner, "owner only"
+    self.isKilled = False
+    log Unkill(msg.sender)
 
 
 @external

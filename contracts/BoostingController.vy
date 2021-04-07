@@ -86,20 +86,6 @@ def _reduceGas(_gasToken: address, _from: address, _gasStart: uint256, _callData
 
 
 @internal
-def _calcAmount(pointA: uint256, pointB: uint256, tsA: uint256, tsB: uint256, t: uint256) -> uint256:
-    assert tsB >= tsA, "reverted timestamps"
-    assert tsA <= t and t <= tsB, "t not in interval"
-
-    if tsB == tsA:
-        return 0
-
-    if pointA <= pointB:
-        return (t - tsA) * (pointB - pointA) / (tsB - tsA) + pointA
-    else:
-        return pointA - (t - tsA) * (pointA - pointB) / (tsB - tsA)
-
-
-@internal
 def _updateBoostIntegral() -> uint256:
     _boostIntegral: uint256 = self.boostIntegral
     _lastBoostTimestamp: uint256 = self.lastBoostTimestamp
@@ -127,7 +113,7 @@ def _updateAccountBoostIntegral(_account: address) -> uint256:
     if _boost.warmupTime > block.timestamp:
         # 2. its during warmup
         # 2.1 calc current user integral
-        _instantAmount: uint256 = self._calcAmount(_boost.instantAmount, _boost.targetAmount, _lastBoostTimestamp, _boost.warmupTime, block.timestamp)
+        _instantAmount: uint256 = _boost.instantAmount + (block.timestamp - _lastBoostTimestamp) * (_boost.targetAmount - _boost.instantAmount) / (_boost.warmupTime - _lastBoostTimestamp)
         _accountBoostIntegral += (_instantAmount + _boost.instantAmount) * (block.timestamp - _lastBoostTimestamp) / 2
         self.boosts[_account].instantAmount = _instantAmount
         self.boostIntegralFor[_account] = _accountBoostIntegral
@@ -175,20 +161,19 @@ def _updateAccountBoostIntegral(_account: address) -> uint256:
 @internal
 def _updateAccountBoostFactorIntegral(_account: address) -> uint256:
     _lastBoostTimestampFor: uint256 = self.lastBoostTimestampFor[_account]
+    _lastBoostIntegralFor: uint256 = self.boostIntegralFor[_account]
     _lastTotalBoostIntegralFor: uint256 = self.totalBoostIntegralFor[_account]
+    _newBoostIntegral: uint256 = self._updateBoostIntegral()
+    _newAccountBoostIntegral: uint256 = self._updateAccountBoostIntegral(_account)
 
     if _lastBoostTimestampFor == 0:
         self.totalBoostIntegralFor[_account] = _lastTotalBoostIntegralFor
         return 0
 
-    _lastBoostIntegralFor: uint256 = self.boostIntegralFor[_account]
-    _newBoostIntegral: uint256 = self._updateBoostIntegral()
     _newBoostFactorIntegralFor: uint256 = self.boostFactorIntegralFor[_account]
-
     if _newBoostIntegral <= _lastTotalBoostIntegralFor:
         return _newBoostFactorIntegralFor
 
-    _newAccountBoostIntegral: uint256 = self._updateAccountBoostIntegral(_account)
     _newBoostFactorIntegralFor += (_newAccountBoostIntegral - _lastBoostIntegralFor) * MULTIPLIER * (block.timestamp - _lastBoostTimestampFor) / (_newBoostIntegral - _lastTotalBoostIntegralFor) 
     self.boostFactorIntegralFor[_account] = _newBoostFactorIntegralFor
     self.boostIntegralFor[_account] = _newAccountBoostIntegral

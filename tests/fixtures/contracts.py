@@ -81,21 +81,6 @@ def voting_controller_mocked(VotingController, controller_mock, farm_token, depl
 
 
 @ pytest.fixture(scope="module")
-def boosting_controller(BoostingController, farm_token, gas_token_check_list, deployer):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
-
-
-@ pytest.fixture(scope="module")
-def boosting_controller_mocked(BoostingController, farm_token, gas_token_check_list, deployer):
-    yield BoostingController.deploy(farm_token, gas_token_check_list, {'from': deployer})
-
-
-@ pytest.fixture(scope="module")
-def voting_controller_mocked(VotingController, controller_mock, farm_token, deployer, gas_token_check_list):
-    yield VotingController.deploy(controller_mock, gas_token_check_list, farm_token, {'from': deployer})
-
-
-@ pytest.fixture(scope="module")
 def boosting_controller(BoostingController, gas_token_check_list, deployer):
     yield BoostingController.deploy(gas_token_check_list, {'from': deployer})
 
@@ -103,11 +88,6 @@ def boosting_controller(BoostingController, gas_token_check_list, deployer):
 @ pytest.fixture(scope="module")
 def boosting_controller_mocked(BoostingController, gas_token_check_list, deployer):
     yield BoostingController.deploy(gas_token_check_list, {'from': deployer})
-
-
-@ pytest.fixture(scope="module")
-def reaper_reward_distributor_mocked(ReaperRewardDistributor, reaper_mock, gas_token_check_list, deployer):
-    yield ReaperRewardDistributor.deploy(reaper_mock, gas_token_check_list, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")
@@ -164,9 +144,9 @@ def curve_ve_mock(CurveVEMock, crv_token_mock, deployer):
 
 
 @ pytest.fixture(scope="module")
-def curve_staker_mocked(CurveStaker, curve_ve_mock, curve_gauge_mock, crv_token_mock, lp_token, deployer):
+def curve_staker_mocked(CurveStaker, curve_ve_mock, curve_gauge_mock, crv_token_mock, lp_token, MAX_UINT256, deployer):
     contract = CurveStaker.deploy(
         curve_gauge_mock, lp_token, crv_token_mock, curve_ve_mock, {'from': deployer})
-    lp_token.approve(curve_gauge_mock, 2 ** 256 - 1,
-                     {'from': contract})  # TODO: max int
+    lp_token.approve(curve_gauge_mock, MAX_UINT256,
+                     {'from': contract})
     yield contract
