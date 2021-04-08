@@ -50,37 +50,40 @@ def deploy():
     chi_token = chi.ChiToken.deploy({'from': DEPLOYER})
 
     # Uniswap
+    uniswap_factory = uniswap.UniswapV2Factory.deploy(
+        DEPLOYER, {'from': DEPLOYER})
+
     # USDN/USDT
-    usdn_usdt_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
-    usdn_usdt_lp.initialize(usdn, usdt, {'from': DEPLOYER})
+    usdn_usdt_lp = uniswap_factory.createPair(
+        usdn, usdt, {'from': DEPLOYER}).return_value
     usdn.transfer(usdn_usdt_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
     usdt.transfer(usdn_usdt_lp, 1000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
-    usdn_usdt_lp.mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.UniswapV2Pair(usdn_usdt_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/CRV
-    usdn_crv_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
-    usdn_crv_lp.initialize(usdn, crv, {'from': DEPLOYER})
+    usdn_crv_lp = uniswap_factory.createPair(
+        usdn, crv, {'from': DEPLOYER}).return_value
     usdn.transfer(usdn_crv_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
     crv.transfer(usdn_crv_lp, 500 * 10 ** CURVE_DECIMALS, {'from': DEPLOYER})
-    usdn_crv_lp.mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.UniswapV2Pair(usdn_crv_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/DUCKS
-    usdn_ducks_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
-    usdn_ducks_lp.initialize(usdn, ducks, {'from': DEPLOYER})
+    usdn_ducks_lp = uniswap_factory.createPair(
+        usdn, ducks, {'from': DEPLOYER}).return_value
     usdn.transfer(usdn_ducks_lp, 1000 * 10 **
                   USDN_DECIMALS, {'from': DEPLOYER})
     ducks.transfer(usdn_ducks_lp, 50 * 10 **
                    DUCKS_DECIMALS, {'from': DEPLOYER})
-    usdn_ducks_lp.mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.UniswapV2Pair(usdn_ducks_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/WETH
-    usdn_weth_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
-    usdn_weth_lp.initialize(usdn, weth, {'from': DEPLOYER})
+    usdn_weth_lp = uniswap_factory.createPair(
+        usdn, weth, {'from': DEPLOYER}).return_value
     usdn.transfer(usdn_weth_lp, 1000 * 10 **
                   USDN_DECIMALS, {'from': DEPLOYER})
     weth.transfer(usdn_weth_lp, 1 * 10 **
                   WETH_DECIMALS, {'from': DEPLOYER})
-    usdn_weth_lp.mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.UniswapV2Pair(usdn_weth_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
