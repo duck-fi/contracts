@@ -26,6 +26,7 @@ CURVE_DECIMALS = 18
 USDT_DECIMALS = 6
 USDC_DECIMALS = 6
 DAI_DECIMALS = 18
+WETH_DECIMALS = 18
 DUCKS_DECIMALS = 18
 MPOOL_LP_DECIMALS = 18
 USDN_MPOOL_LP_DECIMALS = 18
@@ -41,6 +42,7 @@ def deploy():
     usdt = deploy_erc20("Tether USD", "USDT", USDT_DECIMALS, INIT_SUPPLY)
     usdc = deploy_erc20("USD Coin", "USDC", USDC_DECIMALS, INIT_SUPPLY)
     dai = deploy_erc20("Dai Stablecoin", "DAI", DAI_DECIMALS, INIT_SUPPLY)
+    weth = deploy_erc20("Wrapped Ether", "WETH", WETH_DECIMALS, INIT_SUPPLY)
     crv = curve_dao.ERC20CRV.deploy(
         "Curve DAO Token", "CRV", CURVE_DECIMALS, {'from': DEPLOYER})
     ducks = FarmToken.deploy("DUCKS Farming Token",
@@ -48,28 +50,37 @@ def deploy():
     chi_token = chi.ChiToken.deploy({'from': DEPLOYER})
 
     # Uniswap
-    uniswap_factory = uniswap.UniswapV2Factory.deploy(
-        DEPLOYER, {'from': DEPLOYER})
-
-    usdn_usdt_lp = uniswap_factory.createPair(
-        usdn, usdt, {'from': DEPLOYER}).return_value    # USDN/USDT
+    # USDN/USDT
+    usdn_usdt_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
+    usdn_usdt_lp.initialize(usdn, usdt, {'from': DEPLOYER})
     usdn.transfer(usdn_usdt_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
     usdt.transfer(usdn_usdt_lp, 1000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
     usdn_usdt_lp.mint(DEPLOYER, {'from': DEPLOYER})
 
-    usdn_crv_lp = uniswap_factory.createPair(
-        usdn, crv, {'from': DEPLOYER}).return_value     # USDN/CRV
+    # USDN/CRV
+    usdn_crv_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
+    usdn_crv_lp.initialize(usdn, crv, {'from': DEPLOYER})
     usdn.transfer(usdn_crv_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
     crv.transfer(usdn_crv_lp, 500 * 10 ** CURVE_DECIMALS, {'from': DEPLOYER})
     usdn_crv_lp.mint(DEPLOYER, {'from': DEPLOYER})
 
-    usdn_ducks_lp = uniswap_factory.createPair(
-        usdn, ducks, {'from': DEPLOYER}).return_value   # USDN/DUCKS
+    # USDN/DUCKS
+    usdn_ducks_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
+    usdn_ducks_lp.initialize(usdn, ducks, {'from': DEPLOYER})
     usdn.transfer(usdn_ducks_lp, 1000 * 10 **
                   USDN_DECIMALS, {'from': DEPLOYER})
     ducks.transfer(usdn_ducks_lp, 50 * 10 **
                    DUCKS_DECIMALS, {'from': DEPLOYER})
     usdn_ducks_lp.mint(DEPLOYER, {'from': DEPLOYER})
+
+    # USDN/WETH
+    usdn_weth_lp = uniswap.UniswapV2Pair.deploy({'from': DEPLOYER})
+    usdn_weth_lp.initialize(usdn, weth, {'from': DEPLOYER})
+    usdn.transfer(usdn_weth_lp, 1000 * 10 **
+                  USDN_DECIMALS, {'from': DEPLOYER})
+    weth.transfer(usdn_weth_lp, 1 * 10 **
+                  WETH_DECIMALS, {'from': DEPLOYER})
+    usdn_weth_lp.mint(DEPLOYER, {'from': DEPLOYER})
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
@@ -146,9 +157,9 @@ def deploy():
     usdn_usdt_reaper = Reaper.deploy(
         usdn_usdt_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 15, {'from': DEPLOYER})   # 1,5%
     controller.addReaper(usdn_usdt_reaper, {'from': DEPLOYER})
-    usdn_crv_reaper = Reaper.deploy(
-        usdn_crv_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 25, {'from': DEPLOYER})    # 2,5%
-    controller.addReaper(usdn_crv_reaper, {'from': DEPLOYER})
+    usdn_weth_reaper = Reaper.deploy(
+        usdn_weth_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 25, {'from': DEPLOYER})    # 2,5%
+    controller.addReaper(usdn_weth_reaper, {'from': DEPLOYER})
     usdn_mpool_reaper = Reaper.deploy(
         usdn_mpool_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
