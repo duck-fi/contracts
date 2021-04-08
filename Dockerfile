@@ -24,4 +24,4 @@ RUN python3 integration/blockscout/blockscout.py
 RUN cat contracts.sql
 
 EXPOSE 8545
-CMD [ "ganache-cli", "-b", "30", "-h", "0.0.0.0", "--db", "/var/lib/dispersion/db", "-m", "abstract render give egg now oxygen wisdom extend strategy link risk insane" ]
+CMD [ "ganache-cli", "--chainId", "1617881604346", "-b", "30", "-h", "0.0.0.0", "--db", "/var/lib/dispersion/db", "-m", "abstract render give egg now oxygen wisdom extend strategy link risk insane" ]
