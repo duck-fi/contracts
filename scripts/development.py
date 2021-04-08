@@ -26,7 +26,7 @@ CURVE_DECIMALS = 18
 USDT_DECIMALS = 6
 USDC_DECIMALS = 6
 DAI_DECIMALS = 18
-DFT_DECIMALS = 18
+DUCKS_DECIMALS = 18
 MPOOL_LP_DECIMALS = 18
 USDN_MPOOL_LP_DECIMALS = 18
 
@@ -50,12 +50,26 @@ def deploy():
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
         DEPLOYER, {'from': DEPLOYER})
+
     usdn_usdt_lp = uniswap_factory.createPair(
         usdn, usdt, {'from': DEPLOYER}).return_value    # USDN/USDT
+    usdn.transfer(usdn_usdt_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
+    usdt.transfer(usdn_usdt_lp, 1000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
+    usdn_usdt_lp.mint(DEPLOYER, {'from': DEPLOYER})
+
     usdn_crv_lp = uniswap_factory.createPair(
         usdn, crv, {'from': DEPLOYER}).return_value     # USDN/CRV
+    usdn.transfer(usdn_crv_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
+    crv.transfer(usdn_crv_lp, 500 * 10 ** CURVE_DECIMALS, {'from': DEPLOYER})
+    usdn_crv_lp.mint(DEPLOYER, {'from': DEPLOYER})
+
     usdn_ducks_lp = uniswap_factory.createPair(
         usdn, ducks, {'from': DEPLOYER}).return_value   # USDN/DUCKS
+    usdn.transfer(usdn_ducks_lp, 1000 * 10 **
+                  USDN_DECIMALS, {'from': DEPLOYER})
+    ducks.transfer(usdn_ducks_lp, 50 * 10 **
+                   DUCKS_DECIMALS, {'from': DEPLOYER})
+    usdn_ducks_lp.mint(DEPLOYER, {'from': DEPLOYER})
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
@@ -92,7 +106,7 @@ def deploy():
         1_000 * 10 ** DAI_DECIMALS,
         1_000 * 10 ** USDC_DECIMALS,
         1_000 * 10 ** USDT_DECIMALS
-    ], 0)
+    ], 0, {'from': DEPLOYER})
 
     curve_voting_escrow = curve_dao.VotingEscrow.deploy(
         crv, 'Vote-escrowed CRV', 'veCRV', 'veCRV_1.0.0', {'from': DEPLOYER})
