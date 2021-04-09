@@ -49,6 +49,8 @@ def deploy():
                              "DUCKS", {'from': DEPLOYER})
     chi_token = chi.ChiToken.deploy({'from': DEPLOYER})
 
+    print(uniswap.__dir__())
+
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
         DEPLOYER, {'from': DEPLOYER})
