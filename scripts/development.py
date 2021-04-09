@@ -58,14 +58,16 @@ def deploy():
         usdn, usdt, {'from': DEPLOYER}).return_value
     usdn.transfer(usdn_usdt_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
     usdt.transfer(usdn_usdt_lp, 1000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
-    uniswap.UniswapV2Pair(usdn_usdt_lp).mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.interfaces.IUniswapV2Pair(
+        usdn_usdt_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/CRV
     usdn_crv_lp = uniswap_factory.createPair(
         usdn, crv, {'from': DEPLOYER}).return_value
     usdn.transfer(usdn_crv_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
     crv.transfer(usdn_crv_lp, 500 * 10 ** CURVE_DECIMALS, {'from': DEPLOYER})
-    uniswap.UniswapV2Pair(usdn_crv_lp).mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.interfaces.IUniswapV2Pair(
+        usdn_crv_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/DUCKS
     usdn_ducks_lp = uniswap_factory.createPair(
@@ -74,7 +76,8 @@ def deploy():
                   USDN_DECIMALS, {'from': DEPLOYER})
     ducks.transfer(usdn_ducks_lp, 50 * 10 **
                    DUCKS_DECIMALS, {'from': DEPLOYER})
-    uniswap.UniswapV2Pair(usdn_ducks_lp).mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.interfaces.IUniswapV2Pair(
+        usdn_ducks_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/WETH
     usdn_weth_lp = uniswap_factory.createPair(
@@ -83,7 +86,8 @@ def deploy():
                   USDN_DECIMALS, {'from': DEPLOYER})
     weth.transfer(usdn_weth_lp, 1 * 10 **
                   WETH_DECIMALS, {'from': DEPLOYER})
-    uniswap.UniswapV2Pair(usdn_weth_lp).mint(DEPLOYER, {'from': DEPLOYER})
+    uniswap.interfaces.IUniswapV2Pair(
+        usdn_weth_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # Curve
     mpool_lp = curve.CurveTokenV2.deploy(
