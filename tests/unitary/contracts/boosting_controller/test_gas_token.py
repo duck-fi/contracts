@@ -17,7 +17,7 @@ def test_boost_boosting_token(boosting_controller_mocked, boosting_token_mocked,
     minLockTime = 2 * week
 
     chi_token.mint(15, {'from': deployer})
-    chi_token.approve(boosting_controller_mocked, 20, {'from': deployer})
+    chi_token.approve(boosting_controller_mocked, 15, {'from': deployer})
 
     boosting_token_mocked.mint(deployer, amount, {'from': deployer})
     boosting_token_mocked.approve(
@@ -33,7 +33,7 @@ def test_boost_boosting_token(boosting_controller_mocked, boosting_token_mocked,
     assert boosting_controller_mocked.balances(deployer) == amount
     assert boosting_controller_mocked.totalBalance() == amount
     assert boosting_controller_mocked.boostIntegral() == 0
-    assert chi_token.balanceOf(deployer) == 8
+    assert chi_token.balanceOf(deployer) == 10
 
     chain.mine(1, chain.time() + 2 * minLockTime + 1)
 
@@ -44,4 +44,4 @@ def test_boost_boosting_token(boosting_controller_mocked, boosting_token_mocked,
     assert tx2.events["Unboost"].values() == [deployer, amount]
     assert boosting_controller_mocked.balances(deployer) == 0
     assert boosting_controller_mocked.totalBalance() == 0
-    assert chi_token.balanceOf(deployer) == 4
+    assert chi_token.balanceOf(deployer) == 6

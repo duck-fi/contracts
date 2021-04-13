@@ -19,9 +19,6 @@ def test_complex_simple(farm_token, lp_token, reaper, controller, voting_control
     initial_emission_timestamp = tx.timestamp
     initial_voting_timestamp = tx.timestamp
 
-    # tx = farm_token.startEmission({'from': deployer})
-    # chain.mine(1, init_ts)
-    # tx = voting_controller.startVoting({'from': deployer})
     assert reaper.balances(deployer) == 0
     assert reaper.totalBalances() == 0
     assert reaper.balancesIntegral() == 0

@@ -67,33 +67,32 @@ def crv_token_mock(ERC20Basic, deployer):
 
 
 @pytest.fixture(scope="module")
-def voting_token_mocked(StrictTransfableToken, voting_controller_mocked, voting_white_list, deployer):
-    contract = StrictTransfableToken.deploy(
-        VOTING_TOKEN_NAME, VOTING_TOKEN_SYMBOL, voting_white_list, voting_controller_mocked, {'from': deployer})
+def voting_token_mocked(StrictTransferableToken, voting_controller_mocked, voting_white_list, WhiteList, deployer):
+    voting_transferable_white_list = WhiteList.deploy({'from': deployer})
+    voting_transferable_white_list.addAddress(voting_controller_mocked, {'from': deployer})
+    contract = StrictTransferableToken.deploy(
+        VOTING_TOKEN_NAME, VOTING_TOKEN_SYMBOL, voting_white_list, voting_transferable_white_list, {'from': deployer})
     voting_controller_mocked.setVotingToken(contract, {'from': deployer})
     yield contract
 
 
 @pytest.fixture(scope="module")
-def boosting_token_mocked(StrictTransfableToken, boosting_controller_mocked, boosting_white_list, deployer):
-    contract = StrictTransfableToken.deploy(BOOSTING_TOKEN_NAME, BOOSTING_TOKEN_SYMBOL,
-                                            boosting_white_list, boosting_controller_mocked, {'from': deployer})
+def boosting_token_mocked(StrictTransferableToken, boosting_controller_mocked, boosting_white_list, WhiteList, deployer):
+    boosting_transferable_white_list = WhiteList.deploy({'from': deployer})
+    boosting_transferable_white_list.addAddress(boosting_controller_mocked, {'from': deployer})
+    contract = StrictTransferableToken.deploy(BOOSTING_TOKEN_NAME, BOOSTING_TOKEN_SYMBOL,
+                                            boosting_white_list, boosting_transferable_white_list, {'from': deployer})
     boosting_controller_mocked.setBoostingToken(contract, {'from': deployer})
     yield contract
 
 
 @pytest.fixture(scope="module")
-def strict_transfable_token(StrictTransfableToken, white_list, deployer):
-    strict_transfable_token = StrictTransfableToken.deploy(
-        "Strict Transfable Token", "STT", white_list, deployer, {'from': deployer})
-    yield strict_transfable_token
+def strict_transferable_token(StrictTransferableToken, white_list, deployer):
+    strict_transferable_token = StrictTransferableToken.deploy(
+        "Strict Transferable Token", "STT", white_list, white_list, {'from': deployer})
+    yield strict_transferable_token
 
 
 @pytest.fixture(scope="module")
 def chi_token(deployer, pm):
     yield (pm('forest-friends/chi@1.0.1').ChiToken).deploy({'from': deployer})
-
-
-@pytest.fixture(scope="module")
-def lp_token(ERC20Basic, deployer):
-    yield ERC20Basic.deploy(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, LP_TOKEN_DECIMALS, LP_TOKEN_INITIAL_SUPPLY, {'from': deployer})

@@ -7,6 +7,7 @@
 
 
 from vyper.interfaces import ERC20
+import interfaces.tokens.ERC20Burnable as ERC20Burnable
 import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.Staker as Staker
@@ -67,11 +68,16 @@ def reap() -> uint256:
     _uniswapRouterContract: address = self.uniswapRouterContract
     _claimedCrvTokens: uint256 = Staker(self.stakerContract).claim(self)
     _crvBalance: uint256 = ERC20(_crvToken).balanceOf(self)
+    
     ERC20(_crvToken).approve(_uniswapRouterContract, _crvBalance)
     path: address[3] = [_crvToken, self.usdnToken, _farmToken]
-    # UniswapV2Router02(_uniswapRouterContract).swapExactTokensForTokens(_crvBalance, 0, )
-    return 0
-    #TODO: swap reward
+    UniswapV2Router02(_uniswapRouterContract).swapExactTokensForTokens(_crvBalance, 0, path, self, block.timestamp + 60)
+    
+    _farmTokenBalance: uint256 = ERC20(_farmToken).balanceOf(self)
+    if _farmTokenBalance > 0:
+        ERC20Burnable(_farmToken).burn(_farmTokenBalance)
+    
+    return _farmTokenBalance
 
 
 @external
@@ -87,12 +93,6 @@ def withdraw(_amount: uint256, _account: address):
     assert msg.sender == self.reaper, "reaper only"
     assert self.activated, "not activated"
     Staker(self.stakerContract).unstake(_amount, _account)
-
-
-@external
-def claim(_amount: uint256, _account: address):
-    assert msg.sender == self.reaper, "reaper only"
-    assert self.activated, "not activated"
 
 
 @view

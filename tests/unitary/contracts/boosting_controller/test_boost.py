@@ -67,8 +67,7 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
 
     # wait for some time (up to quater of warmup)
     chain.mine(1, blockTimestamp + warmupTime / 4)
-    tx2 = boosting_controller_mocked.updateBoostIntegral()
-    tx3 = boosting_controller_mocked.accountBoostIntegral(morpheus)
+    tx2 = boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_1 = chain.time()
     assert boosting_controller_mocked.balances(morpheus) == amount
     assert boosting_controller_mocked.totalBalance() == amount
@@ -91,15 +90,13 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
         morpheus)[3] == blockTimestamp + lockTime
     assert boosting_controller_mocked.boostIntegralFor(morpheus) == (
         instant_value_1 + 0) * (blockTimestamp_1 - blockTimestamp) / 2
-    assert tx2.return_value == boosting_controller_mocked.boostIntegral()
-    assert tx3.return_value == boosting_controller_mocked.boostIntegralFor(
-        morpheus)
+    assert tx2.return_value == 10 ** 18 * \
+        (blockTimestamp_1 - blockTimestamp) * (0.125)  # 1/4 of warmup
 
     # wait for some time (up to half of warmup + delta)
     chain.mine(1, blockTimestamp +
-               warmupTime / 2 + delta)
-    tx2 = boosting_controller_mocked.updateBoostIntegral()
-    tx3 = boosting_controller_mocked.accountBoostIntegral(morpheus)
+               warmupTime / 2)
+    tx2 = boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_2 = chain.time()
     assert boosting_controller_mocked.balances(morpheus) == amount
     assert boosting_controller_mocked.totalBalance() == amount
@@ -122,17 +119,15 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
         morpheus)[3] == blockTimestamp + lockTime
     assert boosting_controller_mocked.boostIntegralFor(morpheus) == math.floor((instant_value_2 + instant_value_1) * (
         blockTimestamp_2 - blockTimestamp_1) / 2) + math.floor((instant_value_1 + 0) * (blockTimestamp_1 - blockTimestamp) / 2)
-    assert tx2.return_value == boosting_controller_mocked.boostIntegral()
-    assert tx3.return_value == boosting_controller_mocked.boostIntegralFor(
-        morpheus)
+    assert tx2.return_value == 10 ** 18 * \
+        (blockTimestamp_2 - blockTimestamp) * (0.250)  # 1/2 of warmup
     previous_integral_morpheus = boosting_controller_mocked.boostIntegralFor(
         morpheus)
 
-    # wait for some time (end of warmup + quater of reduction)
+    # wait for some time (end of warmup + quater of lockTime)
     chain.mine(1, blockTimestamp +
                warmupTime + (lockTime - warmupTime) / 4)
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(morpheus)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_3 = chain.time()
     assert boosting_controller_mocked.balances(morpheus) == amount
     assert boosting_controller_mocked.totalBalance() == amount
@@ -157,11 +152,10 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
     previous_integral_morpheus = boosting_controller_mocked.boostIntegralFor(
         morpheus)
 
-    # wait for some time (end of warmup + 3/4 of reduction)
+    # wait for some time (end of warmup + 3/4 of lockTime)
     chain.mine(1, blockTimestamp +
                warmupTime + (lockTime - warmupTime) * 3 / 4)
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(morpheus)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_4 = chain.time()
     assert boosting_controller_mocked.balances(morpheus) == amount
     assert boosting_controller_mocked.totalBalance() == amount
@@ -187,10 +181,9 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
     previous_integral_morpheus = boosting_controller_mocked.boostIntegralFor(
         morpheus)
 
-    # wait for some time (end of reduction + week)
+    # wait for some time (end of lockTime + week)
     chain.mine(1, blockTimestamp + lockTime + week)
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(morpheus)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_5 = chain.time()
     assert boosting_controller_mocked.balances(morpheus) == amount
     assert boosting_controller_mocked.totalBalance() == amount
@@ -216,10 +209,9 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
     previous_integral_morpheus = boosting_controller_mocked.boostIntegralFor(
         morpheus)
 
-    # wait for some time (end of reduction + 2 * week)
+    # wait for some time (end of lockTime + 2 * week)
     chain.mine(1, blockTimestamp + lockTime + 2 * week)
-    boosting_controller_mocked.updateBoostIntegral()
-    boosting_controller_mocked.accountBoostIntegral(morpheus)
+    boosting_controller_mocked.updateAccountBoostFactorIntegral(morpheus)
     blockTimestamp_6 = chain.time()
     assert boosting_controller_mocked.balances(morpheus) == amount
     assert boosting_controller_mocked.totalBalance() == amount
@@ -245,7 +237,7 @@ def test_boost(boosting_controller_mocked, boosting_token_mocked, deployer, morp
     previous_integral_morpheus = boosting_controller_mocked.boostIntegralFor(
         morpheus)
 
-    # wait for some time (end of reduction + 3 * week)
+    # wait for some time (end of lockTime + 3 * week)
     chain.mine(1, blockTimestamp + lockTime + 3 * week)
 
     # unboost all tokens

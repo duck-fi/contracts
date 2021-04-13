@@ -30,6 +30,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, init_ts + day)
         tx1 = reaper.deposit(amount, {'from': deployer})
+        if tx1.timestamp != init_ts + day:
+            chain.undo(1)
+            continue
         chain.mine(1, init_ts + day)
         tx1_2 = reaper_2.deposit(amount, {'from': deployer})
         if tx1.timestamp == tx1_2.timestamp:
@@ -41,6 +44,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, init_ts + 2 * day)
         tx2 = reaper.deposit(amount, {'from': morpheus})
+        if tx2.timestamp != init_ts + 2 * day:
+            chain.undo(1)
+            continue
         chain.mine(1, init_ts + 2 * day)
         tx2_1 = reaper_2.deposit(amount, {'from': morpheus})
         if tx2.timestamp == tx2_1.timestamp:
@@ -52,6 +58,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, init_ts + 3 * day)
         tx3 = reaper.snapshot({'from': deployer})
+        if tx3.timestamp != init_ts + 3 * day:
+            chain.undo(1)
+            continue
         chain.mine(1, init_ts + 3 * day)
         tx3_1 = reaper.snapshot({'from': morpheus})
         if tx3.timestamp == tx3_1.timestamp:
@@ -104,6 +113,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 1 * day)
         tx4 = reaper.snapshot({'from': deployer})
+        if tx4.timestamp != aligned_time + 1 * day:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 1 * day)
         tx4_1 = reaper.snapshot({'from': morpheus})
         if tx4.timestamp == tx4_1.timestamp:
@@ -162,9 +174,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
 
     # modify vote share
     voting_controller.vote(reaper, farm_token, 1, {
-                           'from': deployer})  # TODO: fix
+                           'from': deployer})
     voting_controller.vote(reaper_2, farm_token, 3, {
-                           'from': deployer})  # TODO: 3
+                           'from': deployer})
 
     # wait till next voting period
     chain.mine(1, aligned_time + week)
@@ -174,6 +186,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 2 * week)
         tx5 = reaper.snapshot({'from': deployer})
+        if tx5.timestamp != aligned_time + 2 * week:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 2 * week)
         tx5_1 = reaper.snapshot({'from': morpheus})
         if tx5.timestamp == tx5_1.timestamp:
@@ -235,6 +250,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 3 * week + 100)
         tx6 = reaper.snapshot({'from': deployer})
+        if tx6.timestamp != aligned_time + 3 * week + 100:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 3 * week + 100)
         tx6_1 = reaper.snapshot({'from': morpheus})
         if tx6.timestamp == tx6_1.timestamp:
@@ -288,6 +306,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 3 * week + week/2)
         tx6 = reaper.snapshot({'from': deployer})
+        if tx6.timestamp != aligned_time + 3 * week + week/2:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 3 * week + week/2)
         tx6_1 = reaper.snapshot({'from': morpheus})
         if tx6.timestamp == tx6_1.timestamp:
@@ -341,6 +362,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 3 * week + week - 100)
         tx6 = reaper.snapshot({'from': deployer})
+        if tx6.timestamp != aligned_time + 3 * week + week - 100:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 3 * week + week - 100)
         tx6_1 = reaper.snapshot({'from': morpheus})
         if tx6.timestamp == tx6_1.timestamp:
@@ -394,6 +418,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 3 * week + week - 100)
         tx6 = reaper_2.snapshot({'from': deployer})
+        if tx6.timestamp != aligned_time + 3 * week + week - 100:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 3 * week + week - 100)
         tx6_1 = reaper_2.snapshot({'from': morpheus})
         if tx6.timestamp == tx6_1.timestamp:
@@ -458,6 +485,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 3 * week + week - 100)
         tx7 = reaper_3.deposit(amount, {'from': deployer})
+        if tx7.timestamp != aligned_time + 3 * week + week - 100:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 3 * week + week - 100)
         tx7_1 = reaper_3.deposit(amount, {'from': morpheus})
         if tx7.timestamp == tx7_1.timestamp:
@@ -479,6 +509,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 4 * week + week - 100)
         tx8 = reaper.snapshot({'from': deployer})
+        if tx8.timestamp != aligned_time + 4 * week + week - 100:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 4 * week + week - 100)
         tx8_1 = reaper.snapshot({'from': morpheus})
         if tx8.timestamp == tx8_1.timestamp:
@@ -534,6 +567,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 4 * week + week - 100)
         tx9 = reaper_2.snapshot({'from': deployer})
+        if tx9.timestamp != aligned_time + 4 * week + week - 100:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 4 * week + week - 100)
         tx9_1 = reaper_2.snapshot({'from': morpheus})
         if tx9.timestamp == tx9_1.timestamp:
@@ -592,6 +628,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 4 * week + week - 100)
         tx10 = reaper_3.snapshot({'from': deployer})
+        if tx10.timestamp != aligned_time + 4 * week + week - 100:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 4 * week + week - 100)
         tx10_1 = reaper_3.snapshot({'from': morpheus})
         if tx10.timestamp == tx10_1.timestamp:
@@ -675,6 +714,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 5 * week + week - 10)
         tx11 = reaper.snapshot({'from': deployer})
+        if tx11.timestamp != aligned_time + 5 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 5 * week + week - 10)
         tx11_1 = reaper.snapshot({'from': morpheus})
         if tx11.timestamp == tx11_1.timestamp:
@@ -730,6 +772,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 5 * week + week - 10)
         tx12 = reaper_2.snapshot({'from': deployer})
+        if tx12.timestamp != aligned_time + 5 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 5 * week + week - 10)
         tx12_1 = reaper_2.snapshot({'from': morpheus})
         if tx12.timestamp == tx12_1.timestamp:
@@ -788,6 +833,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 5 * week + week - 10)
         tx13 = reaper_3.snapshot({'from': deployer})
+        if tx13.timestamp != aligned_time + 5 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 5 * week + week - 10)
         tx13_1 = reaper_3.snapshot({'from': morpheus})
         if tx13.timestamp == tx13_1.timestamp:
@@ -871,6 +919,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 6 * week + week - 10)
         tx14 = reaper.snapshot({'from': deployer})
+        if tx14.timestamp != aligned_time + 6 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 6 * week + week - 10)
         tx14_1 = reaper.snapshot({'from': morpheus})
         if tx14.timestamp == tx14_1.timestamp:
@@ -926,6 +977,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 6 * week + week - 10)
         tx15 = reaper_2.snapshot({'from': deployer})
+        if tx15.timestamp != aligned_time + 6 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 6 * week + week - 10)
         tx15_1 = reaper_2.snapshot({'from': morpheus})
         if tx15.timestamp == tx15_1.timestamp:
@@ -984,6 +1038,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 6 * week + week - 10)
         tx16 = reaper_3.snapshot({'from': deployer})
+        if tx16.timestamp != aligned_time + 6 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 6 * week + week - 10)
         tx16_1 = reaper_3.snapshot({'from': morpheus})
         if tx16.timestamp == tx16_1.timestamp:
@@ -1066,6 +1123,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 7 * week + week - 10)
         tx17 = reaper.snapshot({'from': deployer})
+        if tx17.timestamp != aligned_time + 7 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 7 * week + week - 10)
         tx17_1 = reaper.snapshot({'from': morpheus})
         if tx17.timestamp == tx17_1.timestamp:
@@ -1121,6 +1181,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 7 * week + week - 10)
         tx18 = reaper_2.snapshot({'from': deployer})
+        if tx18.timestamp != aligned_time + 7 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 7 * week + week - 10)
         tx18_1 = reaper_2.snapshot({'from': morpheus})
         if tx18.timestamp == tx18_1.timestamp:
@@ -1179,6 +1242,9 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     while True:
         chain.mine(1, aligned_time + 7 * week + week - 10)
         tx19 = reaper_3.snapshot({'from': deployer})
+        if tx19.timestamp != aligned_time + 7 * week + week - 10:
+            chain.undo(1)
+            continue
         chain.mine(1, aligned_time + 7 * week + week - 10)
         tx19_1 = reaper_3.snapshot({'from': morpheus})
         if tx19.timestamp == tx19_1.timestamp:
