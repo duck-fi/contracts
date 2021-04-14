@@ -66,6 +66,10 @@ def __init__(_stakeContract: address, _stakeToken: address, _rewardToken: addres
     assert _rewardToken != ZERO_ADDRESS, "RewardToken param is required"
     assert _stakeContract != ZERO_ADDRESS, "StakeContract param is required"
     assert _votingEscrowContract != ZERO_ADDRESS, "VotingEscrowContract param is required"
+
+    assert ERC20(_stakeToken).approve(_stakeContract, MAX_UINT256)
+    assert ERC20(_rewardToken).approve(_votingEscrowContract, MAX_UINT256)
+
     self.stakeToken = _stakeToken
     self.rewardToken = _rewardToken
     self.stakeContract = _stakeContract
@@ -93,7 +97,6 @@ def setReaperStrategy(_reaperStrategy: address):
 @nonreentrant('lock')
 def stake(_amount: uint256):
     assert msg.sender == self.reaperStrategy , "reaperStrategy only"
-    assert ERC20(self.stakeToken).transferFrom(msg.sender, self, _amount)
     LiquidityGauge(self.stakeContract).deposit(_amount)
 
 

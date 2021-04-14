@@ -28,10 +28,9 @@ def test_stake(curve_staker_mocked, curve_gauge_mock, curve_minter_mock, lp_toke
     # fill minter mock with the money
     crv_token_mock.transfer(curve_minter_mock, 10 ** 18, {'from': deployer})
 
-    # deployer <=> reaper strategy
-    # give approve for curve_staker_mocked from reaper strategy TODO: maybe add that automatically
-    lp_token.approve(curve_staker_mocked, 2 ** 256 - 1, {'from': deployer})
-
+    # deployer transfers on curve_staker_mocked
+    # before stake money should be on staker
+    lp_token.transfer(curve_staker_mocked, 1000, {'from': deployer})
     tx1 = curve_staker_mocked.stake(1000, {'from': deployer})
 
     chain.mine(1, chain.time() + week)
@@ -41,6 +40,7 @@ def test_stake(curve_staker_mocked, curve_gauge_mock, curve_minter_mock, lp_toke
     assert tx2.return_value == 1000 * (tx2.timestamp - tx1.timestamp)
     assert crv_token_mock.balanceOf(morpheus) == tx2.return_value
 
+    lp_token.transfer(curve_staker_mocked, 8000, {'from': deployer})
     tx3 = curve_staker_mocked.stake(8000, {'from': deployer})
 
     chain.mine(1, chain.time() + week)

@@ -135,7 +135,7 @@ def _snapshot(_account: address):
     _oldBalancesIntegral: uint256 = self.balancesIntegral
     _balancesIntegral: uint256 = _oldBalancesIntegral
     _totalBalances: uint256 = self.totalBalances
-    if not self.isKilled and block.timestamp > _lastSnapshotTimestamp:
+    if block.timestamp > _lastSnapshotTimestamp:
         # update reaper integrals
         _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
         _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
@@ -146,9 +146,10 @@ def _snapshot(_account: address):
         elif _emissionIntegral > 0:
             _balancesIntegral = _totalBalances * (block.timestamp - _lastSnapshotTimestamp) + _oldBalancesIntegral
         
-        if _balancesIntegral > _oldBalancesIntegral:
+        if _balancesIntegral > _oldBalancesIntegral and not self.isKilled:
             _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
             self.unitCostIntegral = _unitCostIntegral
+        
         self.balancesIntegral = _balancesIntegral
         self.emissionIntegral = _emissionIntegral
         self.voteIntegral = _voteIntegral
@@ -186,6 +187,8 @@ def _snapshot(_account: address):
 @external
 @nonreentrant('lock')
 def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False, _gasToken: address = ZERO_ADDRESS):
+    assert not self.isKilled, "reaper is killed"
+    
     _gasStart: uint256 = msg.gas
     
     if _account != msg.sender:
@@ -252,20 +255,19 @@ def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):
 
     if _reaperStrategy != ZERO_ADDRESS:
         _availableAmount = ReaperStrategy(_reaperStrategy).availableToWithdraw(_amount, msg.sender)
+        assert _availableAmount > 0, "withdraw is locked"
+        _lpBalance: uint256 = ERC20(_lpToken).balanceOf(self)
+        
+        if _lpBalance >= _availableAmount:
+            assert ERC20(_lpToken).transfer(msg.sender, _availableAmount)
+        elif _lpBalance > 0:
+            assert ERC20(_lpToken).transfer(msg.sender, _lpBalance)
+            ReaperStrategy(_reaperStrategy).withdraw(_availableAmount - _lpBalance, msg.sender)
+        else:
+            ReaperStrategy(_reaperStrategy).withdraw(_availableAmount, msg.sender)
 
-        if _availableAmount > 0:
-            _lpBalance: uint256 = ERC20(_lpToken).balanceOf(self)
-
-            if _lpBalance >= _availableAmount:
-                assert ERC20(_lpToken).transfer(msg.sender, _availableAmount)
-            elif _lpBalance > 0:
-                assert ERC20(_lpToken).transfer(msg.sender, _lpBalance)
-                ReaperStrategy(_reaperStrategy).withdraw(_availableAmount - _lpBalance, msg.sender)
-            else:
-                ReaperStrategy(_reaperStrategy).withdraw(_availableAmount, msg.sender)
-
-            if _amount - _availableAmount > 0:
-                self.balances[self] += _amount - _availableAmount
+        if _amount - _availableAmount > 0:
+            self.balances[self] += _amount - _availableAmount
     else:
         assert ERC20(_lpToken).transfer(msg.sender, _amount)
     

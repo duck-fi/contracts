@@ -25,16 +25,13 @@ event ApplyOwnership:
 
 reaper: public(address)
 activated: public(bool)
-
 admin: public(address)
 owner: public(address)
 futureOwner: public(address)
 
 
 @external
-def __init__(_reaper: address):
-    assert _reaper != ZERO_ADDRESS, "_reaper is not set"
-    self.reaper = _reaper
+def __init__():
     self.activated = False
     self.admin = msg.sender
     self.owner = msg.sender
@@ -60,6 +57,13 @@ def deposit(_amount: uint256):
 @external
 def withdraw(_amount: uint256, _account: address):
     assert self.activated, "not activated"
+
+
+@external
+def activate():
+    assert msg.sender == self.owner, "owner only"
+    assert not self.activated, "activated already"
+    self.activated = True
 
 
 @view

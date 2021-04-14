@@ -126,7 +126,7 @@ def test_emissionIntegral_progress(farm_token, chain, trinity, deployer, ZERO_AD
 
         # fail to mint more than allowed
         exception_tester("exceeds allowable mint amount",
-                         farm_token.mint, trinity, to_raw_farm_token(1_000), {'from': deployer})
+                         farm_token.mint, trinity, to_raw_farm_token(10_000), {'from': deployer})
 
 
 def test_emission_overflow(farm_token, deployer, trinity, exception_tester):

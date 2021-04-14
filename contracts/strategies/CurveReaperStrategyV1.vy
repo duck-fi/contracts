@@ -56,6 +56,7 @@ def __init__(_reaper: address, _stakerContract: address, _uniswapRouterContract:
 
 @external
 def invest(_amount: uint256):
+    assert msg.sender == self.reaper, "reaper only" # TODO: need it?
     _stakerContract: address = self.stakerContract
     ERC20(Staker(_stakerContract).stakeToken()).transferFrom(self.reaper, _stakerContract, _amount)
     Staker(_stakerContract).stake(_amount)
@@ -71,6 +72,7 @@ def reap() -> uint256:
     
     ERC20(_crvToken).approve(_uniswapRouterContract, _crvBalance)
     path: address[3] = [_crvToken, self.usdnToken, _farmToken]
+    
     UniswapV2Router02(_uniswapRouterContract).swapExactTokensForTokens(_crvBalance, 0, path, self, block.timestamp + 60)
     
     _farmTokenBalance: uint256 = ERC20(_farmToken).balanceOf(self)
@@ -93,6 +95,13 @@ def withdraw(_amount: uint256, _account: address):
     assert msg.sender == self.reaper, "reaper only"
     assert self.activated, "not activated"
     Staker(self.stakerContract).unstake(_amount, _account)
+
+
+@external
+def activate():
+    assert msg.sender == self.owner, "owner only"
+    assert not self.activated, "activated already"
+    self.activated = True
 
 
 @view
