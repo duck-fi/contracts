@@ -3,7 +3,7 @@ from brownie import (
     accounts,
     ERC20Basic,
     FarmToken,
-    StrictTransfableToken,
+    StrictTransferableToken,
     StakableERC20,
     Controller,
     VotingController,
@@ -150,14 +150,14 @@ def deploy():
     voting_controller = VotingController.deploy(
         controller, gas_token_check_list, ducks, {'from': DEPLOYER})
     vducks_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
-    vducks = StrictTransfableToken.deploy("DUCKS Voting Token",
+    vducks = StrictTransferableToken.deploy("DUCKS Voting Token",
                                           "vDUCKS", vducks_minter_check_list, voting_controller, {'from': DEPLOYER})
     voting_controller.setVotingToken(vducks, {'from': DEPLOYER})
 
     boosting_controller = BoostingController.deploy(
         gas_token_check_list, {'from': DEPLOYER})
     bducks_minter_check_list = WhiteList.deploy({'from': DEPLOYER})
-    bducks = StrictTransfableToken.deploy("DUCKS Boosting Token",
+    bducks = StrictTransferableToken.deploy("DUCKS Boosting Token",
                                           "bDUCKS", bducks_minter_check_list, boosting_controller, {'from': DEPLOYER})
 
     # Reapers
