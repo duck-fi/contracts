@@ -172,10 +172,18 @@ def deploy():
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
 
     print("DUCKS: {}".format(ducks))
+    print("USDN: {}".format(usdn))
+    print("USDT: {}".format(usdt))
+    print("USDC: {}".format(usdc))
+    print("DAI: {}".format(dai))
+    print("WETH: {}".format(weth))
+    print("CRV: {}".format(crv))
     print("CHI: {}".format(chi_token))
-    print("USDN/CRV: {}".format(usdn_crv_lp))
-    print("USDN/USDT: {}".format(usdn_usdt_lp))
-    print("USDN/DUCKS: {}".format(usdn_ducks_lp))
+    print("UNI USDN/CRV: {}".format(usdn_crv_lp))
+    print("UNI USDN/USDT: {}".format(usdn_usdt_lp))
+    print("UNI USDN/DUCKS: {}".format(usdn_ducks_lp))
+    print("UNI USDN/WETH: {}".format(usdn_weth_lp))
+    print("CURVE USDN/3POOL: {}".format(usdn_mpool))
 
 
 def deploy_erc20(name, symbol, decimals, mint):
