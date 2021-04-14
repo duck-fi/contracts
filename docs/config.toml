@@ -1,8 +1,8 @@
-baseURL = "https://dispersion-fi.github.io/contracts"
+baseURL = "https://duck-fi.github.io/contracts"
 languageCode = "en-us"
 title = ""
 theme = "book"
 
 [params]
-    BookLogo = 'img/logo.svg'
+    BookLogo = 'img/logo.png'
     BookServiceWorker = true
