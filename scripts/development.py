@@ -197,6 +197,9 @@ def deploy():
     print("UNI USDN/DUCKS: {}".format(usdn_ducks_lp))
     print("UNI USDN/WETH: {}".format(usdn_weth_lp))
     print("CURVE USDN/3POOL: {}".format(usdn_mpool))
+    print("REAPER USDN/USDT: {}".format(usdn_usdt_reaper))
+    print("REAPER USDN/WETH: {}".format(usdn_weth_reaper))
+    print("REAPER USDN/3POOL: {}".format(usdn_mpool_reaper))
 
 
 def deploy_erc20(name, symbol, decimals, mint):
