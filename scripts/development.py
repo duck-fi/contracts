@@ -172,18 +172,24 @@ def deploy():
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
 
     # Deposit to reapers
-    uniswap.interface.IUniswapV2ERC20(usdn_usdt_lp).approve(usdn_usdt_reaper, 10000, {'from': DEPLOYER})
-    usdn_usdt_reaper.deposit(10000, {'from': DEPLOYER})
+    usdn_usdt_lp_balance = uniswap.interface.IUniswapV2ERC20(usdn_usdt_lp).balanceOf(DEPLOYER, {'from': DEPLOYER})
+    uniswap.interface.IUniswapV2ERC20(usdn_usdt_lp).approve(usdn_usdt_reaper, usdn_usdt_lp_balance, {'from': DEPLOYER})
+    usdn_usdt_reaper.deposit(usdn_usdt_lp_balance, {'from': DEPLOYER})
 
-    uniswap.interface.IUniswapV2ERC20(usdn_weth_lp).approve(usdn_weth_reaper, 1000, {'from': DEPLOYER})
-    usdn_weth_reaper.deposit(1000, {'from': DEPLOYER})
+    usdn_weth_lp_balance = uniswap.interface.IUniswapV2ERC20(usdn_weth_lp).balanceOf(DEPLOYER, {'from': DEPLOYER})
+    uniswap.interface.IUniswapV2ERC20(usdn_weth_lp).approve(usdn_weth_reaper, usdn_weth_lp_balance, {'from': DEPLOYER})
+    usdn_weth_reaper.deposit(usdn_weth_lp_balance, {'from': DEPLOYER})
 
-    usdn_mpool_lp.approve(usdn_mpool_reaper, 100000, {'from': DEPLOYER})
-    usdn_mpool_reaper.deposit(100000, {'from': DEPLOYER})
+    usdn_mpool_lp_balance = usdn_mpool_lp.balanceOf(DEPLOYER, {'from': DEPLOYER})
+    usdn_mpool_lp.approve(usdn_mpool_reaper, usdn_mpool_lp_balance, {'from': DEPLOYER})
+    usdn_mpool_reaper.deposit(usdn_mpool_lp_balance, {'from': DEPLOYER})
 
     # Dispersion start emission
     controller.startEmission(voting_controller, 0)
 
+    print("usdn_usdt_lp_balance: {}".format(usdn_usdt_lp_balance))
+    print("usdn_weth_lp_balance: {}".format(usdn_weth_lp_balance))
+    print("usdn_mpool_lp_balance: {}".format(usdn_mpool_lp_balance))
     print("DUCKS: {}".format(ducks))
     print("USDN: {}".format(usdn))
     print("USDT: {}".format(usdt))
