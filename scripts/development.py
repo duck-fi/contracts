@@ -171,6 +171,19 @@ def deploy():
         usdn_mpool_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
 
+    # Deposit to reapers
+    uniswap.interface.IUniswapV2ERC20(usdn_usdt_lp).approve(usdn_usdt_reaper, 10000, {'from': DEPLOYER})
+    usdn_usdt_reaper.deposit(10000, {'from': DEPLOYER})
+
+    uniswap.interface.IUniswapV2ERC20(usdn_weth_lp).approve(usdn_weth_reaper, 1000, {'from': DEPLOYER})
+    usdn_weth_reaper.deposit(1000, {'from': DEPLOYER})
+
+    usdn_mpool_lp.approve(usdn_mpool_reaper, 100000, {'from': DEPLOYER})
+    usdn_mpool_reaper.deposit(100000, {'from': DEPLOYER})
+
+    # Dispersion start emission
+    controller.startEmission(voting_controller, 0)
+
     print("DUCKS: {}".format(ducks))
     print("USDN: {}".format(usdn))
     print("USDT: {}".format(usdt))
