@@ -15,7 +15,7 @@ from pathlib import Path
 from . import utils
 
 
-INIT_SUPPLY = 1_000_000
+INIT_SUPPLY = 100_000_000
 
 DEPLOYER = accounts[2]
 DAY = 86400
@@ -56,8 +56,8 @@ def deploy():
     # USDN/USDT
     usdn_usdt_lp = uniswap_factory.createPair(
         usdn, usdt, {'from': DEPLOYER}).return_value
-    usdn.transfer(usdn_usdt_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
-    usdt.transfer(usdn_usdt_lp, 1000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
+    usdn.transfer(usdn_usdt_lp, 5_000_000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
+    usdt.transfer(usdn_usdt_lp, 5_000_000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
     uniswap.interface.IUniswapV2Pair(
         usdn_usdt_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
@@ -82,9 +82,9 @@ def deploy():
     # USDN/WETH
     usdn_weth_lp = uniswap_factory.createPair(
         usdn, weth, {'from': DEPLOYER}).return_value
-    usdn.transfer(usdn_weth_lp, 1000 * 10 **
+    usdn.transfer(usdn_weth_lp, 5_000_000 * 10 **
                   USDN_DECIMALS, {'from': DEPLOYER})
-    weth.transfer(usdn_weth_lp, 1 * 10 **
+    weth.transfer(usdn_weth_lp, 5_000 * 10 **
                   WETH_DECIMALS, {'from': DEPLOYER})
     uniswap.interface.IUniswapV2Pair(
         usdn_weth_lp).mint(DEPLOYER, {'from': DEPLOYER})
@@ -95,13 +95,13 @@ def deploy():
     mpool = curve.StableSwap3Pool.deploy(
         DEPLOYER, [dai, usdc, usdt], mpool_lp, 200, 4000000, 5000000000, {'from': DEPLOYER})
     mpool_lp.set_minter(mpool, {'from': DEPLOYER})
-    dai.approve(mpool, 1000 * 10 ** DAI_DECIMALS, {'from': DEPLOYER})
-    usdc.approve(mpool, 1000 * 10 ** USDC_DECIMALS, {'from': DEPLOYER})
-    usdt.approve(mpool, 1000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
+    dai.approve(mpool, 2_000_000 * 10 ** DAI_DECIMALS, {'from': DEPLOYER})
+    usdc.approve(mpool, 2_000_000 * 10 ** USDC_DECIMALS, {'from': DEPLOYER})
+    usdt.approve(mpool, 2_000_000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
     mpool.add_liquidity([
-        1000 * 10 ** DAI_DECIMALS,
-        1000 * 10 ** USDC_DECIMALS,
-        1000 * 10 ** USDT_DECIMALS
+        2_000_000 * 10 ** DAI_DECIMALS,
+        2_000_000 * 10 ** USDC_DECIMALS,
+        2_000_000 * 10 ** USDT_DECIMALS
     ], 0)
 
     usdn_mpool_lp = curve.CurveTokenV2.deploy(
@@ -111,19 +111,19 @@ def deploy():
     usdn_mpool_lp.set_minter(usdn_mpool, {'from': DEPLOYER})
     deposit_usdn_mpool = curve.DepositUSDN.deploy(
         usdn_mpool, usdn_mpool_lp, {'from': DEPLOYER})
-    usdn.approve(deposit_usdn_mpool, 1_000 * 10 **
+    usdn.approve(deposit_usdn_mpool, 3_000_000 * 10 **
                  USDN_DECIMALS, {'from': DEPLOYER})
-    dai.approve(deposit_usdn_mpool, 1_000 * 10 **
+    dai.approve(deposit_usdn_mpool, 1_000_000 * 10 **
                 DAI_DECIMALS, {'from': DEPLOYER})
-    usdc.approve(deposit_usdn_mpool, 1_000 * 10 **
+    usdc.approve(deposit_usdn_mpool, 1_000_000 * 10 **
                  USDC_DECIMALS, {'from': DEPLOYER})
-    usdt.approve(deposit_usdn_mpool, 1_000 * 10 **
+    usdt.approve(deposit_usdn_mpool, 1_000_000 * 10 **
                  USDT_DECIMALS, {'from': DEPLOYER})
     deposit_usdn_mpool.add_liquidity([
-        1_000 * 10 ** USDN_DECIMALS,
-        1_000 * 10 ** DAI_DECIMALS,
-        1_000 * 10 ** USDC_DECIMALS,
-        1_000 * 10 ** USDT_DECIMALS
+        3_000_000 * 10 ** USDN_DECIMALS,
+        1_000_000 * 10 ** DAI_DECIMALS,
+        1_000_000 * 10 ** USDC_DECIMALS,
+        1_000_000 * 10 ** USDT_DECIMALS
     ], 0, {'from': DEPLOYER})
 
     curve_voting_escrow = curve_dao.VotingEscrow.deploy(
