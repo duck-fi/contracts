@@ -45,6 +45,8 @@ MIN_GAS_CONSTANT: constant(uint256) = 21_000
 
 
 farmToken: public(address)
+votingController: public(address)
+boostingController: public(address)
 gasTokenCheckList: public(address)
 reapers: public(address[MAX_REAPERS_COUNT])
 lastReaperIndex: public(uint256)
@@ -230,17 +232,42 @@ def startMinting():
 
 
 @external
-def startEmission(_votingController: address, _votingDelay: uint256):
+def startEmission(_votingDelay: uint256):
     """
     @notice Start emission of `FarmToken`.
     @dev Callable by `owner` only. 
         Emits `YearEmissionUpdate(INITIAL_YEAR_EMISSION)` and `StartVoting(_votingDelay)` events
-    @param _votingController Address of `VotingController` contract
     @param _votingDelay Initial delay defore next voting
     """
     assert msg.sender == self.owner, "owner only"
     Farmable(self.farmToken).startEmission()
-    VotingController(_votingController).startVoting(_votingDelay)
+    VotingController(self.votingController).startVoting(_votingDelay)
+
+
+@external
+def setVotingController(_votingController: address):
+    """
+    @notice Set `_votingController` contract address.
+    @dev Callable by `owner` only. `_votingController` can't be equal `ZERO_ADDRESS`.
+    @param _votingController Address of new `_votingController` contract
+    """
+    assert msg.sender == self.owner, "owner only"
+    assert _votingController != ZERO_ADDRESS, "zero address"
+    assert self.votingController == ZERO_ADDRESS, "already set"
+    self.votingController = _votingController
+
+
+@external
+def setBoostingController(_boostingController: address):
+    """
+    @notice Set `_boostingController` contract address.
+    @dev Callable by `owner` only. `_boostingController` can't be equal `ZERO_ADDRESS`.
+    @param _boostingController Address of new `_boostingController` contract
+    """
+    assert msg.sender == self.owner, "owner only"
+    assert _boostingController != ZERO_ADDRESS, "zero address"
+    assert self.boostingController == ZERO_ADDRESS, "already set"
+    self.boostingController = _boostingController
 
 
 @external

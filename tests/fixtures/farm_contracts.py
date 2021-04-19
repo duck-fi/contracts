@@ -42,7 +42,6 @@ def farm_contracts(deployer, pm):
     curve = pm('curvefi/curve-contract@1.0')
     curve_dao = pm('curvefi/curve-dao-contracts@1.1.0')
     uniswap = pm('Uniswap/uniswap-v2-core@1.0.1')
-    # uniswap_peripheral = pm('Uniswap/uniswap-v2-periphery@1.0.0-beta.0') TODO: remove
     chi = pm('forest-friends/chi@1.0.1')
 
     usdn = deploy_usdn(deployer)
@@ -61,7 +60,6 @@ def farm_contracts(deployer, pm):
     # Uniswap
     uniswap_factory = uniswap.UniswapV2Factory.deploy(
         deployer, {'from': deployer})
-    # uniswap_router_v2 = uniswap_peripheral.UniswapV2Router02.deploy({'from': deployer})  TODO: remove
 
     # USDN/USDT
     usdn_usdt_lp = uniswap_factory.createPair(
@@ -142,6 +140,7 @@ def farm_contracts(deployer, pm):
         crv, curve_voting_escrow, {'from': deployer})
     curve_minter = curve_dao.Minter.deploy(
         crv, curve_controller, {'from': deployer})
+    crv.set_minter(curve_minter, {'from': deployer})
     usdn_mpool_gauge = curve_dao.LiquidityGauge.deploy(
         usdn_mpool_lp, curve_minter, deployer, {'from': deployer})
     curve_controller.add_type(
@@ -169,22 +168,25 @@ def farm_contracts(deployer, pm):
     bducks_minter_check_list = WhiteList.deploy({'from': deployer})
     bducks = StrictTransferableToken.deploy("DUCKS Boosting Token",
                                           "bDUCKS", bducks_minter_check_list, boosting_controller, {'from': deployer})
+
+    controller.setVotingController(voting_controller, {'from': deployer})
+    controller.setBoostingController(boosting_controller, {'from': deployer})
     
     curve_staker = CurveStaker.deploy(usdn_mpool_gauge, usdn_mpool_lp, crv, curve_voting_escrow, {'from': deployer})
 
     # Reapers
     usdn_usdt_reaper = Reaper.deploy(
-        usdn_usdt_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 15, {'from': deployer})   # 1,5%
+        usdn_usdt_lp, ducks, controller, gas_token_check_list, 15, {'from': deployer})   # 1,5%
     controller.addReaper(usdn_usdt_reaper, {'from': deployer})
     usdn_weth_reaper = Reaper.deploy(
-        usdn_weth_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 25, {'from': deployer})    # 2,5%
+        usdn_weth_lp, ducks, controller, gas_token_check_list, 25, {'from': deployer})   # 2,5%
     controller.addReaper(usdn_weth_reaper, {'from': deployer})
     usdn_mpool_reaper = Reaper.deploy(
-        usdn_mpool_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': deployer})  # 4,2%
+        usdn_mpool_lp, ducks, controller, gas_token_check_list, 42, {'from': deployer})  # 4,2%
     controller.addReaper(usdn_mpool_reaper, {'from': deployer})
 
     # Reaper strategies
-    curve_strategy_v1 = CurveReaperStrategyV1.deploy(usdn_mpool_reaper, curve_staker, deployer, usdn, {'from': deployer}) # TODO: deployer -> uniswap_router_v2
+    curve_strategy_v1 = CurveReaperStrategyV1.deploy(usdn_mpool_reaper, curve_staker, usdn_crv_lp, usdn_ducks_lp, {'from': deployer})
     usdn_mpool_reaper.setReaperStrategy(curve_strategy_v1, {'from': deployer})
     curve_staker.setReaperStrategy(curve_strategy_v1, {'from': deployer})
 

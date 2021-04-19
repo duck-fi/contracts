@@ -21,19 +21,19 @@ def farmToken() -> address:
 
 @view
 @external
-def controller() -> address:
+def votingController() -> address:
+    return ZERO_ADDRESS
+
+
+@view
+@external
+def boostingController() -> address:
     return ZERO_ADDRESS
 
 
 @view
 @external
 def reaperStrategy() -> address:
-    return ZERO_ADDRESS
-
-
-@view
-@external
-def votingController() -> address:
     return ZERO_ADDRESS
 
 
@@ -113,8 +113,8 @@ def invest(_gasToken: address):
 
 
 @external
-def reap(_gasToken: address):
-    pass
+def reap(_gasToken: address) -> uint256:
+    return 0
 
 
 @external

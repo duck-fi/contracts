@@ -7,7 +7,7 @@ YEAR_EMISSION = 1_000_000 * 10 ** 18
 @given(amount=strategy('uint256', min_value=10**3, max_value=10**20))
 def test_reaper_kill(farm_token, lp_token, controller, reaper, voting_controller, deployer, chain, year, day, exception_tester, amount):
     initial_balance = lp_token.balanceOf(deployer)
-    tx = controller.startEmission(voting_controller, 0, {'from': deployer})
+    tx = controller.startEmission(0, {'from': deployer})
     initial_emission_timestamp = tx.timestamp
 
     chain.mine(1, chain.time() + 7 * day)

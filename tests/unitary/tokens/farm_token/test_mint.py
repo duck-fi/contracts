@@ -1,8 +1,6 @@
 import brownie
 from brownie.test import given, strategy
 
-# TODO consider to move into shared place/module
-
 
 def to_raw_farm_token(dec_amount: float) -> int:
     return dec_amount * (10 ** FARM_TOKEN_DECIMALS)

@@ -11,6 +11,7 @@ import interfaces.Ownable as Ownable
 import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.tokens.Farmable as Farmable
+import interfaces.Controller as Controller
 import interfaces.VotingController as VotingController
 import interfaces.BoostingController as BoostingController
 import interfaces.GasToken as GasToken
@@ -52,7 +53,6 @@ BOOST_AMPLIFIER_PERCENT: constant(uint256) = 50
 lpToken: public(address)
 farmToken: public(address)
 
-controller: public(address)
 votingController: public(address)
 boostingController: public(address)
 
@@ -81,23 +81,19 @@ futureOwner: public(address)
 
 
 @external
-def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address, _boostingController: address, _gasTokenCheckList: address, _adminFee: uint256):
+def __init__(_lpToken: address, _farmToken: address, _controller: address, _gasTokenCheckList: address, _adminFee: uint256):
     assert _lpToken != ZERO_ADDRESS, "_lpToken is not set"
     assert _controller != ZERO_ADDRESS, "_controller is not set"
-    assert _votingController != ZERO_ADDRESS, "_votingController is not set"
-    assert _boostingController != ZERO_ADDRESS, "_boostingController is not set"
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
     assert _adminFee <= ADMIN_FEE_MULTIPLIER, "_adminFee > 100%"
     self.lpToken = _lpToken
-    self.controller = _controller
-    self.votingController = _votingController
-    self.boostingController = _boostingController
+    self.votingController = Controller(_controller).votingController()
+    self.boostingController = Controller(_controller).boostingController()
     self.gasTokenCheckList = _gasTokenCheckList
     self.farmToken = _farmToken
     self.adminFee = _adminFee
     self.owner = msg.sender
-    assert ERC20(_farmToken).approve(_controller, MAX_UINT256)
 
 
 @internal
@@ -234,12 +230,17 @@ def invest(_gasToken: address = ZERO_ADDRESS):
 
 @external
 @nonreentrant('lock')
-def reap(_gasToken: address = ZERO_ADDRESS):
+def reap(_gasToken: address = ZERO_ADDRESS) -> uint256:
     _gasStart: uint256 = msg.gas
+    _reapedAmount: uint256 = 0
+    
     _reaperStrategy: address = self.reaperStrategy
     if _reaperStrategy != ZERO_ADDRESS:
-        ReaperStrategy(_reaperStrategy).reap()
+        _reapedAmount = ReaperStrategy(_reaperStrategy).reap()
+    
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
+
+    return _reapedAmount
 
 
 @external

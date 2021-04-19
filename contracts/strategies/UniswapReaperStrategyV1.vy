@@ -33,13 +33,11 @@ futureOwner: public(address)
 @external
 def __init__():
     self.activated = False
-    self.admin = msg.sender
     self.owner = msg.sender
 
 
 @external
 def invest(_amount: uint256):
-    assert self.admin == msg.sender
     assert False, "not supported"
 
 

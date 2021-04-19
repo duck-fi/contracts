@@ -36,33 +36,39 @@ def controller_mock(ControllerMock, deployer, reaper_1_mock, reaper_2_mock, reap
 
 
 @pytest.fixture(scope="module")
-def controller(Controller, gas_token_check_list, farm_token, deployer):
-    controller = Controller.deploy(
+def controller_deploy(Controller, gas_token_check_list, farm_token, deployer):
+    yield Controller.deploy(
         farm_token, gas_token_check_list, {'from': deployer})
-    farm_token.setMinter(controller, {'from': deployer})
-    yield controller
 
 
 @pytest.fixture(scope="module")
-def reaper(Reaper, lp_token, farm_token, controller, voting_controller, boosting_controller_mocked, deployer, gas_token_check_list):
-    contract = Reaper.deploy(lp_token, farm_token, controller, voting_controller,
-                             boosting_controller_mocked, gas_token_check_list, 0, {'from': deployer})
+def controller(controller_deploy, gas_token_check_list, farm_token, voting_controller, boosting_controller_mocked, deployer):
+    farm_token.setMinter(controller_deploy, {'from': deployer})
+    controller_deploy.setVotingController(voting_controller, {'from': deployer})
+    controller_deploy.setBoostingController(boosting_controller_mocked, {'from': deployer})
+
+    yield controller_deploy
+
+
+@pytest.fixture(scope="module")
+def reaper(Reaper, lp_token, farm_token, controller, deployer, gas_token_check_list):
+    contract = Reaper.deploy(
+        lp_token, farm_token, controller, gas_token_check_list, 0, {'from': deployer})
     controller.addReaper(contract)
     yield contract
 
 
 @pytest.fixture(scope="module")
-def reaper_2(Reaper, lp_token, farm_token, controller, voting_controller, boosting_controller_mocked, deployer, gas_token_check_list):
-    contract = Reaper.deploy(lp_token, farm_token, controller, voting_controller,
-                             boosting_controller_mocked, gas_token_check_list, 0, {'from': deployer})
+def reaper_2(Reaper, lp_token, farm_token, controller, deployer, gas_token_check_list):
+    contract = Reaper.deploy(
+        lp_token, farm_token, controller, gas_token_check_list, 0, {'from': deployer})
     controller.addReaper(contract)
     yield contract
 
 
 @pytest.fixture(scope="module")
 def reaper_3(Reaper, lp_token, farm_token, controller, voting_controller, boosting_controller_mocked, deployer, gas_token_check_list):
-    yield Reaper.deploy(lp_token, farm_token, controller, voting_controller,
-                             boosting_controller_mocked, gas_token_check_list, 0, {'from': deployer})
+    yield Reaper.deploy(lp_token, farm_token, controller, gas_token_check_list, 0, {'from': deployer})
 
 
 @pytest.fixture(scope="module")
@@ -71,8 +77,8 @@ def reaper_strategy_mock(ReaperStrategyMock, reaper, lp_token, deployer):
 
 
 @pytest.fixture(scope="module")
-def voting_controller(VotingController, controller, farm_token, deployer, gas_token_check_list):
-    yield VotingController.deploy(controller, gas_token_check_list, farm_token, {'from': deployer})
+def voting_controller(VotingController, controller_deploy, farm_token, deployer, gas_token_check_list):
+    yield VotingController.deploy(controller_deploy, gas_token_check_list, farm_token, {'from': deployer})
 
 
 @ pytest.fixture(scope="module")

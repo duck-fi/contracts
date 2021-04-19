@@ -15,7 +15,7 @@ def test_complex_simple(farm_token, lp_token, reaper, controller, voting_control
     init_ts = chain.time()
 
     chain.mine(1, init_ts)
-    tx = controller.startEmission(voting_controller, 0, {'from': deployer})
+    tx = controller.startEmission(0, {'from': deployer})
     initial_emission_timestamp = tx.timestamp
     initial_voting_timestamp = tx.timestamp
 

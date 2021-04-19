@@ -9,7 +9,10 @@ from brownie import (
     VotingController,
     BoostingController,
     Reaper,
-    WhiteList
+    WhiteList,
+    CurveStaker,
+    CurveReaperStrategyV1,
+    UniswapReaperStrategyV1
 )
 from pathlib import Path
 from . import utils
@@ -132,6 +135,7 @@ def deploy():
         crv, curve_voting_escrow, {'from': DEPLOYER})
     curve_minter = curve_dao.Minter.deploy(
         crv, curve_controller, {'from': DEPLOYER})
+    crv.set_minter(curve_minter, {'from': DEPLOYER})
     usdn_mpool_gauge = curve_dao.LiquidityGauge.deploy(
         usdn_mpool_lp, curve_minter, DEPLOYER, {'from': DEPLOYER})
     curve_controller.add_type(
@@ -139,7 +143,7 @@ def deploy():
     curve_controller.add_gauge(
         usdn_mpool_gauge, 0, 10 ** 18, {'from': DEPLOYER})
 
-    # Dispersion
+    # Duck finance
     gas_token_check_list = WhiteList.deploy({'from': DEPLOYER})
     gas_token_check_list.addAddress(chi_token, {'from': DEPLOYER})
 
@@ -160,16 +164,30 @@ def deploy():
     bducks = StrictTransferableToken.deploy("DUCKS Boosting Token",
                                           "bDUCKS", bducks_minter_check_list, boosting_controller, {'from': DEPLOYER})
 
+    controller.setVotingController(voting_controller, {'from': DEPLOYER})
+    controller.setBoostingController(boosting_controller, {'from': DEPLOYER})
+
+    curve_staker = CurveStaker.deploy(usdn_mpool_gauge, usdn_mpool_lp, crv, curve_voting_escrow, {'from': DEPLOYER})
+
     # Reapers
     usdn_usdt_reaper = Reaper.deploy(
-        usdn_usdt_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 15, {'from': DEPLOYER})   # 1,5%
+        usdn_usdt_lp, ducks, controller, gas_token_check_list, 15, {'from': DEPLOYER})   # 1,5%
     controller.addReaper(usdn_usdt_reaper, {'from': DEPLOYER})
     usdn_weth_reaper = Reaper.deploy(
-        usdn_weth_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 25, {'from': DEPLOYER})    # 2,5%
+        usdn_weth_lp, ducks, controller, gas_token_check_list, 25, {'from': DEPLOYER})   # 2,5%
     controller.addReaper(usdn_weth_reaper, {'from': DEPLOYER})
     usdn_mpool_reaper = Reaper.deploy(
-        usdn_mpool_lp, ducks, controller, voting_controller, boosting_controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
+        usdn_mpool_lp, ducks, controller, gas_token_check_list, 42, {'from': DEPLOYER})  # 4,2%
     controller.addReaper(usdn_mpool_reaper, {'from': DEPLOYER})
+
+    # Reaper strategies
+    curve_strategy_v1 = CurveReaperStrategyV1.deploy(usdn_mpool_reaper, curve_staker, usdn_crv_lp, usdn_ducks_lp, {'from': DEPLOYER})
+    usdn_mpool_reaper.setReaperStrategy(curve_strategy_v1, {'from': DEPLOYER})
+    curve_staker.setReaperStrategy(curve_strategy_v1, {'from': DEPLOYER})
+
+    uniswap_strategy_v1 = UniswapReaperStrategyV1.deploy({'from': DEPLOYER})
+    usdn_usdt_reaper.setReaperStrategy(uniswap_strategy_v1, {'from': DEPLOYER})
+    usdn_weth_reaper.setReaperStrategy(uniswap_strategy_v1, {'from': DEPLOYER})
 
     print("DUCKS: {}".format(ducks))
     print("CHI: {}".format(chi_token))

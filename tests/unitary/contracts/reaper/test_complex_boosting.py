@@ -19,7 +19,7 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
 
     while True:
         chain.mine(1, init_ts)
-        tx1 = controller.startEmission(voting_controller, 0, {'from': deployer})
+        tx1 = controller.startEmission(0, {'from': deployer})
         if tx1.timestamp == init_ts:
             break
         else:
@@ -119,17 +119,10 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
         else:
             chain.undo(1)
 
-    # TODO: remove
     print("last_reap_integral_deployer after boost",reaper.reapIntegralFor(deployer))
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)
     print("reaper.emissionIntegral()", reaper.emissionIntegral())
     print("reaper.boostIntegralFor(deployer)",reaper.boostIntegralFor(deployer))
-    # print("reaper.debug1()",reaper.debug1())
-    # print("reaper.debug2()",reaper.debug2())
-    # print("reaper.debug3()",reaper.debug3())
-    # print("boosting_controller_mocked.debug1()",boosting_controller_mocked.debug1())
-    # print("boosting_controller_mocked.debug2()",boosting_controller_mocked.debug2())
-    # print("boosting_controller_mocked.debug3()",boosting_controller_mocked.debug3())
 
     assert reaper.balances(deployer) == amount
     assert reaper.totalBalances() == amount
@@ -165,7 +158,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
         else:
             chain.undo(1)
 
-    # TODO: remove
     print("last_reap_integral_deployer after boost",reaper.reapIntegralFor(deployer))
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)
     print("reaper.emissionIntegral()", reaper.emissionIntegral())
@@ -205,7 +197,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
         else:
             chain.undo(1)
     
-    # TODO: remove
     print("last_reap_integral_deployer after boost",reaper.reapIntegralFor(deployer))
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)
     print("reaper.emissionIntegral()", reaper.emissionIntegral())
@@ -252,7 +243,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
         else:
             chain.undo(1)
     
-    # TODO: remove
     print("last_reap_integral_deployer after boost",reaper.reapIntegralFor(deployer))
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)
     print("reaper.emissionIntegral()", reaper.emissionIntegral())
@@ -320,7 +310,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
         else:
             chain.undo(1)
     
-    # TODO: remove
     print("last_reap_integral_deployer after boost",reaper.reapIntegralFor(deployer))
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)
     print("reaper.emissionIntegral()", reaper.emissionIntegral())
@@ -404,7 +393,6 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
         else:
             chain.undo(2)
     
-    # TODO: remove
     print("reaper.reapIntegralFor(deployer)",reaper.reapIntegralFor(deployer))
     print("reaper.reapIntegralFor(morpheus)",reaper.reapIntegralFor(morpheus))
     print("diff",reaper.reapIntegralFor(deployer) - last_reap_integral_deployer)

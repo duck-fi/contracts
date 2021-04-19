@@ -12,7 +12,7 @@ def test_insufficient_funds_withdraw(reaper, thomas, exception_tester):
 @given(amount=strategy('uint256', min_value=1, max_value=1_000))
 def test_deposit(farm_token, lp_token, controller, reaper, voting_controller, deployer, chain, day, amount):
     initial_balance = lp_token.balanceOf(deployer)
-    controller.startEmission(voting_controller, 0, {'from': deployer})
+    controller.startEmission(0, {'from': deployer})
 
     chain.mine(1, chain.time())
     voting_controller.snapshot({'from': deployer})
