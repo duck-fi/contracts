@@ -56,25 +56,25 @@ def deploy():
     # USDN/USDT
     usdn_usdt_lp = uniswap_factory.createPair(
         usdn, usdt, {'from': DEPLOYER}).return_value
-    usdn.transfer(usdn_usdt_lp, 5_000_000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
-    usdt.transfer(usdn_usdt_lp, 5_000_000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
+    usdn.transfer(usdn_usdt_lp, 10_000_000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
+    usdt.transfer(usdn_usdt_lp, 10_000_000 * 10 ** USDT_DECIMALS, {'from': DEPLOYER})
     uniswap.interface.IUniswapV2Pair(
         usdn_usdt_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/CRV
     usdn_crv_lp = uniswap_factory.createPair(
         usdn, crv, {'from': DEPLOYER}).return_value
-    usdn.transfer(usdn_crv_lp, 1000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
-    crv.transfer(usdn_crv_lp, 500 * 10 ** CURVE_DECIMALS, {'from': DEPLOYER})
+    usdn.transfer(usdn_crv_lp, 2000 * 10 ** USDN_DECIMALS, {'from': DEPLOYER})
+    crv.transfer(usdn_crv_lp, 1000 * 10 ** CURVE_DECIMALS, {'from': DEPLOYER})
     uniswap.interface.IUniswapV2Pair(
         usdn_crv_lp).mint(DEPLOYER, {'from': DEPLOYER})
 
     # USDN/DUCKS
     usdn_ducks_lp = uniswap_factory.createPair(
         usdn, ducks, {'from': DEPLOYER}).return_value
-    usdn.transfer(usdn_ducks_lp, 1000 * 10 **
+    usdn.transfer(usdn_ducks_lp, 2000 * 10 **
                   USDN_DECIMALS, {'from': DEPLOYER})
-    ducks.transfer(usdn_ducks_lp, 50 * 10 **
+    ducks.transfer(usdn_ducks_lp, 100 * 10 **
                    DUCKS_DECIMALS, {'from': DEPLOYER})
     uniswap.interface.IUniswapV2Pair(
         usdn_ducks_lp).mint(DEPLOYER, {'from': DEPLOYER})
@@ -82,9 +82,9 @@ def deploy():
     # USDN/WETH
     usdn_weth_lp = uniswap_factory.createPair(
         usdn, weth, {'from': DEPLOYER}).return_value
-    usdn.transfer(usdn_weth_lp, 5_000_000 * 10 **
+    usdn.transfer(usdn_weth_lp, 10_000_000 * 10 **
                   USDN_DECIMALS, {'from': DEPLOYER})
-    weth.transfer(usdn_weth_lp, 5_000 * 10 **
+    weth.transfer(usdn_weth_lp, 10_000 * 10 **
                   WETH_DECIMALS, {'from': DEPLOYER})
     uniswap.interface.IUniswapV2Pair(
         usdn_weth_lp).mint(DEPLOYER, {'from': DEPLOYER})
@@ -111,19 +111,19 @@ def deploy():
     usdn_mpool_lp.set_minter(usdn_mpool, {'from': DEPLOYER})
     deposit_usdn_mpool = curve.DepositUSDN.deploy(
         usdn_mpool, usdn_mpool_lp, {'from': DEPLOYER})
-    usdn.approve(deposit_usdn_mpool, 3_000_000 * 10 **
+    usdn.approve(deposit_usdn_mpool, 6_000_000 * 10 **
                  USDN_DECIMALS, {'from': DEPLOYER})
-    dai.approve(deposit_usdn_mpool, 1_000_000 * 10 **
+    dai.approve(deposit_usdn_mpool, 6_000_000 * 10 **
                 DAI_DECIMALS, {'from': DEPLOYER})
-    usdc.approve(deposit_usdn_mpool, 1_000_000 * 10 **
+    usdc.approve(deposit_usdn_mpool, 6_000_000 * 10 **
                  USDC_DECIMALS, {'from': DEPLOYER})
-    usdt.approve(deposit_usdn_mpool, 1_000_000 * 10 **
+    usdt.approve(deposit_usdn_mpool, 6_000_000 * 10 **
                  USDT_DECIMALS, {'from': DEPLOYER})
     deposit_usdn_mpool.add_liquidity([
-        3_000_000 * 10 ** USDN_DECIMALS,
-        1_000_000 * 10 ** DAI_DECIMALS,
-        1_000_000 * 10 ** USDC_DECIMALS,
-        1_000_000 * 10 ** USDT_DECIMALS
+        6_000_000 * 10 ** USDN_DECIMALS,
+        6_000_000 * 10 ** DAI_DECIMALS,
+        6_000_000 * 10 ** USDC_DECIMALS,
+        6_000_000 * 10 ** USDT_DECIMALS
     ], 0, {'from': DEPLOYER})
 
     curve_voting_escrow = curve_dao.VotingEscrow.deploy(
@@ -173,16 +173,16 @@ def deploy():
 
     # Deposit to reapers
     usdn_usdt_lp_balance = uniswap.interface.IUniswapV2ERC20(usdn_usdt_lp).balanceOf(DEPLOYER, {'from': DEPLOYER})
-    uniswap.interface.IUniswapV2ERC20(usdn_usdt_lp).approve(usdn_usdt_reaper, usdn_usdt_lp_balance, {'from': DEPLOYER})
-    usdn_usdt_reaper.deposit(usdn_usdt_lp_balance, {'from': DEPLOYER})
+    uniswap.interface.IUniswapV2ERC20(usdn_usdt_lp).approve(usdn_usdt_reaper, usdn_usdt_lp_balance // 2, {'from': DEPLOYER})
+    usdn_usdt_reaper.deposit(usdn_usdt_lp_balance // 2, {'from': DEPLOYER})
 
     usdn_weth_lp_balance = uniswap.interface.IUniswapV2ERC20(usdn_weth_lp).balanceOf(DEPLOYER, {'from': DEPLOYER})
-    uniswap.interface.IUniswapV2ERC20(usdn_weth_lp).approve(usdn_weth_reaper, usdn_weth_lp_balance, {'from': DEPLOYER})
-    usdn_weth_reaper.deposit(usdn_weth_lp_balance, {'from': DEPLOYER})
+    uniswap.interface.IUniswapV2ERC20(usdn_weth_lp).approve(usdn_weth_reaper, usdn_weth_lp_balance // 2, {'from': DEPLOYER})
+    usdn_weth_reaper.deposit(usdn_weth_lp_balance // 2, {'from': DEPLOYER})
 
     usdn_mpool_lp_balance = usdn_mpool_lp.balanceOf(DEPLOYER, {'from': DEPLOYER})
-    usdn_mpool_lp.approve(usdn_mpool_reaper, usdn_mpool_lp_balance, {'from': DEPLOYER})
-    usdn_mpool_reaper.deposit(usdn_mpool_lp_balance, {'from': DEPLOYER})
+    usdn_mpool_lp.approve(usdn_mpool_reaper, usdn_mpool_lp_balance // 2, {'from': DEPLOYER})
+    usdn_mpool_reaper.deposit(usdn_mpool_lp_balance // 2, {'from': DEPLOYER})
 
     # Dispersion start emission
     controller.startEmission(voting_controller, 0)
