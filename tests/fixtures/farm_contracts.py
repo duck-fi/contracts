@@ -147,6 +147,10 @@ def farm_contracts(deployer, pm):
         "simple", 10 ** 18, {'from': deployer})
     curve_controller.add_gauge(
         usdn_mpool_gauge, 0, 10 ** 18, {'from': deployer})
+    
+    curve_voting_escrow_check_list = WhiteList.deploy({'from': deployer})
+    curve_voting_escrow.commit_smart_wallet_checker(curve_voting_escrow_check_list, {'from': deployer})
+    curve_voting_escrow.apply_smart_wallet_checker({'from': deployer})
 
     # Duck finance
     gas_token_check_list = WhiteList.deploy({'from': deployer})
@@ -220,6 +224,7 @@ def farm_contracts(deployer, pm):
 
     # add curve dao to dict
     contracts['curve_voting_escrow'] = curve_voting_escrow
+    contracts['curve_voting_escrow_check_list'] = curve_voting_escrow_check_list
     contracts['curve_controller'] = curve_controller
     contracts['curve_minter'] = curve_minter
     contracts['usdn_mpool_gauge'] = usdn_mpool_gauge

@@ -1,4 +1,4 @@
-def test_reaper_admin_fee(farm_contracts, deployer, morpheus, trinity, chain, day, week, exception_tester):
+def test_reaper_claim(farm_contracts, deployer, morpheus, trinity, chain, day, week, exception_tester):
     controller = farm_contracts['controller']
     voting_controller = farm_contracts['voting_controller']
     ducks = farm_contracts['ducks']
@@ -134,6 +134,8 @@ def test_reaper_admin_fee(farm_contracts, deployer, morpheus, trinity, chain, da
     # now claim ducks reward
     controller.startMinting({'from': deployer})
 
+    exception_tester("mint is not allowed", controller.mintFor, reaper, morpheus, {'from': deployer})
+
     ducks_balance_deployer = ducks.balanceOf(deployer)
     controller.mintFor(reaper, {'from': deployer})
     assert ducks.balanceOf(deployer) == ducks_balance_deployer + reaper.reapIntegralFor(deployer)
@@ -154,3 +156,45 @@ def test_reaper_admin_fee(farm_contracts, deployer, morpheus, trinity, chain, da
     ducks_balance_trinity = ducks.balanceOf(trinity)
     controller.mintFor(reaper, {'from': trinity})
     assert ducks.balanceOf(trinity) == ducks_balance_trinity
+
+    # deposit in reaper again for trinity
+    usdn_usdt_lp.transfer(trinity, 1000, {'from': deployer})
+    usdn_usdt_lp.approve(reaper, 1000, {'from': trinity})
+    tx8 = reaper.deposit(1000, {'from': trinity})
+
+    assert reaper.balances(trinity) == 1000
+    assert reaper.totalBalances() == 1000
+    assert usdn_usdt_lp.balanceOf(reaper) == 1000
+    assert usdn_usdt_lp.balanceOf(uniswap_strategy_v1) == 0
+
+    chain.mine(1, tx8.timestamp + day)
+
+    tx9 = controller.mintableTokens(reaper, {'from': trinity})
+    assert tx9.return_value > 0
+
+    exception_tester("mint is not allowed", controller.mintFor, reaper, trinity, {'from': morpheus})
+    
+    # set mint allowance
+    assert controller.mintAllowance(reaper, trinity, morpheus) == False
+    controller.mintApprove(reaper, morpheus, True, {'from': trinity})
+    assert controller.mintAllowance(reaper, trinity, morpheus) == True
+
+    ducks_balance_trinity = ducks.balanceOf(trinity)
+    controller.mintFor(reaper, trinity, {'from': morpheus})
+    assert ducks.balanceOf(trinity) >= ducks_balance_trinity + tx9.return_value
+
+    chain.mine(1, tx9.timestamp + day)
+
+    tx10 = controller.mintableTokens(reaper, trinity, {'from': morpheus})
+    assert tx10.return_value > 0
+
+    # unset mint allowance
+    assert controller.mintAllowance(reaper, trinity, morpheus) == True
+    controller.mintApprove(reaper, morpheus, False, {'from': trinity})
+    assert controller.mintAllowance(reaper, trinity, morpheus) == False
+
+    exception_tester("mint is not allowed", controller.mintFor, reaper, trinity, {'from': morpheus})
+
+    ducks_balance_trinity = ducks.balanceOf(trinity)
+    controller.mintFor(reaper, {'from': trinity})
+    assert ducks.balanceOf(trinity) >= ducks_balance_trinity + tx10.return_value

@@ -127,3 +127,90 @@ def test_reaper_deposit_withdraw(farm_contracts, deployer, morpheus, trinity, ch
     assert usdn_mpool_lp.balanceOf(curve_staker) == 0
     assert usdn_mpool_lp.balanceOf(usdn_mpool_gauge) == 0
     assert usdn_mpool_gauge.balanceOf(curve_staker) == 0
+
+
+def test_deposit_crv_to_voting_escrow(farm_contracts, deployer, morpheus, chain, day, week, year, exception_tester):
+    curve_staker = farm_contracts['curve_staker']
+    curve_voting_escrow = farm_contracts['curve_voting_escrow']
+    curve_voting_escrow_check_list = farm_contracts['curve_voting_escrow_check_list']
+    crv = farm_contracts['crv']
+
+    crv_value = 10 ** 19
+    assert crv.balanceOf(deployer) > 10 ** 19
+    assert curve_staker.lockingPeriod() == year
+
+    exception_tester("owner only", curve_staker.setLockingPeriod, 5 * week, {'from': morpheus})
+    curve_staker.setLockingPeriod(5 * week, {'from': deployer})
+
+    crv.approve(curve_staker, crv_value, {'from': deployer})
+    exception_tester("Smart contract depositors not allowed", curve_staker.depositToEscrow, crv_value, {'from': deployer})
+
+    # add curve_staker to 
+    curve_voting_escrow_check_list.addAddress(curve_staker, {'from': deployer})
+
+    exception_tester("no unlocked amount for renewal", curve_staker.depositToEscrow, crv_value, True, {'from': deployer})
+
+    tx1 = curve_staker.depositToEscrow(crv_value, {'from': deployer})
+
+    assert curve_staker.lockUntilTimestamp() == curve_staker.lockUntilTimestampFor(deployer)
+    assert curve_voting_escrow.locked(curve_staker) == [crv_value, curve_staker.lockUntilTimestamp()]
+    assert crv.balanceOf(curve_staker) == 0
+    assert curve_voting_escrow.balanceOf(curve_staker) > 0
+    last_vecrv_balance = curve_voting_escrow.balanceOf(curve_staker)
+
+    chain.mine(1, tx1.timestamp + week)
+    crv.transfer(morpheus, crv_value, {'from': deployer})
+    crv.approve(curve_staker, crv_value, {'from': morpheus})
+
+    exception_tester("no unlocked amount for renewal", curve_staker.depositToEscrow, crv_value, True, {'from': morpheus})
+
+    tx2 = curve_staker.depositToEscrow(crv_value, {'from': morpheus})
+
+    assert curve_staker.lockUntilTimestampFor(deployer) == curve_staker.lockUntilTimestampFor(morpheus)
+    assert curve_voting_escrow.locked(curve_staker) == [2 * crv_value, curve_staker.lockUntilTimestamp()]
+    assert crv.balanceOf(curve_staker) == 0
+    assert curve_voting_escrow.balanceOf(curve_staker) > 0
+    assert curve_voting_escrow.balanceOf(curve_staker) > last_vecrv_balance
+
+    exception_tester("withdraw is locked", curve_staker.withdrawFromEscrow, {'from': deployer})
+    exception_tester("withdraw is locked", curve_staker.withdrawFromEscrow, {'from': morpheus})
+
+    # lock is finished
+    chain.mine(1, curve_staker.lockUntilTimestamp() + 1)
+
+    assert curve_voting_escrow.balanceOf(curve_staker) == 0
+
+    exception_tester("", curve_staker.withdrawFromEscrow, {'from': deployer})
+    exception_tester("", curve_staker.withdrawFromEscrow, {'from': morpheus})
+
+    # deployer has unlocked amount - so renewal or withdraw is needed
+    exception_tester("withdrawal unlocked amount or renewal is needed", curve_staker.depositToEscrow, crv_value, False, {'from': deployer})
+    exception_tester("withdrawal extra unlocked amount is needed", curve_staker.depositToEscrow, crv_value // 2, True, {'from': deployer})
+    
+    crv.approve(curve_staker, crv_value, {'from': deployer})
+    tx3 = curve_staker.depositToEscrow(2 * crv_value, True, {'from': deployer})
+
+    assert curve_staker.lockUntilTimestampFor(deployer) == curve_staker.lockUntilTimestamp()
+    assert curve_voting_escrow.locked(curve_staker) == [2 * crv_value, curve_staker.lockUntilTimestamp()]
+    assert crv.balanceOf(curve_staker) == crv_value
+    assert curve_voting_escrow.balanceOf(curve_staker) > 0
+
+    # withdraw for morpheus
+    curve_staker.withdrawFromEscrow({'from': morpheus})
+
+    assert crv.balanceOf(morpheus) == crv_value
+    assert crv.balanceOf(curve_staker) == 0
+
+    # lock is finished
+    chain.mine(1, curve_staker.lockUntilTimestamp() + 1)
+
+    # enable new lock
+    crv.approve(curve_staker, 1, {'from': morpheus})
+    curve_staker.depositToEscrow(1, False, {'from': morpheus})
+
+    # withdraw for deployer
+    curve_staker.withdrawFromEscrow({'from': deployer})
+
+    assert curve_staker.lockUntilTimestampFor(morpheus) == curve_staker.lockUntilTimestamp()
+    assert curve_voting_escrow.locked(curve_staker) == [1, curve_staker.lockUntilTimestamp()]
+    assert crv.balanceOf(curve_staker) == 0

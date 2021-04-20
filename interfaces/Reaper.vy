@@ -21,6 +21,12 @@ def farmToken() -> address:
 
 @view
 @external
+def controller() -> address:
+    return ZERO_ADDRESS
+
+
+@view
+@external
 def votingController() -> address:
     return ZERO_ADDRESS
 

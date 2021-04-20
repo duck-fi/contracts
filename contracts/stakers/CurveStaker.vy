@@ -131,7 +131,7 @@ def _depositToEscrow(_crvValue: uint256):
             # finish escrow to start a new one
             VotingEscrow(self.votingEscrowContract).withdraw()
         # start new escrow (round to weeks)
-        _lockUntilTimestamp: uint256 = (block.timestamp + self.lockingPeriod) * WEEK / WEEK
+        _lockUntilTimestamp: uint256 = (block.timestamp + self.lockingPeriod) / WEEK * WEEK
         self.lockUntilTimestamp = _lockUntilTimestamp
         VotingEscrow(self.votingEscrowContract).create_lock(_crvValue, _lockUntilTimestamp)
     else:
@@ -139,6 +139,8 @@ def _depositToEscrow(_crvValue: uint256):
         VotingEscrow(self.votingEscrowContract).increase_amount(_crvValue)
 
 
+debug1: public(uint256)
+debug2: public(uint256)
 @external
 @nonreentrant('lock')
 def depositToEscrow(_crvValue: uint256, _renewal: bool = False):
@@ -150,7 +152,9 @@ def depositToEscrow(_crvValue: uint256, _renewal: bool = False):
         assert not (_lockedFunds > 0 and block.timestamp > _lockedUntil), "withdrawal unlocked amount or renewal is needed"
         assert ERC20(self.rewardToken).transferFrom(msg.sender, self, _crvValue)
 
+        self.debug1 = self.lockUntilTimestamp
         self._depositToEscrow(_crvValue)
+        self.debug2 = self.lockUntilTimestamp
         self.lockedFundsFor[msg.sender] += _crvValue
         self.lockUntilTimestampFor[msg.sender] = self.lockUntilTimestamp
     else:

@@ -53,6 +53,7 @@ BOOST_AMPLIFIER_PERCENT: constant(uint256) = 50
 lpToken: public(address)
 farmToken: public(address)
 
+controller: public(address)
 votingController: public(address)
 boostingController: public(address)
 
@@ -88,6 +89,7 @@ def __init__(_lpToken: address, _farmToken: address, _controller: address, _gasT
     assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
     assert _adminFee <= ADMIN_FEE_MULTIPLIER, "_adminFee > 100%"
     self.lpToken = _lpToken
+    self.controller = _controller
     self.votingController = Controller(_controller).votingController()
     self.boostingController = Controller(_controller).boostingController()
     self.gasTokenCheckList = _gasTokenCheckList

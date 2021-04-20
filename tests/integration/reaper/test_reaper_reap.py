@@ -1,4 +1,4 @@
-def test_reaper_deposit_withdraw(farm_contracts, deployer, morpheus, trinity, chain, day, week, ZERO_ADDRESS, exception_tester):
+def test_reaper_reap(farm_contracts, deployer, morpheus, trinity, chain, day, week, ZERO_ADDRESS, exception_tester):
     usdn_mpool_lp = farm_contracts['usdn_mpool_lp']
     reaper = farm_contracts['usdn_mpool_reaper']
     curve_strategy_v1 = farm_contracts['curve_strategy_v1']

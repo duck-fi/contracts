@@ -101,7 +101,7 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
         if tx_emission.timestamp == aligned_time:
             break
         else:
-            chain.undo(2)
+            chain.undo(1)
 
     # 1st snapshot for both on reaper after 1 day
     while True:
