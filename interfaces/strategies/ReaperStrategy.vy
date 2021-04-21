@@ -17,6 +17,11 @@ def reap() -> uint256:
     return 0
 
 
+@external
+def activate():
+    pass
+
+
 @view
 @external
 def availableToDeposit(_amount: uint256, _account: address) -> uint256:

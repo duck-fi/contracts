@@ -13,6 +13,8 @@ import interfaces.VotingController as VotingController
 implements: Controller
 
 
+votingController: public(address)
+boostingController: public(address)
 reapers: public(address[10 ** 3])
 indexByReaper: public(HashMap[address, uint256])
 lastReaperIndex: public(uint256)
@@ -61,3 +63,13 @@ def removeReaper(_reaper: address):
 @external
 def claimAdminFee(_reaper: address, _gasToken: address = ZERO_ADDRESS):
     pass
+
+
+@external
+def setVotingController(_votingController: address):
+    self.votingController = _votingController
+
+
+@external
+def setBoostingController(_boostingController: address):
+    self.boostingController = _boostingController

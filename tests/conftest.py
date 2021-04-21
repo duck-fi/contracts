@@ -4,6 +4,7 @@ pytest_plugins = [
     "fixtures.accounts",
     "fixtures.tokens",
     "fixtures.contracts",
+    "fixtures.farm_contracts",
     "fixtures.ownable",
     "fixtures.erc20_burnable",
     "fixtures.erc20",

@@ -9,6 +9,18 @@ def farmToken() -> address:
 
 @view
 @external
+def votingController() -> address:
+    return ZERO_ADDRESS
+
+
+@view
+@external
+def boostingController() -> address:
+    return ZERO_ADDRESS
+
+
+@view
+@external
 def reapers(_index: uint256) -> address:
     return ZERO_ADDRESS
 
@@ -37,4 +49,14 @@ def removeReaper(_reaper: address):
 
 @external
 def claimAdminFee(_reaper: address, _gasToken: address):
+    pass
+
+
+@external
+def setVotingController(_votingController: address):
+    pass
+
+
+@external
+def setBoostingController(_boostingController: address):
     pass

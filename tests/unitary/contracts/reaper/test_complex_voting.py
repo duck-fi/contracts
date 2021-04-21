@@ -91,23 +91,17 @@ def test_complex_voting(farm_token, lp_token, controller, reaper, reaper_2, reap
     last_vote_integral = reaper.voteIntegral()
     last_unit_cost_integral = reaper.unitCostIntegral()
 
-    # set init vote share # TODO: here is a bug if no votes for period => integral has not been updated => if vote share reducing ==> crash
-    # TODO: remove TODO: add one more test
-    # voting_controller.vote(reaper, farm_token, 1, {'from': deployer})
-    # voting_controller.vote(reaper_2, farm_token, 1, {'from': deployer})
-
     # wait for 7 days
     # startVoting + startEmission
     aligned_time = INIT_VOTING_TIME + \
         ((chain.time() + week - INIT_VOTING_TIME) // week) * week + 1
     while True:
         chain.mine(1, aligned_time)
-        tx_emission = controller.startEmission(
-            voting_controller, 0, {'from': deployer})
+        tx_emission = controller.startEmission(0, {'from': deployer})
         if tx_emission.timestamp == aligned_time:
             break
         else:
-            chain.undo(2)
+            chain.undo(1)
 
     # 1st snapshot for both on reaper after 1 day
     while True:

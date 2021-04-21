@@ -41,7 +41,7 @@ def test_escrow(curve_staker_mocked, curve_gauge_mock, curve_minter_mock, crv_to
 
     tx1 = curve_staker_mocked.depositToEscrow(1000, {'from': deployer})
     assert crv_token_mock.balanceOf(deployer) == initial_balance - 1000
-    unlock_timestamp = math.floor((tx1.timestamp + curve_staker_mocked.lockingPeriod()) * week / week)
+    unlock_timestamp = math.floor((tx1.timestamp + curve_staker_mocked.lockingPeriod()) / week) * week
     
     chain.mine(1, unlock_timestamp - 10)
 

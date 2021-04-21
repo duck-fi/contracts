@@ -66,6 +66,10 @@ def __init__(_stakeContract: address, _stakeToken: address, _rewardToken: addres
     assert _rewardToken != ZERO_ADDRESS, "RewardToken param is required"
     assert _stakeContract != ZERO_ADDRESS, "StakeContract param is required"
     assert _votingEscrowContract != ZERO_ADDRESS, "VotingEscrowContract param is required"
+
+    assert ERC20(_stakeToken).approve(_stakeContract, MAX_UINT256)
+    assert ERC20(_rewardToken).approve(_votingEscrowContract, MAX_UINT256)
+
     self.stakeToken = _stakeToken
     self.rewardToken = _rewardToken
     self.stakeContract = _stakeContract
@@ -93,7 +97,6 @@ def setReaperStrategy(_reaperStrategy: address):
 @nonreentrant('lock')
 def stake(_amount: uint256):
     assert msg.sender == self.reaperStrategy , "reaperStrategy only"
-    assert ERC20(self.stakeToken).transferFrom(msg.sender, self, _amount)
     LiquidityGauge(self.stakeContract).deposit(_amount)
 
 
@@ -128,7 +131,7 @@ def _depositToEscrow(_crvValue: uint256):
             # finish escrow to start a new one
             VotingEscrow(self.votingEscrowContract).withdraw()
         # start new escrow (round to weeks)
-        _lockUntilTimestamp: uint256 = (block.timestamp + self.lockingPeriod) * WEEK / WEEK
+        _lockUntilTimestamp: uint256 = (block.timestamp + self.lockingPeriod) / WEEK * WEEK
         self.lockUntilTimestamp = _lockUntilTimestamp
         VotingEscrow(self.votingEscrowContract).create_lock(_crvValue, _lockUntilTimestamp)
     else:
@@ -136,6 +139,8 @@ def _depositToEscrow(_crvValue: uint256):
         VotingEscrow(self.votingEscrowContract).increase_amount(_crvValue)
 
 
+debug1: public(uint256)
+debug2: public(uint256)
 @external
 @nonreentrant('lock')
 def depositToEscrow(_crvValue: uint256, _renewal: bool = False):
@@ -147,7 +152,9 @@ def depositToEscrow(_crvValue: uint256, _renewal: bool = False):
         assert not (_lockedFunds > 0 and block.timestamp > _lockedUntil), "withdrawal unlocked amount or renewal is needed"
         assert ERC20(self.rewardToken).transferFrom(msg.sender, self, _crvValue)
 
+        self.debug1 = self.lockUntilTimestamp
         self._depositToEscrow(_crvValue)
+        self.debug2 = self.lockUntilTimestamp
         self.lockedFundsFor[msg.sender] += _crvValue
         self.lockUntilTimestampFor[msg.sender] = self.lockUntilTimestamp
     else:

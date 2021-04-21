@@ -11,6 +11,7 @@ import interfaces.Ownable as Ownable
 import interfaces.Reaper as Reaper
 import interfaces.strategies.ReaperStrategy as ReaperStrategy
 import interfaces.tokens.Farmable as Farmable
+import interfaces.Controller as Controller
 import interfaces.VotingController as VotingController
 import interfaces.BoostingController as BoostingController
 import interfaces.GasToken as GasToken
@@ -81,23 +82,20 @@ futureOwner: public(address)
 
 
 @external
-def __init__(_lpToken: address, _farmToken: address, _controller: address, _votingController: address, _boostingController: address, _gasTokenCheckList: address, _adminFee: uint256):
+def __init__(_lpToken: address, _farmToken: address, _controller: address, _gasTokenCheckList: address, _adminFee: uint256):
     assert _lpToken != ZERO_ADDRESS, "_lpToken is not set"
     assert _controller != ZERO_ADDRESS, "_controller is not set"
-    assert _votingController != ZERO_ADDRESS, "_votingController is not set"
-    assert _boostingController != ZERO_ADDRESS, "_boostingController is not set"
     assert _gasTokenCheckList != ZERO_ADDRESS, "gasTokenCheckList is not set"
     assert _farmToken != ZERO_ADDRESS, "_farmToken is not set"
     assert _adminFee <= ADMIN_FEE_MULTIPLIER, "_adminFee > 100%"
     self.lpToken = _lpToken
     self.controller = _controller
-    self.votingController = _votingController
-    self.boostingController = _boostingController
+    self.votingController = Controller(_controller).votingController()
+    self.boostingController = Controller(_controller).boostingController()
     self.gasTokenCheckList = _gasTokenCheckList
     self.farmToken = _farmToken
     self.adminFee = _adminFee
     self.owner = msg.sender
-    assert ERC20(_farmToken).approve(_controller, MAX_UINT256)
 
 
 @internal
@@ -135,7 +133,7 @@ def _snapshot(_account: address):
     _oldBalancesIntegral: uint256 = self.balancesIntegral
     _balancesIntegral: uint256 = _oldBalancesIntegral
     _totalBalances: uint256 = self.totalBalances
-    if not self.isKilled and block.timestamp > _lastSnapshotTimestamp:
+    if block.timestamp > _lastSnapshotTimestamp:
         # update reaper integrals
         _emissionIntegral: uint256 = Farmable(self.farmToken).emissionIntegral()
         _voteIntegral: uint256 = VotingController(self.votingController).voteIntegral(self)
@@ -146,9 +144,10 @@ def _snapshot(_account: address):
         elif _emissionIntegral > 0:
             _balancesIntegral = _totalBalances * (block.timestamp - _lastSnapshotTimestamp) + _oldBalancesIntegral
         
-        if _balancesIntegral > _oldBalancesIntegral:
+        if _balancesIntegral > _oldBalancesIntegral and not self.isKilled:
             _unitCostIntegral += (_emissionIntegral - self.emissionIntegral) * (_voteIntegral - self.voteIntegral) / (_balancesIntegral - _oldBalancesIntegral)
             self.unitCostIntegral = _unitCostIntegral
+        
         self.balancesIntegral = _balancesIntegral
         self.emissionIntegral = _emissionIntegral
         self.voteIntegral = _voteIntegral
@@ -186,6 +185,8 @@ def _snapshot(_account: address):
 @external
 @nonreentrant('lock')
 def deposit(_amount: uint256, _account: address = msg.sender, _feeOptimization: bool = False, _gasToken: address = ZERO_ADDRESS):
+    assert not self.isKilled, "reaper is killed"
+    
     _gasStart: uint256 = msg.gas
     
     if _account != msg.sender:
@@ -231,12 +232,17 @@ def invest(_gasToken: address = ZERO_ADDRESS):
 
 @external
 @nonreentrant('lock')
-def reap(_gasToken: address = ZERO_ADDRESS):
+def reap(_gasToken: address = ZERO_ADDRESS) -> uint256:
     _gasStart: uint256 = msg.gas
+    _reapedAmount: uint256 = 0
+    
     _reaperStrategy: address = self.reaperStrategy
     if _reaperStrategy != ZERO_ADDRESS:
-        ReaperStrategy(_reaperStrategy).reap()
+        _reapedAmount = ReaperStrategy(_reaperStrategy).reap()
+    
     self._reduceGas(_gasToken, msg.sender, _gasStart, 4 + 32 * 1)
+
+    return _reapedAmount
 
 
 @external
@@ -252,20 +258,19 @@ def withdraw(_amount: uint256, _gasToken: address = ZERO_ADDRESS):
 
     if _reaperStrategy != ZERO_ADDRESS:
         _availableAmount = ReaperStrategy(_reaperStrategy).availableToWithdraw(_amount, msg.sender)
+        assert _availableAmount > 0, "withdraw is locked"
+        _lpBalance: uint256 = ERC20(_lpToken).balanceOf(self)
+        
+        if _lpBalance >= _availableAmount:
+            assert ERC20(_lpToken).transfer(msg.sender, _availableAmount)
+        elif _lpBalance > 0:
+            assert ERC20(_lpToken).transfer(msg.sender, _lpBalance)
+            ReaperStrategy(_reaperStrategy).withdraw(_availableAmount - _lpBalance, msg.sender)
+        else:
+            ReaperStrategy(_reaperStrategy).withdraw(_availableAmount, msg.sender)
 
-        if _availableAmount > 0:
-            _lpBalance: uint256 = ERC20(_lpToken).balanceOf(self)
-
-            if _lpBalance >= _availableAmount:
-                assert ERC20(_lpToken).transfer(msg.sender, _availableAmount)
-            elif _lpBalance > 0:
-                assert ERC20(_lpToken).transfer(msg.sender, _lpBalance)
-                ReaperStrategy(_reaperStrategy).withdraw(_availableAmount - _lpBalance, msg.sender)
-            else:
-                ReaperStrategy(_reaperStrategy).withdraw(_availableAmount, msg.sender)
-
-            if _amount - _availableAmount > 0:
-                self.balances[self] += _amount - _availableAmount
+        if _amount - _availableAmount > 0:
+            self.balances[self] += _amount - _availableAmount
     else:
         assert ERC20(_lpToken).transfer(msg.sender, _amount)
     
