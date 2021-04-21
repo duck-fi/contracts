@@ -6,12 +6,27 @@ MULTIPLIER = 10 ** 18
 FARM_TOKEN_RATE = 1
 VOTING_TOKEN_RATE = 2
 VOTING_TOKEN_RATE_AMPLIFIER = 2
+VOTING_TOKEN_RATE_MODIFIED = 10
+VOTING_TOKEN_RATE_AMPLIFIER_MODIFIED = 5
 
 
 def check_reapers_vote_power(voting_controller, controller):
     power = 0
     for i in range(1, controller.lastReaperIndex()):
         check_reaper_vote_power(voting_controller, controller.reapers(i))
+        power += voting_controller.reaperVotePower(controller.reapers(i))
+
+    if voting_controller.coinBalances(voting_controller.farmToken()) + voting_controller.coinBalances(voting_controller.votingToken()):
+        assert MULTIPLIER >= power * MULTIPLIER / \
+            voting_controller.totalVotePower() >= 0.999 * MULTIPLIER
+    else:
+        assert power == 0
+
+
+def check_reapers_vote_power_modified(voting_controller, controller):
+    power = 0
+    for i in range(1, controller.lastReaperIndex()):
+        check_reaper_vote_power_modified(voting_controller, controller.reapers(i))
         power += voting_controller.reaperVotePower(controller.reapers(i))
 
     if voting_controller.coinBalances(voting_controller.farmToken()) + voting_controller.coinBalances(voting_controller.votingToken()):
@@ -34,6 +49,25 @@ def check_reaper_vote_power(voting_controller, reaper):
     _votingTokenRate = math.floor(MULTIPLIER * VOTING_TOKEN_RATE + math.floor(MULTIPLIER *
                                                                               VOTING_TOKEN_RATE_AMPLIFIER * _farmTokenBalance /
                                                                               (_farmTokenBalance + _votingTokenBalance)))
+    _reaperVoteBalance = math.floor(voting_controller.reaperBalances(
+        reaper, voting_controller.votingToken()) * _votingTokenRate / MULTIPLIER) + math.floor(voting_controller.reaperBalances(reaper, voting_controller.farmToken()) * FARM_TOKEN_RATE)
+    assert math.fabs(voting_controller.reaperVotePower(
+        reaper) - _reaperVoteBalance) < 10 ** 2
+
+
+def check_reaper_vote_power_modified(voting_controller, reaper):
+    _farmTokenBalance = voting_controller.coinBalances(
+        voting_controller.farmToken())
+    _votingTokenBalance = voting_controller.coinBalances(
+        voting_controller.votingToken())
+
+    if _farmTokenBalance + _votingTokenBalance == 0:
+        assert voting_controller.reaperVotePower(reaper) == 0
+        return
+
+    _votingTokenRate = math.floor(MULTIPLIER * VOTING_TOKEN_RATE_MODIFIED + math.floor(MULTIPLIER *
+                                                                                       VOTING_TOKEN_RATE_AMPLIFIER_MODIFIED * _farmTokenBalance /
+                                                                                       (_farmTokenBalance + _votingTokenBalance)))
     _reaperVoteBalance = math.floor(voting_controller.reaperBalances(
         reaper, voting_controller.votingToken()) * _votingTokenRate / MULTIPLIER) + math.floor(voting_controller.reaperBalances(reaper, voting_controller.farmToken()) * FARM_TOKEN_RATE)
     assert math.fabs(voting_controller.reaperVotePower(
@@ -223,3 +257,12 @@ def test_vote_complex(exception_tester, voting_controller_mocked, controller_moc
     # reaper_1_mock_weight = 7, reaper_2_mock_weight = 13, sum = 20
 
     check_reapers_vote_power(voting_controller_mocked, controller_mock)
+
+    # now change voting token rate
+    chain.mine(1, chain.time() + week + 100)
+
+    voting_controller_mocked.setVotingTokenRate(
+        VOTING_TOKEN_RATE_MODIFIED, VOTING_TOKEN_RATE_AMPLIFIER_MODIFIED, {'from': deployer})
+
+    check_reapers_vote_power_modified(
+        voting_controller_mocked, controller_mock)
