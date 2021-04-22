@@ -386,6 +386,9 @@ def test_complex_boosting(lp_token, reaper, controller, voting_controller, boost
     while True:
         chain.mine(1, init_ts + 37 * week)
         tx13 = reaper.snapshot({'from': deployer})
+        if tx13.timestamp != init_ts + 37 * week:
+            chain.undo(1)
+            continue
         chain.mine(1, init_ts + 37 * week)
         tx13_1 = reaper.snapshot({'from': morpheus})
         if tx13.timestamp == init_ts + 37 * week and tx13_1.timestamp == init_ts + 37 * week:
